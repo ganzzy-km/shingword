@@ -1,0 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@400;500;600&display=swap');
+@import 'tailwindcss';
+@font-face{font-family:'Geulbit Sans';font-weight:400 500;font-display:swap;src:url('/fonts/noto-sans-kr-regular.ttf') format('truetype')}
+@font-face{font-family:'Geulbit Sans';font-weight:600 700;font-display:swap;src:url('/fonts/noto-sans-kr-semibold.ttf') format('truetype')}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+}
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #17212B;
+  --card: #FFFFFF;
+  --card-foreground: #17212B;
+  --primary: #087F8C;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F0FAF9;
+  --secondary-foreground: #102A43;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #16A3A6;
+  --accent-foreground: #FFFFFF;
+  --border: #E2E8F0;
+  --ring: #087F8C;
+  --radius: 8px;
+}
+
+* {
+  font-family: 'Noto Sans KR', system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}

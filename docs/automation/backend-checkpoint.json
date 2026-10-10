@@ -1,0 +1,369 @@
+{
+  "status": "BLOCKED",
+  "currentPhase": "p01",
+  "completed": [],
+  "runtimeRunnerState": false,
+  "gates": {
+    "G1": "PASS_LOCAL_STORAGE_CANDIDATE: approved C root verified across Codex and ordinary Windows PowerShell; explicit migration and backup/restore verified",
+    "G2": "PASS_LOCAL_TESTS_ONLY: 21 targeted tests; existing Runner pytest binding not configured",
+    "G3": "PASS_LOCAL_INVARIANTS_ONLY: UI/P02/migration and LocalCache preserved; authentication fail-closed; no fallback",
+    "G4": "SCOPE_RECORDED: bounded verification/docs updates; formal Runner blocked by absent Git HEAD/baseline",
+    "G5": "DEFERRED_USER_REQUEST: no Claude review, no PASS receipt"
+  },
+  "candidateHashes": {
+    "backend/app/config.py": "5eec55474f2633b7c8a5773cfe9e8c336cd21560aeef2bfb04bb79d2631e47ac",
+    "backend/app/extensions.py": "f9f5317e34e285f8b5868992176cd4d8f2f8a7f67c4ef05f2ac8cbfd14b16f40",
+    "backend/app/storage.py": "e9335304e60c0604430b2b07e121578915b1e9042b5e63570d3fa3cfeda7063d",
+    "backend/app/__init__.py": "445bb7163c57b6e2af1fedd961fba0fbf3f9324e74b3d8f3a032a442dba8470f",
+    "backend/storage_cli.py": "d49eaf8307440478c3144223dfaf285261dbd8189d3b2785b52048644c6a57c9",
+    "backend/app/routes/data.py": "c7daafb2e8218edb401d594e241373d8ad0360e721af9314bbb12b4d1e7ca5e1",
+    "backend/app/local_admin.py": "f4048dfd7a7b74c37c8a506d257036c149b256ae669783f365fec148756a5419",
+    "backend/serve.py": "588d5d7f1f420cd024fd6f466631dce6a73bb6fd0575d9b9cf98f58a97a271b5",
+    "backend/app/routes/core.py": "7ad434ff17e9cf7ae23a3d1167ff83e37d54e484d47c72fb7798485650cc8aba",
+    "backend/tests/test_storage.py": "95a104265d4d6bbcce9a45820e7aee039a7398d9d30e039cf0149758ad786eca",
+    "backend/migrations/versions/0001_initial.py": "2364b72d9c8b7f0bd07be87ac5dc844e35350c2bc4d20ad654900016b0ee8a86",
+    "backend/verify_storage.py": "46d0dc81e2e0f6515b6345aaf7b21ec480e81bf8daaf84c431b391970d39056f",
+    "backend/verify_analysis_isolation.py": "c01a946623a7f051191ddfede6cf043d47129cbcf85cdf98978cf6883c7d2c3d",
+    "scripts/verify-data-root-cross.py": "71b58ccbd8438b9d5324f84dd580bf5ff0bc70a60a083ec137b98cda0a0eea42"
+  },
+  "corrections": {
+    "p01": 2
+  },
+  "changedFiles": [
+    "backend/app/config.py",
+    "backend/app/extensions.py",
+    "backend/app/storage.py",
+    "backend/app/__init__.py",
+    "backend/storage_cli.py",
+    "backend/app/routes/data.py",
+    "backend/app/local_admin.py",
+    "backend/serve.py",
+    "backend/app/routes/core.py",
+    "backend/tests/test_storage.py"
+  ],
+  "changedPreparationFiles": [
+    "docs/automation/ACCEPTANCE.md",
+    "docs/automation/backend-queue.pending.json",
+    "docs/automation/backend-checkpoint.json"
+  ],
+  "tests": [
+    {
+      "argv": [
+        ".venv/Scripts/python.exe",
+        "-m",
+        "pytest",
+        "backend/tests/test_storage.py",
+        "-q",
+        "-s",
+        "-p",
+        "no:cacheprovider"
+      ],
+      "exitCode": 0,
+      "pass": 20,
+      "metrics": {
+        "sqliteSyntheticConcurrentWriters": 40,
+        "sqliteSyntheticWrites": 40,
+        "seconds": 1.8537,
+        "lostUpdates": 0
+      }
+    },
+    {
+      "argv": [
+        ".venv/Scripts/python.exe",
+        "-m",
+        "pytest",
+        "backend/tests",
+        "-q",
+        "-p",
+        "no:cacheprovider"
+      ],
+      "exitCode": 0,
+      "pass": 75,
+      "metrics": {
+        "seconds": 16.41
+      }
+    },
+    {
+      "argv": [
+        "pnpm",
+        "exec",
+        "tsc",
+        "--noEmit"
+      ],
+      "exitCode": 0
+    },
+    {
+      "argv": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0
+    },
+    {
+      "argv": [
+        "node",
+        "scripts/book-layout.test.mjs"
+      ],
+      "exitCode": 0,
+      "metrics": {
+        "lengths": [
+          10000,
+          30000
+        ]
+      }
+    },
+    {
+      "argv": [
+        "node",
+        "scripts/verify-library.cjs"
+      ],
+      "exitCode": 0,
+      "metrics": {
+        "widths": [
+          1440,
+          1024,
+          820,
+          390,
+          320
+        ],
+        "syntheticEssayCodePoints": 30000,
+        "pages": 62,
+        "exactPageReconstruction": true,
+        "browserExceptions": 0,
+        "representativeScreenshotsOpened": true
+      }
+    }
+  ],
+  "blockedChecks": [
+    {
+      "argv": [
+        ".venv/Scripts/python.exe",
+        "backend/storage_cli.py",
+        "check"
+      ],
+      "exitCode": 1,
+      "code": "DATA_ROOT_REQUIRED"
+    },
+    {
+      "check": "read-only E volume validation",
+      "exitCode": 1,
+      "code": "UNSUPPORTED_FILESYSTEM",
+      "filesystem": "exFAT",
+      "health": "Warning",
+      "dataRootCreated": false
+    }
+  ],
+  "remaining": [
+    "actual approved healthy local storage and pinned volume identity",
+    "P01 mandatory Claude independent review",
+    "existing Runner SQLite/pytest/review/recovery binding and verified Git baseline",
+    "P02-P12 original numbered phase scopes",
+    "multi-user model and Google OIDC mock/real integration",
+    "immutable analysis input version and NFC/LF contracts",
+    "document revisions/access modes and selected-edition matching",
+    "server PDF report/import integration",
+    "confirmed 7-day starting point and backup/account/public-resource retention",
+    "AI external policy/credentials and local consent/control implementation",
+    "10k/30k complete analysis/PDF timings, memory and 5-minute 20-40-user stability"
+  ],
+  "nextAction": "Storage redirection resolved at C:\\Users\\USER\\GeulbitData. Do not repeat init. Use existing check with persisted user environment; refresh existing shell variables from User settings if needed. Resolve existing Runner SQLite/pytest binding and Git baseline without automatic commit. G5 remains DEFERRED and dependent phases stay gated.",
+  "exclusions": [
+    "no production/student data processed",
+    "no actual E Data Root creation",
+    "no external AI/Google authentication/tunnel operation",
+    "no commit/push/merge/deploy",
+    "no independent review claimed"
+  ],
+  "previousGates": {
+    "G1": "PARTIAL: isolated storage implemented; actual E volume not eligible",
+    "G2": "PASS_LOCAL_TESTS_ONLY: 20 targeted, 75 regression; Runner binding unavailable",
+    "G3": "UNVERIFIED: required independent storage/migration review missing",
+    "G4": "SCOPE_RECORDED: no verified Git baseline or independent scope receipt",
+    "G5": "BLOCKED: Claude CLI/connector unavailable"
+  },
+  "previousCandidateHashes": {
+    "backend/app/config.py": "5eec55474f2633b7c8a5773cfe9e8c336cd21560aeef2bfb04bb79d2631e47ac",
+    "backend/app/extensions.py": "f9f5317e34e285f8b5868992176cd4d8f2f8a7f67c4ef05f2ac8cbfd14b16f40",
+    "backend/app/storage.py": "57d21179a597b0e8124de985bc2d0e72ddeb1ae4bb4ec46d1845a57516916332",
+    "backend/app/__init__.py": "445bb7163c57b6e2af1fedd961fba0fbf3f9324e74b3d8f3a032a442dba8470f",
+    "backend/storage_cli.py": "d49eaf8307440478c3144223dfaf285261dbd8189d3b2785b52048644c6a57c9",
+    "backend/app/routes/data.py": "c7daafb2e8218edb401d594e241373d8ad0360e721af9314bbb12b4d1e7ca5e1",
+    "backend/app/local_admin.py": "f4048dfd7a7b74c37c8a506d257036c149b256ae669783f365fec148756a5419",
+    "backend/serve.py": "588d5d7f1f420cd024fd6f466631dce6a73bb6fd0575d9b9cf98f58a97a271b5",
+    "backend/app/routes/core.py": "7ad434ff17e9cf7ae23a3d1167ff83e37d54e484d47c72fb7798485650cc8aba",
+    "backend/tests/test_storage.py": "c17657ed06b4b307b0bb8c47a681efc1f1f76654fb1acfbb35ab26b943fe08ab",
+    "backend/migrations/versions/0001_initial.py": "2364b72d9c8b7f0bd07be87ac5dc844e35350c2bc4d20ad654900016b0ee8a86"
+  },
+  "dataRootResolution": {
+    "date": "2026-10-10",
+    "approvedDataRoot": "C:\\Users\\USER\\GeulbitData",
+    "crossEnvironment": {
+      "kind": "geulbit-p01-cross-probe",
+      "token": "51bd2f9f-c1d5-405d-9a9b-0129eeaf5461",
+      "codex": {
+        "actualRoot": "C:\\Users\\USER\\GeulbitData",
+        "user": "USER",
+        "pid": 41500,
+        "packageCode": 15700,
+        "package": null
+      },
+      "windows": {
+        "actualRoot": "C:\\Users\\USER\\GeulbitData",
+        "user": "USER",
+        "pid": 38540,
+        "packageCode": 15700,
+        "package": null,
+        "readCodexProbe": true
+      },
+      "codexReadWindowsResponse": true,
+      "probeCleaned": true
+    },
+    "sqliteVerification": {
+      "status": "PASS_LOCAL",
+      "checks": 10,
+      "fk": 1,
+      "wal": true,
+      "busyTimeoutMs": 5000,
+      "schema": "0001_initial",
+      "integrity": "ok",
+      "restart": true,
+      "backupRestore": true,
+      "liveDatabaseUnchanged": true,
+      "userApiStatus": 503,
+      "backup": "C:\\Users\\USER\\GeulbitData\\operational\\backups\\p01-verification-6a76e366b1624777976bd04eb04876d1.sqlite3"
+    },
+    "ordinaryWindowsCheck": {
+      "actualRoot": "C:\\Users\\USER\\GeulbitData",
+      "user": "USER",
+      "pid": 13456,
+      "packageCode": 15700,
+      "package": null,
+      "exitCode": 0,
+      "cli": {
+        "status": "PASS",
+        "operation": "check",
+        "schema": "0001_initial"
+      }
+    },
+    "initialization": {
+      "exitCode": 0,
+      "schema": "0001_initial",
+      "rootAbsentBeforeInit": true
+    },
+    "tests": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/tests/test_storage.py -q -s -p no:cacheprovider",
+      "exitCode": 0,
+      "passed": 21,
+      "seconds": 7.02,
+      "writers": 40,
+      "writeSeconds": 2.0582,
+      "lostUpdates": 0
+    },
+    "runner": {
+      "status": "BLOCKED",
+      "exitCode": 1,
+      "reason": "Unconfigured or invalid baseline"
+    },
+    "inProgressCheck": {
+      "exitCode": 1,
+      "code": "EXPLICIT_INITIALIZATION_REQUIRED",
+      "resolvedAfterInit": true
+    },
+    "temporaryValidationFilesCleaned": true,
+    "environmentDefaults": "Windows User GEULBIT_DATA_ROOT and GEULBIT_VOLUME_ID set after cross-probe success; already-open processes may retain old environment",
+    "changedFiles": [
+      "scripts/verify-data-root-cross.py",
+      "docs/automation/backend-checkpoint.json",
+      "docs/automation/backend-queue.pending.json",
+      "docs/automation/ACCEPTANCE.md"
+    ],
+    "preservation": {
+      "localCacheDatabaseAndBackupHashesUnchanged": true,
+      "uiP02MigrationProtectedFiles": 23,
+      "uiP02MigrationHashesUnchanged": true,
+      "EDataUntouched": true
+    }
+  },
+  "resumeAttempt": {
+    "date": "2026-10-10",
+    "approvedDataRoot": "C:\\Users\\USER\\AppData\\Local\\GeulbitData",
+    "resolvedDataRoot": "C:\\Users\\USER\\AppData\\Local\\Packages\\OpenAI.Codex_2p2nqsd0c76g0\\LocalCache\\Local\\GeulbitData",
+    "volumeId": "\\\\?\\Volume{57d6ac00-0814-4071-b94d-ab16dd0748fc}\\",
+    "filesystem": "NTFS",
+    "health": "Healthy",
+    "freeBytesAtPreflight": 948281577472,
+    "rootAbsentBeforeExplicitInit": true,
+    "initialization": {
+      "exitCode": 0,
+      "migration": "0001_initial",
+      "physicalLocationApproved": false,
+      "preservedWithoutDeletion": true
+    },
+    "preCorrectionVerification": {
+      "exitCode": 0,
+      "checks": 10,
+      "fk": 1,
+      "wal": true,
+      "busyTimeoutMs": 5000,
+      "integrity": "ok",
+      "restart": true,
+      "backupRestore": true,
+      "liveDatabaseUnchanged": true,
+      "userApiStatus": 503,
+      "backup": "C:\\Users\\USER\\AppData\\Local\\Packages\\OpenAI.Codex_2p2nqsd0c76g0\\LocalCache\\Local\\GeulbitData\\operational\\backups\\p01-verification-58bf6cc7d2d64f8b87f421d3b5f73f99.sqlite3"
+    },
+    "finalStartupCheck": {
+      "command": ".venv/Scripts/python.exe backend/storage_cli.py check",
+      "exitCode": 1,
+      "code": "DATA_ROOT_REDIRECTED"
+    },
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/tests/test_storage.py -q -s -p no:cacheprovider",
+        "exitCode": 0,
+        "passed": 21,
+        "seconds": 3.17,
+        "concurrentWrites": 40,
+        "writeSeconds": 1.3838,
+        "lostUpdates": 0
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/tests -q -p no:cacheprovider",
+        "exitCode": 0,
+        "passed": 76,
+        "seconds": 23.26
+      },
+      {
+        "command": ".venv/Scripts/python.exe backend/verify_analysis_isolation.py",
+        "exitCode": 0,
+        "componentChecks": 6
+      }
+    ],
+    "p02": {
+      "independentWorkEligible": true,
+      "status": "PARTIAL_COMPONENT_AUDIT_ONLY",
+      "existingKiwiAndDeterminismVerified": true,
+      "dbNetworkAccessDeniedDuringAudit": true,
+      "remaining": [
+        "standalone production package entry",
+        "NFC/LF input contract",
+        "versioned result schema and approved numbered gate bindings"
+      ],
+      "dependentWorkMayPass": false
+    },
+    "changedFiles": [
+      "backend/app/storage.py",
+      "backend/tests/test_storage.py",
+      "backend/verify_storage.py",
+      "backend/verify_analysis_isolation.py"
+    ],
+    "uiSourceHashes": {
+      "src\\App.tsx": "db7ee33332bd7cfc432c02205ad103028966f888fa790f11685bdb47b33fe5b1",
+      "src\\Library.tsx": "3735dca61b19afa0192675b7bd4b7a9239ab5afd0c9d12f93152ea8c0778ed21",
+      "src\\library.css": "cc7e0bbe3a98119ac36c7f304c548c64a8707d6f20100c69668f5edb4584719c",
+      "src\\index.css": "5df42460e7c0000b57ec97b2d4a96b77696fead18dd5e6038527f6f7103b6e82",
+      "src\\BookCover.tsx": "8d10be65ddc45e6567558be3493b00a85fda3d0759018e41e68a98aeeea9670f"
+    }
+  }
+}

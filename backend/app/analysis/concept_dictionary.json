@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "confidenceThreshold": 0.72,
+  "conceptGroups": {
+    "isolation": ["고립", "단절", "소외", "외로움"],
+    "conflict": ["갈등", "대립", "충돌"],
+    "identity": ["정체성", "자아", "내면"],
+    "oppression": ["억압", "통제", "강요"],
+    "growth": ["성장", "성숙", "변화"],
+    "solidarity": ["연대", "협력", "결속"]
+  },
+  "predicateGroups": {
+    "reveal": ["드러내다", "보여 주다", "나타내다", "부각하다"],
+    "isolate": ["고립되다", "고립시키다", "단절되다", "소외되다"],
+    "emphasize": ["강조하다", "부각하다", "역설하다"]
+  },
+  "allowedSentences": [],
+  "excludedSentences": [],
+  "uncertainExpressions": []
+}
+

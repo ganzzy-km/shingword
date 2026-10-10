@@ -1,0 +1,793 @@
+{
+  "version": 1,
+  "configured": false,
+  "repo": "C:/Users/USER/Documents/ChatGPT/글빛",
+  "expectedHead": null,
+  "expectedBranch": null,
+  "protected": {},
+  "allowedTestExecutables": [
+    ".venv/Scripts/python.exe"
+  ],
+  "phases": [
+    {
+      "id": "p01",
+      "mode": "implement",
+      "dependsOn": [],
+      "prompt": null,
+      "activePlan": null,
+      "allowedPaths": [
+        "backend/app/config.py",
+        "backend/app/extensions.py",
+        "backend/app/storage.py",
+        "backend/app/__init__.py",
+        "backend/storage_cli.py",
+        "backend/app/routes/data.py",
+        "backend/app/local_admin.py",
+        "backend/serve.py",
+        "backend/app/routes/core.py",
+        "backend/tests/test_storage.py",
+        "backend/verify_storage.py",
+        "scripts/verify-data-root-cross.py",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/ACCEPTANCE.md"
+      ],
+      "maxChangedFiles": 10,
+      "timeoutSeconds": null,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/tests/test_storage.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 21,
+          "requires": "Existing Runner pytest binding; not TAP minimumPass"
+        }
+      ],
+      "requiredOutputs": [
+        "backend/app/storage.py",
+        "backend/storage_cli.py",
+        "backend/tests/test_storage.py"
+      ],
+      "acceptance": {
+        "source": {
+          "kind": "user_instruction",
+          "section": "3. P01 Acceptance Gate",
+          "date": "2026-10-10"
+        },
+        "requirements": [
+          "verified Data Root and volume identity",
+          "no startup initialization or fallback",
+          "existing Alembic and FK/WAL/busy_timeout",
+          "safe online backup/restore",
+          "disconnect latch",
+          "no unauthenticated production data API"
+        ],
+        "cases": {
+          "normal": [
+            "test_explicit_initialization_uses_existing_alembic_and_sqlite_constraints",
+            "test_online_backup_restores_into_isolated_sqlite"
+          ],
+          "failure": [
+            "test_missing_drive_never_creates_fallback",
+            "test_existing_data_is_not_initialized_or_overwritten",
+            "test_invalid_volume_never_creates_data_root",
+            "test_corrupt_database_and_unknown_migration_are_blocked",
+            "test_failed_initialization_is_not_automatically_retried",
+            "test_virtualized_data_root_is_rejected_before_initialization"
+          ],
+          "boundary": [
+            "test_identity_must_be_explicit",
+            "test_symlink_escape_is_rejected",
+            "test_insufficient_space_never_initializes",
+            "test_missing_database_is_not_recreated"
+          ],
+          "dataConsistency": [
+            "test_repeated_alembic_upgrade_preserves_existing_rows",
+            "test_40_concurrent_sqlite_writes_keep_integrity",
+            "test_disconnect_latches_until_explicit_new_startup"
+          ]
+        },
+        "G1": "PASS_LOCAL_STORAGE_CANDIDATE",
+        "G2": "LOCAL_TESTS_PASS_RUNNER_BINDING_UNVERIFIED",
+        "G3": "LOCAL_INVARIANTS_VERIFIED",
+        "G4": "SCOPE_RECORDED_BASELINE_UNVERIFIED",
+        "G5": "DEFERRED_USER_REQUEST"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": [
+          "migration",
+          "storage",
+          "backup/restore"
+        ],
+        "status": "DEFERRED_USER_REQUEST"
+      }
+    },
+    {
+      "id": "p02",
+      "mode": "implement",
+      "dependsOn": [
+        "p01"
+      ],
+      "prompt": null,
+      "activePlan": null,
+      "allowedPaths": [],
+      "maxChangedFiles": null,
+      "timeoutSeconds": null,
+      "tests": [],
+      "requiredOutputs": [],
+      "acceptance": {
+        "source": null,
+        "requirements": null,
+        "cases": {
+          "normal": null,
+          "failure": null,
+          "boundary": null,
+          "dataConsistency": null
+        },
+        "G1": "NOT_CONFIGURED",
+        "G2": "NOT_RUN",
+        "G3": "NOT_CONFIGURED",
+        "G4": "NOT_CONFIGURED",
+        "G5": "NOT_RUN"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": null,
+        "status": "NOT_RUN"
+      }
+    },
+    {
+      "id": "p03",
+      "mode": "implement",
+      "dependsOn": [
+        "p02"
+      ],
+      "prompt": null,
+      "activePlan": null,
+      "allowedPaths": [],
+      "maxChangedFiles": null,
+      "timeoutSeconds": null,
+      "tests": [],
+      "requiredOutputs": [],
+      "acceptance": {
+        "source": null,
+        "requirements": null,
+        "cases": {
+          "normal": null,
+          "failure": null,
+          "boundary": null,
+          "dataConsistency": null
+        },
+        "G1": "NOT_CONFIGURED",
+        "G2": "NOT_RUN",
+        "G3": "NOT_CONFIGURED",
+        "G4": "NOT_CONFIGURED",
+        "G5": "NOT_RUN"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": null,
+        "status": "NOT_RUN"
+      }
+    },
+    {
+      "id": "p04",
+      "mode": "implement",
+      "dependsOn": [
+        "p03"
+      ],
+      "prompt": null,
+      "activePlan": null,
+      "allowedPaths": [],
+      "maxChangedFiles": null,
+      "timeoutSeconds": null,
+      "tests": [],
+      "requiredOutputs": [],
+      "acceptance": {
+        "source": null,
+        "requirements": null,
+        "cases": {
+          "normal": null,
+          "failure": null,
+          "boundary": null,
+          "dataConsistency": null
+        },
+        "G1": "NOT_CONFIGURED",
+        "G2": "NOT_RUN",
+        "G3": "NOT_CONFIGURED",
+        "G4": "NOT_CONFIGURED",
+        "G5": "NOT_RUN"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": null,
+        "status": "NOT_RUN"
+      }
+    },
+    {
+      "id": "p05",
+      "mode": "implement",
+      "dependsOn": [
+        "p04"
+      ],
+      "prompt": null,
+      "activePlan": null,
+      "allowedPaths": [],
+      "maxChangedFiles": null,
+      "timeoutSeconds": null,
+      "tests": [],
+      "requiredOutputs": [],
+      "acceptance": {
+        "source": null,
+        "requirements": null,
+        "cases": {
+          "normal": null,
+          "failure": null,
+          "boundary": null,
+          "dataConsistency": null
+        },
+        "G1": "NOT_CONFIGURED",
+        "G2": "NOT_RUN",
+        "G3": "NOT_CONFIGURED",
+        "G4": "NOT_CONFIGURED",
+        "G5": "NOT_RUN"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": null,
+        "status": "NOT_RUN"
+      }
+    },
+    {
+      "id": "p06",
+      "mode": "implement",
+      "dependsOn": [
+        "p05"
+      ],
+      "prompt": null,
+      "activePlan": null,
+      "allowedPaths": [],
+      "maxChangedFiles": null,
+      "timeoutSeconds": null,
+      "tests": [],
+      "requiredOutputs": [],
+      "acceptance": {
+        "source": null,
+        "requirements": null,
+        "cases": {
+          "normal": null,
+          "failure": null,
+          "boundary": null,
+          "dataConsistency": null
+        },
+        "G1": "NOT_CONFIGURED",
+        "G2": "NOT_RUN",
+        "G3": "NOT_CONFIGURED",
+        "G4": "NOT_CONFIGURED",
+        "G5": "NOT_RUN"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": null,
+        "status": "NOT_RUN"
+      }
+    },
+    {
+      "id": "p07",
+      "mode": "implement",
+      "dependsOn": [
+        "p06"
+      ],
+      "prompt": null,
+      "activePlan": null,
+      "allowedPaths": [],
+      "maxChangedFiles": null,
+      "timeoutSeconds": null,
+      "tests": [],
+      "requiredOutputs": [],
+      "acceptance": {
+        "source": null,
+        "requirements": null,
+        "cases": {
+          "normal": null,
+          "failure": null,
+          "boundary": null,
+          "dataConsistency": null
+        },
+        "G1": "NOT_CONFIGURED",
+        "G2": "NOT_RUN",
+        "G3": "NOT_CONFIGURED",
+        "G4": "NOT_CONFIGURED",
+        "G5": "NOT_RUN"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": null,
+        "status": "NOT_RUN"
+      }
+    },
+    {
+      "id": "p08",
+      "mode": "implement",
+      "dependsOn": [
+        "p07"
+      ],
+      "prompt": null,
+      "activePlan": null,
+      "allowedPaths": [],
+      "maxChangedFiles": null,
+      "timeoutSeconds": null,
+      "tests": [],
+      "requiredOutputs": [],
+      "acceptance": {
+        "source": null,
+        "requirements": null,
+        "cases": {
+          "normal": null,
+          "failure": null,
+          "boundary": null,
+          "dataConsistency": null
+        },
+        "G1": "NOT_CONFIGURED",
+        "G2": "NOT_RUN",
+        "G3": "NOT_CONFIGURED",
+        "G4": "NOT_CONFIGURED",
+        "G5": "NOT_RUN"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": null,
+        "status": "NOT_RUN"
+      }
+    },
+    {
+      "id": "p09",
+      "mode": "implement",
+      "dependsOn": [
+        "p08"
+      ],
+      "prompt": null,
+      "activePlan": null,
+      "allowedPaths": [],
+      "maxChangedFiles": null,
+      "timeoutSeconds": null,
+      "tests": [],
+      "requiredOutputs": [],
+      "acceptance": {
+        "source": null,
+        "requirements": null,
+        "cases": {
+          "normal": null,
+          "failure": null,
+          "boundary": null,
+          "dataConsistency": null
+        },
+        "G1": "NOT_CONFIGURED",
+        "G2": "NOT_RUN",
+        "G3": "NOT_CONFIGURED",
+        "G4": "NOT_CONFIGURED",
+        "G5": "NOT_RUN"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": null,
+        "status": "NOT_RUN"
+      }
+    },
+    {
+      "id": "p10",
+      "mode": "implement",
+      "dependsOn": [
+        "p09"
+      ],
+      "prompt": null,
+      "activePlan": null,
+      "allowedPaths": [],
+      "maxChangedFiles": null,
+      "timeoutSeconds": null,
+      "tests": [],
+      "requiredOutputs": [],
+      "acceptance": {
+        "source": null,
+        "requirements": null,
+        "cases": {
+          "normal": null,
+          "failure": null,
+          "boundary": null,
+          "dataConsistency": null
+        },
+        "G1": "NOT_CONFIGURED",
+        "G2": "NOT_RUN",
+        "G3": "NOT_CONFIGURED",
+        "G4": "NOT_CONFIGURED",
+        "G5": "NOT_RUN"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": null,
+        "status": "NOT_RUN"
+      }
+    },
+    {
+      "id": "p11",
+      "mode": "implement",
+      "dependsOn": [
+        "p10"
+      ],
+      "prompt": null,
+      "activePlan": null,
+      "allowedPaths": [],
+      "maxChangedFiles": null,
+      "timeoutSeconds": null,
+      "tests": [],
+      "requiredOutputs": [],
+      "acceptance": {
+        "source": null,
+        "requirements": null,
+        "cases": {
+          "normal": null,
+          "failure": null,
+          "boundary": null,
+          "dataConsistency": null
+        },
+        "G1": "NOT_CONFIGURED",
+        "G2": "NOT_RUN",
+        "G3": "NOT_CONFIGURED",
+        "G4": "NOT_CONFIGURED",
+        "G5": "NOT_RUN"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": null,
+        "status": "NOT_RUN"
+      },
+      "unresolvedBoundary": "P11 actual external AI connection requires confirmed policy; no real transfer during verification"
+    },
+    {
+      "id": "p12",
+      "mode": "implement",
+      "dependsOn": [
+        "p11"
+      ],
+      "prompt": null,
+      "activePlan": null,
+      "allowedPaths": [],
+      "maxChangedFiles": null,
+      "timeoutSeconds": null,
+      "tests": [],
+      "requiredOutputs": [],
+      "acceptance": {
+        "source": null,
+        "requirements": null,
+        "cases": {
+          "normal": null,
+          "failure": null,
+          "boundary": null,
+          "dataConsistency": null
+        },
+        "G1": "NOT_CONFIGURED",
+        "G2": "NOT_RUN",
+        "G3": "NOT_CONFIGURED",
+        "G4": "NOT_CONFIGURED",
+        "G5": "NOT_RUN"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": null,
+        "status": "NOT_RUN"
+      },
+      "unresolvedBoundary": "P12 unresolved deletion/retention policy cannot be auto-decided"
+    }
+  ],
+  "preparationCheckpoint": {
+    "status": "BLOCKED",
+    "configurationStatus": "NOT_CONFIGURED_BASELINE_AND_RUNNER_BINDINGS_REQUIRED",
+    "completed": [],
+    "currentPhase": "p01",
+    "corrections": {
+      "p01": 2
+    },
+    "queueSubmitted": false,
+    "uiReadiness": "USER_CONFIRMED_COMPLETE",
+    "uiEvidence": "UI_CHECKPOINT.md",
+    "runtimeStateCreated": false,
+    "candidateCheckpoint": "backend-checkpoint.json",
+    "dataRoot": "C:\\Users\\USER\\GeulbitData",
+    "volumeId": "\\\\?\\Volume{57d6ac00-0814-4071-b94d-ab16dd0748fc}\\"
+  },
+  "integration": {
+    "existingKit": "C:/Projects/dream-hs-automation-bounded-v3",
+    "existingRunner": "automation/runner.mjs",
+    "existingRecovery": "automation/recovery.mjs",
+    "contractNotes": "ACCEPTANCE.md",
+    "ready": false,
+    "tools": null,
+    "baselineSnapshot": null,
+    "outputDir": null,
+    "queueApprovalReceipt": null,
+    "phaseSources": null,
+    "requiredSSOT": [
+      "AGENTS.md",
+      "DECISIONS.md",
+      "ARCHITECTURE.md",
+      "ACTIVE_PLAN.md"
+    ],
+    "missingSSOT": [
+      "DECISIONS.md",
+      "ARCHITECTURE.md",
+      "ACTIVE_PLAN.md"
+    ],
+    "blockedBy": [
+      "E_VOLUME_EXFAT_HEALTH_WARNING",
+      "P01_CLAUDE_REVIEW_UNAVAILABLE",
+      "PHASE_SOURCES_MISSING",
+      "VERIFIED_GIT_HEAD_MISSING",
+      "SQLITE_PYTEST_BINDING_UNVERIFIED",
+      "CLAUDE_REVIEW_BINDING_UNVERIFIED",
+      "TEST_FAILURE_RECOVERY_BINDING_UNVERIFIED",
+      "SUCCESS_LOG_RETENTION_BINDING_UNVERIFIED"
+    ]
+  },
+  "policy": {
+    "maxAutomaticCorrectionsPerPhase": 2,
+    "allGatesRequired": [
+      "G1",
+      "G2",
+      "G3",
+      "G4",
+      "G5"
+    ],
+    "advanceOwner": "existing Runner",
+    "implementationStopsAtPhaseEnd": true,
+    "forbidden": [
+      "automatic commit",
+      "automatic push",
+      "automatic merge",
+      "automatic deploy",
+      "HOLD adoption",
+      "real Google authentication",
+      "external AI transfer",
+      "student data",
+      "production access"
+    ],
+    "excluded": [
+      "P13 OCR v1.1",
+      "production deployment",
+      "final public approval"
+    ]
+  },
+  "existingEvidence": {
+    "status": "REFERENCE_ONLY_NOT_PHASE_PASS",
+    "uiCheckpoint": "UI_CHECKPOINT.md",
+    "uiMetrics": "artifacts/ui-verification/results.json",
+    "priorBackendPassed": 55,
+    "targetedCandidates": [
+      {
+        "file": "backend/tests/test_writing_analysis.py",
+        "covers": [
+          "autosave conflict",
+          "versions/diff",
+          "analysis job",
+          "revision/undo",
+          "empty input",
+          "result reopening"
+        ]
+      },
+      {
+        "file": "backend/tests/test_core_resources.py",
+        "covers": [
+          "settings validation",
+          "duplicate resource",
+          "pagination",
+          "invalid file",
+          "delete guard",
+          "secure file routing"
+        ]
+      },
+      {
+        "file": "backend/tests/test_local_admin.py",
+        "covers": [
+          "local authentication",
+          "CSRF",
+          "rate limit",
+          "external denial",
+          "secret replacement failure"
+        ]
+      },
+      {
+        "file": "backend/tests/test_backup_reset.py",
+        "covers": [
+          "invalid restore",
+          "reset confirmation",
+          "export"
+        ]
+      },
+      {
+        "file": "backend/tests/test_language_analysis.py",
+        "covers": [
+          "quote ranges",
+          "quote apply denial",
+          "local analysis"
+        ]
+      },
+      {
+        "file": "backend/tests/test_ui_settings.py",
+        "covers": [
+          "existing settings store",
+          "invalid library preference"
+        ]
+      }
+    ],
+    "phaseAssignments": null
+  },
+  "finalValidation": {
+    "status": "PLAN_ONLY_NOT_EXECUTED",
+    "fixture": "backend/tests/conftest.py: tmp_path SQLite and MemorySecretStore",
+    "commands": [
+      {
+        "cwd": ".",
+        "argv": [
+          ".venv/Scripts/python.exe",
+          "-m",
+          "pytest",
+          "backend/tests",
+          "-q",
+          "-p",
+          "no:cacheprovider"
+        ],
+        "passCountParser": "UNBOUND",
+        "minimumPass": null
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "pnpm",
+          "exec",
+          "tsc",
+          "--noEmit"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "pnpm",
+          "run",
+          "build"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "node",
+          "scripts/book-layout.test.mjs"
+        ]
+      },
+      {
+        "cwd": ".",
+        "argv": [
+          "node",
+          "scripts/verify-library.cjs"
+        ],
+        "requires": "isolated synthetic-data server; scripts/ui-verification-server.py"
+      }
+    ],
+    "requiredAdditionalCases": "Approved Phase contracts, failure/consistency cases and final independent review must be bound before execution"
+  }
+}

@@ -1,0 +1,13 @@
+{% extends "local_admin/base.html" %}
+{% block title %}관리자 로그인 · 글빛{% endblock %}
+{% block content %}<form class="card" method="post">
+  <h2>관리자 로그인</h2>
+  {% if expired %}<div class="alert">10분 동안 활동이 없어 세션이 만료되었습니다.</div>{% endif %}
+  {% if setup_done %}<div class="alert ok">관리자 비밀번호를 설정했습니다. 로그인해 주세요.</div>{% endif %}
+  {% if changed %}<div class="alert ok">보안 설정을 변경해 기존 세션을 종료했습니다. 다시 로그인해 주세요.</div>{% endif %}
+  {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <label for="password">관리자 비밀번호</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+  <button type="submit">로그인</button>
+</form>{% endblock %}
+

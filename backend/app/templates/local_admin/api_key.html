@@ -1,0 +1,29 @@
+{% extends "local_admin/base.html" %}
+{% block title %}표준국어대사전 API 키 · 글빛{% endblock %}
+{% block content %}
+{% if error %}<div class="alert">{{ error }}</div>{% endif %}{% if message %}<div class="alert ok">{{ message }}</div>{% endif %}
+<section class="card">
+  <div class="row"><h2>표준국어대사전 API 연결</h2><span class="status">{{ dictionary.status or ("not_configured" if not configured else "available") }}</span></div>
+  <p>현재 키: <code>{{ masked or "등록되지 않음" }}</code></p>
+  <p class="muted">마지막 연결 확인: {{ dictionary.checkedAt or "확인 기록 없음" }}</p>
+</section>
+<form class="card" method="post">
+  <h2>{% if configured %}API 키 변경{% else %}API 키 최초 등록{% endif %}</h2>
+  <p>새 키로 공식 사전 연결 시험이 성공한 경우에만 DPAPI 저장소의 키를 교체합니다. 전체 키는 저장 후 다시 표시되지 않습니다.</p>
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <label for="password">관리자 비밀번호 재확인</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+  <label for="newKey">새 API 키</label><input id="newKey" name="newKey" type="password" minlength="32" maxlength="32" autocomplete="off" required>
+  <label for="newKeyConfirm">새 API 키 확인</label><input id="newKeyConfirm" name="newKeyConfirm" type="password" minlength="32" maxlength="32" autocomplete="off" required>
+  {% if configured %}<label for="confirmation">변경 확인 문구: {{ confirmation_phrase }}</label><input id="confirmation" name="confirmation" autocomplete="off" required>{% endif %}
+  <button type="submit" {% if not storage_available %}disabled{% endif %}>연결 시험 후 저장</button>
+</form>
+<form class="card" method="post" action="{{ url_for('change_password') }}">
+  <h2>관리자 비밀번호 변경</h2><input type="hidden" name="csrf" value="{{ csrf }}">
+  <label for="currentPassword">현재 비밀번호</label><input id="currentPassword" name="currentPassword" type="password" autocomplete="current-password" required>
+  <label for="newPassword">새 비밀번호</label><input id="newPassword" name="newPassword" type="password" minlength="12" autocomplete="new-password" required>
+  <label for="newPasswordConfirm">새 비밀번호 확인</label><input id="newPasswordConfirm" name="newPasswordConfirm" type="password" minlength="12" autocomplete="new-password" required>
+  <button type="submit" class="secondary">비밀번호 변경</button>
+</form>
+<form class="card" method="post" action="{{ url_for('logout') }}"><input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit" class="secondary">로그아웃</button></form>
+{% endblock %}
+
