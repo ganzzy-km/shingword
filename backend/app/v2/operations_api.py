@@ -56,7 +56,14 @@ def report(identifier):
     interactions=AIInteraction.query.filter_by(user_id=g.principal.id,analysis_id=run.id).all() if include else []
     questions=[q['question'] for a in interactions for q in (a.questions or []) if isinstance(q,dict) and isinstance(q.get('question'),str)]
     notes=[a.note for a in interactions if a.note] if include else []
-    args=dict(owner_id=item.owner_id,title=item.title or '제목 없는 글',text=version.content,version_id=version.id,run_id=run.id,analysis=presentable_snapshot(run),font_path=current_app.config.get('PDF_FONT_PATH',Path(__file__).resolve().parents[3]/'public/fonts/noto-sans-kr-regular.ttf'),max_pages=current_app.config.get('PDF_MAX_PAGES',100),max_bytes=current_app.config.get('PDF_MAX_BYTES',50*1024*1024),expires_at=item.expires_at.replace(tzinfo=timezone.utc).timestamp() if item.expires_at else None,now=time.time,include_ai=include,ai_questions=questions,thought_notes=notes)
+    context=run.context_snapshot if isinstance(run.context_snapshot,dict) else {}
+    header=context.get('essayContext')
+    header=header if isinstance(header,dict) else {}
+    # A selected run keeps its header after later draft metadata edits. Older
+    # runs without a captured title retain the existing title fallback only.
+    title=header.get('title') if isinstance(header.get('title'),str) else item.title
+    inquiry=header.get('inquiryQuestion') if isinstance(header.get('inquiryQuestion'),str) else ''
+    args=dict(owner_id=item.owner_id,title=title or '제목 없는 글',text=version.content,version_id=version.id,run_id=run.id,analysis=presentable_snapshot(run),font_path=current_app.config.get('PDF_FONT_PATH',Path(__file__).resolve().parents[3]/'public/fonts/noto-sans-kr-regular.ttf'),max_pages=current_app.config.get('PDF_MAX_PAGES',100),max_bytes=current_app.config.get('PDF_MAX_BYTES',50*1024*1024),expires_at=item.expires_at.replace(tzinfo=timezone.utc).timestamp() if item.expires_at else None,now=time.time,include_ai=include,ai_questions=questions,thought_notes=notes,inquiry_question=inquiry)
     db.session.remove() # no database transaction during PDF layout
     try:data=create_report(g.principal,**args)
     except PdfRejected as e:return api_error(str(e),'PDF를 만들 수 없습니다.',422)

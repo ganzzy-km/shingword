@@ -62,7 +62,7 @@ def _fix_unicode_maps(document, font_path, source, extra_fonts=()):
 
 def create_report(user, *, owner_id, title, text, version_id, run_id, analysis,
                   font_path, max_pages, max_bytes, expires_at, now,
-                  include_ai=False, ai_questions=(), thought_notes=()):
+                  include_ai=False, ai_questions=(), thought_notes=(), inquiry_question=""):
     require_private_owner(user, owner_id, expires_at=expires_at, now=now())
     source_hash = hashlib.sha256(text.encode()).hexdigest()
     if text != _canonical(text) or not version_id or not run_id or analysis.get("input") != {"versionId": version_id, "sha256": source_hash, "codePoints": len(text)}:
@@ -77,7 +77,10 @@ def create_report(user, *, owner_id, title, text, version_id, run_id, analysis,
         manifest = {"schemaVersion": "geulbit.pdf/1", "title": title, "text": text,
                     "sha256": source_hash, "versionId": version_id, "runId": run_id}
         # Copy only presentable sections, never runtime paths, user identity or arbitrary manifest JSON.
-        paragraphs = [title, f"분석 버전: {version_id} / 실행: {run_id}", "작성한 본문", text, "분석의 한계"]
+        paragraphs = [title]
+        if inquiry_question:
+            paragraphs.append(f"탐구질문: {inquiry_question}")
+        paragraphs.extend([f"분석 버전: {version_id} / 실행: {run_id}", "작성한 본문", text, "분석의 한계"])
         paragraphs.extend(analysis.get("limitations", []))
         for finding in analysis.get("findings", []):
             paragraphs.append(f"{finding.get('tier', '확인 필요')}: {finding.get('reason', '')}")
