@@ -1,0 +1,83 @@
+{
+  "status": "APPROVED_RETENTION_BASIS_RELEASE_SETTINGS_PENDING",
+  "policyVersion": "geulbit.private-beta/local-backup-doc7d-g5waiver-v1",
+  "enabled": false,
+  "operatorName": "서비스 운영자(사용자 본인; 지인 대상)",
+  "privacyContact": "개인정보 문의·동의 철회·삭제 요청은 서비스 운영자에게 기존 직접 연락 수단으로 요청",
+  "purpose": "Google 계정 식별, 개인 글 저장, 한국어 규범 분석, 자료 연결 및 사용자가 요청한 PDF 제공",
+  "requiredData": [
+    "검증된 Google sub",
+    "이메일",
+    "계정 상태 및 권한",
+    "동의 버전과 시각",
+    "직접 작성·업로드한 글과 자료",
+    "분석 결과",
+    "본문을 제외한 최소 보안 감사 기록"
+  ],
+  "optionalData": [
+    "Google 프로필 표시 이름·사진",
+    "명시적으로 선택한 피드백 반응 및 생각 메모"
+  ],
+  "requiredConsentText": "글빛의 계정 식별 및 글 저장·분석에 필요한 개인정보 처리 안내를 읽고 동의합니다. 동의하지 않으면 계정 생성과 글 저장 기능을 이용할 수 없습니다. AI 전송 동의는 포함되지 않습니다.",
+  "ageConfirmationText": "나는 만 14세 이상입니다. 만 14세 미만은 현재 가입할 수 없습니다.",
+  "thirdPartyNotice": "Google 인증을 이용하며, 외부 접속 시험에서는 ngrok이 HTTPS 트래픽을 중계합니다. 실제 AI 외부 전송은 꺼져 있습니다. 해당 제공자의 데이터 처리 조건을 대체하는 동의문이 아닙니다.",
+  "rights": "내 계정에서 개인정보 확인·계정 탈퇴, 내 글 목록에서 글별 삭제. 추가 문의는 기존 운영자 직접 연락 수단 사용.",
+  "releaseBlocks": [
+    "현재 소스 G1~G4 검증",
+    "운영 adapter 및 예약 작업 검증",
+    "실제 외부 신규 USER 가입 검증"
+  ],
+  "currentIsolation": "지정 계정만 접근하는 격리 시험. 일반 사용자 자동 ACTIVE 가입과 자동 삭제는 활성화하지 않음.",
+  "approvedRetention": {
+    "essayAndVersionsAndAnalyses": "마지막으로 성공한 실제 정규화 본문 변경 후 7일; 동일 내용 저장·조회·분석·제목 변경으로 연장하지 않음",
+    "dependentPrivateFiles": "에세이 종속 개인 파일은 참조 관계 확인 후 삭제; 공유 공용 자료 보호",
+    "independentPrivateDocuments": "last-document-body-change/7d-v1",
+    "accountsAndConsentsAfterWithdrawal": "최초 탈퇴 시각(UTC)부터 달력 기준 2개월. 말일은 해당 월 말일. 계정·동의를 삭제하고, 공용 자료가 있으면 식별정보를 제거한 최소 소유권 참조만 남김. 그 외 미해결 개인 참조는 BLOCKED.",
+    "normalSecurityLogsDays": 30,
+    "administratorAuditDays": 90,
+    "backup": "C: 로컬 암호화 SQLite Online Backup; 생성 후 7일; 격리 복원과 삭제·탈퇴 재적용 검증. 디스크 전체 고장 시 원본과 백업이 함께 손실될 수 있음."
+  },
+  "distributionScope": "지인 대상 비공개 베타; G5와 필수 기술 Gate 통과 시 조건부 공개 승인",
+  "requestedReleasePolicyChanges": {
+    "date": "2026-10-11",
+    "status": "APPROVED_LOCAL_C_BACKUP_DIRECT_CONTACT_CONDITIONAL_RELEASE",
+    "backupOmissionApproved": false,
+    "directOperatorContactApproved": true,
+    "publicReleaseApproved": false,
+    "separatePhysicalBackupRequired": false,
+    "dedicatedContactEmailRequired": false,
+    "conditionalReleaseApproved": true,
+    "G5": "WAIVED_BY_USER"
+  },
+  "backupMode": "7d-encrypted-local-c-v1",
+  "trustedRuntimeConfigurationExample": {
+    "ACCOUNT_RETENTION_POLICY": "withdrawal/calendar-2months-v1",
+    "ACCOUNT_RETENTION_APPROVED": false,
+    "RETENTION_NO_BACKUP_APPROVED": false,
+    "RETENTION_APPROVED": false,
+    "RETENTION_DATES_VERIFIED": false,
+    "RETENTION_POLICY": {
+      "basis": "last-successful-body-change/7d-v1",
+      "targetScope": "PRIVATE_ESSAY_GRAPH",
+      "backupRetention": "7d-encrypted-local-c-v1",
+      "privateDocuments": "SEPARATE_APPROVED_LIFECYCLE"
+    },
+    "ACCOUNT_PUBLIC_OWNER_ERASURE_APPROVED": false,
+    "RETENTION_LOCAL_BACKUP_APPROVED": false,
+    "PRIVATE_DOCUMENT_RETENTION_POLICY": "last-document-body-change/7d-v1"
+  },
+  "betaSignup": {
+    "enabled": false,
+    "policy": {
+      "approved": true,
+      "version": "geulbit.private-beta/local-backup-doc7d-g5waiver-v1",
+      "contact": "개인정보 문의·동의 철회·삭제 요청은 서비스 운영자에게 기존 직접 연락 수단으로 요청",
+      "notice": "지인 대상 개인 운영의 무료 비공개 베타입니다. 만 14세 이상만 이용할 수 있습니다.\nGoogle 계정 식별 정보와 직접 작성한 에세이를 로그인·저장·한국어 규범 분석에 사용합니다.\n에세이는 마지막 실제 본문 변경 후 7일 보존합니다. 같은 내용 저장·조회·재분석은 기간을 연장하지 않습니다. 종속 버전·분석·피드백·개인 파일을 함께 정리합니다. 독립 개인 자료도 마지막 실제 내용 변경 후 7일 보존하며 관련 분석·연결·개인 파일을 정리합니다. 공용 자료에는 이 7일 삭제를 적용하지 않습니다.\n탈퇴 후 계정·동의 기록은 달력 기준 2개월 보존 후 삭제하거나 공용 자료 소유권만 남기도록 식별정보를 제거합니다. 일반 보안 로그는 30일, 관리자 감사 로그는 90일 보존합니다.\n내려받은 PDF는 사용자 기기에 보관됩니다. 서버 PC가 꺼지거나 인터넷·ngrok이 중단되면 이용할 수 없습니다. C: 로컬 암호화 백업은 생성 후 7일 보존하며 복원 전 삭제·탈퇴 상태를 재검증합니다. 디스크 전체 고장 시 원본과 백업이 함께 손실되며 완전 복구를 보장하지 않습니다. 외부 AI 전송은 비활성입니다."
+    },
+    "ordinarySignup": "CONSENT_AND_14PLUS_THEN_ACTIVE_USER",
+    "adminAutoGrant": false,
+    "inactiveAutoRestore": false,
+    "publicOwnerReferenceErasureApproved": true,
+    "operatingActivation": "BLOCKED_UNTIL_BETA_RELEASE_GATES"
+  }
+}

@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react"
-import { api, errorMessage } from "./api"
+import { api, ApiError, errorMessage, resetApiSession, type AccountSession } from "./api"
 import Library from "./Library"
+import SourceTools from "./SourceTools"
+import TextSourceDialog from "./TextSourceDialog"
+import OcrReviewPanel from "./OcrReviewPanel"
+import OcrModeDialog, { type OcrMode } from "./OcrModeDialog"
+import { useEscapeLayer } from "./escape-navigation"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Screen = "dashboard" | "new-analysis" | "analysis-results" | "history" | "criteria" | "works" | "rules" | "settings"
@@ -80,6 +85,11 @@ interface SourceData {
   pages: number
   cards: number
   date: string
+  scope?: "PUBLIC" | "PRIVATE"
+  canManageScope?: boolean
+  latestRevisionId?: string
+  accessMode?: "MATCH_ONLY" | "VIEW" | "DOWNLOAD"
+  documentType?: string
   mimeType?: string
   size?: number
   ocr?: OcrInfo | null
@@ -87,6 +97,8 @@ interface SourceData {
 }
 interface OcrInfo {
   status: string
+  jobId?: string | null
+  reviewAvailable?: boolean
   label: string
   message: string
   language: string
@@ -290,10 +302,22 @@ interface RuleData {
   clause: string
   autoFixable: boolean
   contextRequired: boolean
+  categoryLabel: string
+  scope: string
+  active: boolean
+  version: string
+  incorrectExamples: string[]
+  correctExamples: string[]
+  exceptionExamples: string[]
+  primaryReference: {
+    reference: { title: string; pdfPageCount: number }
+    location: { pdfPages: number[] }
+    normsCatalogue: { provisionCount: number }
+  } | null
   source: {
     name: string
     url: string
-    checkedAt: string
+    checkedAt: string | null
   } | null
 }
 
@@ -353,7 +377,7 @@ function clearGlbitStorage() {
   for (const storage of [window.localStorage, window.sessionStorage]) {
     for (let index = storage.length - 1; index >= 0; index -= 1) {
       const key = storage.key(index)
-      if (key && /^glbit([:_-]|$)/i.test(key)) storage.removeItem(key)
+      if (key && /^(glbit|geulbit)([.:_-]|$)/i.test(key)) storage.removeItem(key)
     }
   }
 }
@@ -859,11 +883,13 @@ function Label({
 }
 
 function PrimaryBtn({
+  buttonRef,
   onClick,
   disabled,
   className = "",
   children,
 }: {
+  buttonRef?: React.Ref<HTMLButtonElement>
   onClick?: () => void
   disabled?: boolean
   className?: string
@@ -871,10 +897,11 @@ function PrimaryBtn({
 }) {
   return (
     <button
+      ref={buttonRef}
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-lg text-white font-semibold transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed ${className}`}
-      style={{ background: "#087F8C" }}
+      className={`gb-aux-primary rounded-lg text-white font-semibold transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed ${className}`}
+      style={{ background: "var(--green, #087F8C)" }}
     >
       {children}
     </button>
@@ -912,6 +939,9 @@ function FileRow({
   onPreview,
   onDelete,
   onOcr,
+  scope,
+  onScopeChange,
+  scopeBusy = false,
 }: {
   name: string
   pages: number
@@ -922,30 +952,35 @@ function FileRow({
   onPreview?: () => void
   onDelete?: () => void
   onOcr?: () => void
+  scope?: "PUBLIC" | "PRIVATE"
+  onScopeChange?: () => void
+  scopeBusy?: boolean
 }) {
   return (
-    <div className={`${CARD_CLS} p-5 flex items-center gap-4`}>
+    <div className={`${CARD_CLS} p-4 sm:p-5 flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4`}>
       <div className="w-10 h-10 rounded-lg bg-[#F0FAF9] flex items-center justify-center shrink-0 text-[#087F8C]">
         <SvgIcon d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex flex-wrap items-center gap-2 mb-1">
           <p className="text-[15px] font-semibold text-[#17212B] truncate">
             {name}
           </p>
           <Badge type={status} label={statusLabel} />
+          {scope && <span className="text-[12px] text-[#64748B]">{scope === "PUBLIC" ? "공용" : "개인"}</span>}
         </div>
         <p className="text-[13px] text-[#64748B]">
           {pages}페이지 · {date} 업로드{cards ? ` · 카드 ${cards}개` : ""}
         </p>
       </div>
-      <div className="flex gap-2 shrink-0">
-        {onOcr && (status === "warning" || status === "error") && (
+      <div className="flex flex-wrap gap-2 shrink-0 w-full sm:w-auto justify-end">
+        {onScopeChange && <button onClick={onScopeChange} disabled={scopeBusy} className={`h-9 px-3 text-[14px] disabled:opacity-40 ${OUTLINE_BTN}`}>{scopeBusy ? "처리 중..." : scope === "PUBLIC" ? "공개 중지" : "공용으로 전환"}</button>}
+        {onOcr && (
           <button
             onClick={onOcr}
             className="h-9 px-4 rounded-lg border border-[#B45309] text-[#B45309] text-[14px] font-semibold hover:bg-[#FFF4E5] transition-colors"
           >
-            OCR 확인
+            추출 글 확인
           </button>
         )}
         <button
@@ -992,7 +1027,9 @@ function OcrDialog({
   closeRef.current = onClose
   const titleId = `ocr-dialog-title-${model.kind}-${model.id}`
   const descriptionId = `ocr-dialog-description-${model.kind}-${model.id}`
-  const canRun = ["needs_ocr", "unavailable", "failed", "partial"].includes(
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useEscapeLayer("modal", true, () => { if (!busyRef.current) closeRef.current() }, dialogRef)
+  const canRun = model.kind !== "rubric" && ["needs_ocr", "unavailable", "failed", "partial"].includes(
     model.statusCode,
   )
   const hasText = model.pages.some((page) => page.text.trim().length > 0)
@@ -1011,11 +1048,6 @@ function OcrDialog({
 
   useEffect(() => {
     cancelRef.current?.focus()
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !busyRef.current) closeRef.current()
-    }
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [model.id])
 
   return (
@@ -1026,6 +1058,7 @@ function OcrDialog({
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -1034,7 +1067,7 @@ function OcrDialog({
       >
         <div className="px-5 sm:px-7 py-5 border-b border-[#E2E8F0]">
           <h2 id={titleId} className="text-[20px] font-bold text-[#17212B]">
-            OCR 실행 및 결과 확인
+            {model.kind === "rubric" ? "추출 글 확인" : "OCR 실행 및 결과 확인"}
           </h2>
           <p id={descriptionId} className="text-[14px] text-[#64748B] mt-1">
             원본과 추출 글을 비교한 뒤 필요한 부분을 수정해 주세요.
@@ -1169,6 +1202,7 @@ function ConfirmDialog({
   onInputChange,
   onConfirm,
   onClose,
+  errorText,
 }: {
   title: string
   description: string
@@ -1179,6 +1213,7 @@ function ConfirmDialog({
   onInputChange?: (value: string) => void
   onConfirm: () => void
   onClose: () => void
+  errorText?: string
 }) {
   const cancelRef = useRef<HTMLButtonElement>(null)
   const busyRef = useRef(busy)
@@ -1187,14 +1222,11 @@ function ConfirmDialog({
   closeRef.current = onClose
   const allowed = !requiredText || inputValue === requiredText
   const titleId = `confirm-dialog-${confirmLabel.replace(/\s/g, "-")}`
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useEscapeLayer("modal", true, () => { if (!busyRef.current) closeRef.current() }, dialogRef)
 
   useEffect(() => {
     cancelRef.current?.focus()
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !busyRef.current) closeRef.current()
-    }
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
   }, [titleId])
 
   return (
@@ -1205,6 +1237,7 @@ function ConfirmDialog({
       }}
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -1216,6 +1249,7 @@ function ConfirmDialog({
         <p className="text-[15px] text-[#475569] leading-7 mt-3">
           {description}
         </p>
+        {errorText && <p role="alert" className="text-[14px] text-[#C62828] mt-3">{errorText}</p>}
         {requiredText && (
           <div className="mt-5">
             <label className="block text-[14px] font-semibold text-[#334155] mb-1.5">
@@ -2350,6 +2384,7 @@ function AnalysisResultsScreen({
 
 // ─── Criteria ─────────────────────────────────────────────────────────────────
 function CriteriaScreen() {
+  const rubricStatus = (value: string) => ["확인 완료", "등록 완료"].includes(value) ? "확인 완료" : ["확인 필요", "OCR 확인 필요"].includes(value) ? "확인 필요" : value
   const [items, setItems] = useState<RubricData[]>([])
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState("")
@@ -2405,11 +2440,12 @@ function CriteriaScreen() {
       const detail = await api.get<RubricData>(`/rubrics/${item.id}`)
       const statusCode =
         detail.ocr?.status ??
+        (detail.correctedText?.trim() || detail.ocrText?.trim() ? "not_required" :
         (detail.status.includes("환경")
           ? "unavailable"
           : detail.status.includes("실패")
             ? "failed"
-            : "completed")
+            : "completed"))
       setOcrError("")
       setOcrDialog({
         kind: "rubric",
@@ -2510,12 +2546,12 @@ function CriteriaScreen() {
   const visible = items.filter(
     (item) =>
       item.name.toLowerCase().includes(search.toLowerCase()) &&
-      (!status || item.status === status),
+      (!status || rubricStatus(item.status) === status),
   )
   const badge = (value: string): BadgeType =>
-    value === "등록 완료"
+    rubricStatus(value) === "확인 완료"
       ? "success"
-      : value.includes("OCR")
+      : rubricStatus(value) === "확인 필요" || value.includes("OCR")
         ? "warning"
         : value.includes("실패") || value.includes("환경")
           ? "error"
@@ -2528,11 +2564,11 @@ function CriteriaScreen() {
           { label: "전체 평가 기준 자료", value: `${items.length}개` },
           {
             label: "사용 가능한 기준 카드",
-            value: `${items.filter((file) => file.status === "등록 완료").reduce((sum, file) => sum + file.cards, 0)}개`,
+              value: `${items.filter((file) => rubricStatus(file.status) === "확인 완료").reduce((sum, file) => sum + file.cards, 0)}개`,
           },
           {
             label: "사용자 확인 필요",
-            value: `${items.filter((file) => file.status.includes("OCR")).length}개`,
+            value: `${items.filter((file) => rubricStatus(file.status) === "확인 필요" || file.status.includes("OCR")).length}개`,
             highlight: true,
           },
           {
@@ -2568,8 +2604,8 @@ function CriteriaScreen() {
             className="h-10 px-3 rounded-lg border border-[#CBD5E1] text-[15px] text-[#475569] bg-white focus:outline-none focus:ring-2 focus:ring-[#087F8C]"
           >
             <option value="">OCR 상태 전체</option>
-            <option value="등록 완료">확인 완료</option>
-            <option value="OCR 확인 필요">확인 필요</option>
+            <option value="확인 완료">확인 완료</option>
+            <option value="확인 필요">확인 필요</option>
             <option value="OCR 실행 환경 필요">실행 환경 필요</option>
             <option value="OCR 일부 완료">일부 완료</option>
             <option value="처리 실패">처리 실패</option>
@@ -2578,7 +2614,7 @@ function CriteriaScreen() {
         <input
           ref={fileRef}
           type="file"
-          accept=".pdf,.png,.jpg,.jpeg,.txt,.docx"
+          accept="application/pdf,text/plain,.pdf,.txt"
           className="hidden"
           onChange={(event) => void upload(event.target.files?.[0])}
         />
@@ -2592,6 +2628,7 @@ function CriteriaScreen() {
         </PrimaryBtn>
       </div>
 
+      <p className="text-sm leading-7 text-[#64748B]">텍스트가 포함된 PDF·UTF-8 TXT를 등록하고 추출 글을 확인하세요. 스캔 자료의 OCR은 작품과 근거에서 이용할 수 있습니다.</p>
       <div className="space-y-3">
         {visible.length > 0 ? (
           visible.map((item) => (
@@ -2602,7 +2639,7 @@ function CriteriaScreen() {
               date={new Date(item.date).toLocaleDateString("ko-KR")}
               cards={item.cards || undefined}
               status={badge(item.status)}
-              statusLabel={item.status}
+              statusLabel={rubricStatus(item.status)}
               onPreview={
                 item.fileId
                   ? () =>
@@ -2614,7 +2651,7 @@ function CriteriaScreen() {
                   : undefined
               }
               onDelete={() => setDeleteTarget(item)}
-              onOcr={() => void openOcr(item)}
+              onOcr={item.correctedText?.trim() || item.ocrText?.trim() ? () => void openOcr(item) : undefined}
             />
           ))
         ) : (
@@ -2698,6 +2735,7 @@ function NewAnalysisScreen({
     inquiryQuestion: question,
     content: text,
     status,
+    revisionNumber,
   })
 
   const saveDraft = async () => {
@@ -2774,11 +2812,12 @@ function NewAnalysisScreen({
     try {
       const id = writingId ?? (await saveDraft())
       if (!id) return
-      await api.patch(`/writings/${id}`, writingPayload("분석 준비"))
+      const saved = await api.patch<WritingData>(`/writings/${id}`, writingPayload("분석 준비"))
+      setRevisionNumber(saved.revisionNumber)
       const job = await api.post<{
         analysisId: string
         jobId: string
-      }>("/analyses", { writingId: id, analysisTypes: ["전체 분석"] })
+      }>("/analyses", { writingId: id, content: text, revisionNumber: saved.revisionNumber, analysisTypes: ["전체 분석"] })
       setJobId(job.jobId)
       setJobProgress(0)
       await waitForAnalysis(job.jobId)
@@ -3331,15 +3370,30 @@ function HistoryScreen({
 }
 
 // ─── Works ────────────────────────────────────────────────────────────────────
-function WorksScreen() {
+function SourcePreview({ value, onClose }: { value: { id: string; title: string; content: string; accessMode?: string }; onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null)
+  useEffect(() => { dialog.current?.showModal() }, [])
+  return <dialog ref={dialog} onCancel={onClose} onClose={onClose} aria-label="자료 본문 미리보기" className="w-[calc(100%_-_2rem)] max-w-4xl max-h-[90vh] rounded-xl bg-white p-5 overflow-auto"><div className="flex justify-between gap-3"><h2>{value.title}</h2>{value.accessMode === "DOWNLOAD" && <a className={OUTLINE_BTN} href={`/api/files/source/${value.id}`}>원본 다운로드</a>}<button autoFocus className={OUTLINE_BTN} onClick={onClose}>닫기</button></div><pre className="whitespace-pre-wrap break-words text-sm leading-7 mt-5">{value.content}</pre></dialog>
+}
+
+function WorksScreen({ account }: { account: AccountSession }) {
+  const [textEntry, setTextEntry] = useState(false)
+  const [ocrModeOpen, setOcrModeOpen] = useState(false)
+  const uploadButton = useRef<HTMLButtonElement>(null)
+  const ocrMode = useRef<OcrMode>("precise")
+  const ocrProfile = useRef("auto")
+  const [ocrReview, setOcrReview] = useState<{ id: string; accessMode: string } | null>(null)
+  const [publicReference, setPublicReference] = useState(false)
+  const [previewText, setPreviewText] = useState<{ id: string; title: string; content: string; accessMode?: string } | null>(null)
   const [tab, setTab] = useState<"works" | "citations">("works")
   const [works, setWorks] = useState<SourceData[]>([])
   const [quotes, setQuotes] = useState<QuoteData[]>([])
   const [busy, setBusy] = useState(false)
   const [loadError, setLoadError] = useState("")
-  const [ocrDialog, setOcrDialog] = useState<OcrDialogModel | null>(null)
-  const [ocrBusy, setOcrBusy] = useState(false)
-  const [ocrError, setOcrError] = useState("")
+  const [scopeTarget, setScopeTarget] = useState<SourceData | null>(null)
+  const [scopeBusy, setScopeBusy] = useState(false)
+  const [scopeError, setScopeError] = useState("")
+  const [scopeMessage, setScopeMessage] = useState("")
   const [deleteTarget, setDeleteTarget] = useState<WorksDeleteTarget | null>(
     null,
   )
@@ -3366,10 +3420,20 @@ function WorksScreen() {
     if (!file) return
     const form = new FormData()
     form.append("file", file)
+    form.append("ocrMode", ocrMode.current)
+    form.append("ocrProfile", ocrProfile.current)
+    if (publicReference) {
+      form.append("scope", "PUBLIC")
+      form.append("documentType", "REFERENCE")
+      form.append("accessMode", "DOWNLOAD")
+      form.append("rightsConfirmed", "true")
+      form.append("rightsInfo", "2026-10-11 사용자 제공 PDF 전체 공용 등록·활용 승인. 별도 공식 라이선스 검증 아님.")
+    }
     setBusy(true)
     try {
-      await api.post("/source-documents", form)
+      const saved = await api.post<SourceData>("/source-documents", form)
       await load()
+      if (saved.ocr?.reviewAvailable) setOcrReview({ id: saved.id, accessMode: saved.accessMode ?? "VIEW" })
     } catch (error) {
       setLoadError(errorMessage(error))
     } finally {
@@ -3388,106 +3452,23 @@ function WorksScreen() {
     }
   }
 
-  const openSourceOcr = async (item: SourceData) => {
+  const changeScope = async () => {
+    if (!scopeTarget || scopeBusy) return
+    setScopeBusy(true)
+    setScopeError("")
     try {
-      const detail = await api.get<SourceData>(`/source-documents/${item.id}`)
-      const statusCode =
-        detail.ocr?.status ??
-        (detail.status.includes("환경")
-          ? "unavailable"
-          : detail.status.includes("실패")
-            ? "failed"
-            : "completed")
-      setOcrError("")
-      setOcrDialog({
-        kind: "source",
-        id: detail.id,
-        fileName: detail.originalName || detail.title,
-        mimeType: detail.mimeType || "application/octet-stream",
-        pageCount: detail.pages || 1,
-        status: detail.status,
-        statusCode,
-        reason:
-          detail.ocr?.message ||
-          (statusCode === "unavailable"
-            ? "이미지 또는 스캔 페이지에서 글자를 읽으려면 서버 컴퓨터의 한글 OCR 환경이 필요합니다."
-            : "추출 결과를 원본과 비교해 확인해야 합니다."),
-        previewUrl: `/api/files/sources/${detail.id}`,
-        pages: (detail.pageData ?? [])
-          .filter(
-            (page) =>
-              (page.correctedText ?? page.originalText ?? "").length > 0,
-          )
-          .map((page) => ({
-            pageNumber: page.pageNumber ?? 1,
-            text: page.correctedText ?? page.originalText ?? "",
-            confidence: page.confidence,
-            method: page.extractionMethod ?? "ocr",
-          })),
+      const saved = await api.patch<SourceData>(`/source-documents/${scopeTarget.id}/scope`, {
+        scope: scopeTarget.scope === "PUBLIC" ? "PRIVATE" : "PUBLIC",
+        expectedRevisionId: scopeTarget.latestRevisionId,
       })
+      // Update only after server confirmation; failed requests keep the old row.
+      setWorks(current => current.map(item => item.id === saved.id ? saved : item))
+      setScopeMessage(saved.scope === "PUBLIC" ? "공용으로 전환했습니다." : "공개를 중지했습니다.")
+      setScopeTarget(null)
     } catch (error) {
-      setLoadError(errorMessage(error))
-    }
-  }
-
-  const runSourceOcr = async () => {
-    if (!ocrDialog || ocrBusy) return
-    setOcrBusy(true)
-    setOcrError("")
-    try {
-      const detail = await api.post<SourceData>(
-        `/source-documents/${ocrDialog.id}/ocr`,
-      )
-      setOcrDialog((current) =>
-        current
-          ? {
-              ...current,
-              status: detail.status,
-              statusCode: detail.ocr?.status ?? current.statusCode,
-              reason: detail.ocr?.message ?? current.reason,
-              pageCount: detail.pages || current.pageCount,
-              pages: (detail.pageData ?? [])
-                .filter(
-                  (page) =>
-                    (page.correctedText ?? page.originalText ?? "").length > 0,
-                )
-                .map((page) => ({
-                  pageNumber: page.pageNumber ?? 1,
-                  text: page.correctedText ?? page.originalText ?? "",
-                  confidence: page.confidence,
-                  method: page.extractionMethod ?? "ocr",
-                })),
-            }
-          : current,
-      )
-      await load()
-    } catch (error) {
-      setOcrError(errorMessage(error))
+      setScopeError(errorMessage(error))
     } finally {
-      setOcrBusy(false)
-    }
-  }
-
-  const saveSourceOcr = async () => {
-    if (!ocrDialog || ocrBusy || ocrDialog.pages.length === 0) return
-    setOcrBusy(true)
-    setOcrError("")
-    try {
-      for (const [index, page] of ocrDialog.pages.entries()) {
-        await api.patch(
-          `/source-documents/${ocrDialog.id}/pages/${page.pageNumber}`,
-          {
-            correctedText: page.text,
-            confirm: index === ocrDialog.pages.length - 1,
-          },
-        )
-      }
-      await load()
-      setOcrDialog(null)
-    } catch (error) {
-      setOcrError(errorMessage(error))
-    } finally {
-      setOcrBusy(false)
+      setScopeBusy(false)
     }
   }
 
@@ -3525,23 +3506,36 @@ function WorksScreen() {
             </button>
           ))}
         </div>
+        <details className="writing-library-tools"><summary>자료 검색·개인 노트·공용 등록 신청</summary><SourceTools key={account.id} account={account}/></details>
         <input
           ref={fileRef}
           type="file"
-          accept=".pdf,.png,.jpg,.jpeg,.txt,.docx"
+          accept="application/pdf,text/plain,image/png,image/jpeg,image/tiff,.pdf,.txt,.png,.jpg,.jpeg,.tif,.tiff"
           className="hidden"
           onChange={(event) => void upload(event.target.files?.[0])}
         />
+        <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={() => setTextEntry(true)} disabled={busy} className={`h-11 px-5 text-[15px] ${OUTLINE_BTN}`}>
+          텍스트 직접 입력
+        </button>
         <PrimaryBtn
-          onClick={() => fileRef.current?.click()}
+          buttonRef={uploadButton}
+          onClick={() => setOcrModeOpen(true)}
           disabled={busy}
           className="flex items-center gap-2 h-10 px-5 text-[15px]"
         >
           <SvgIcon d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />{" "}
           자료 업로드
         </PrimaryBtn>
+        </div>
       </div>
 
+      <p className="text-sm text-[#64748B]">글을 직접 입력하거나 PDF·TXT·인쇄 이미지를 개인 작품 자료로 등록하세요. 스캔 자료는 OCR 검수 후 원문을 확정합니다.</p>
+      {textEntry && <TextSourceDialog onClose={() => setTextEntry(false)} onSaved={() => { setTextEntry(false); void load() }} />}
+      {ocrModeOpen && <OcrModeDialog returnFocus={uploadButton} onClose={() => setOcrModeOpen(false)} onChoose={(mode, profile) => { ocrMode.current = mode;ocrProfile.current = profile;setOcrModeOpen(false);fileRef.current?.click() }} />}
+      {ocrReview && <OcrReviewPanel documentId={ocrReview.id} accessMode={ocrReview.accessMode} onClose={() => setOcrReview(null)} onSaved={() => void load()} />}
+      {account.role === "ADMIN" && account.email === "ps25090@onedu.jje.go.kr" && <label className="flex gap-2 text-sm items-center"><input type="checkbox" checked={publicReference} onChange={e => setPublicReference(e.target.checked)} />제공한 규범집 전체를 공용 참고자료로 등록 (승인된 PDF만)</label>}
+      {previewText && <SourcePreview value={previewText} onClose={() => setPreviewText(null)} />}
       {tab === "works" && (
         <div className="space-y-3">
           {works.length > 0 ? (
@@ -3554,22 +3548,23 @@ function WorksScreen() {
                 cards={item.cards || undefined}
                 status={badge(item.status)}
                 statusLabel={item.status}
-                onPreview={() =>
-                  window.open(
-                    `/api/files/sources/${item.id}`,
-                    "_blank",
-                    "noopener,noreferrer",
-                  )
-                }
-                onDelete={() => setDeleteTarget({ kind: "source", item })}
-                onOcr={() => void openSourceOcr(item)}
+                scope={item.scope}
+                scopeBusy={scopeBusy}
+                onScopeChange={account.role === "ADMIN" && item.canManageScope ? () => { setScopeError(""); setScopeMessage(""); setScopeTarget(item) } : undefined}
+                onPreview={item.accessMode === "MATCH_ONLY" ? undefined : () => {
+                  if (item.ocr?.reviewAvailable) { setOcrReview({ id: item.id, accessMode: item.accessMode ?? "VIEW" }); return }
+                  void api.get<SourceData & { content?: string }>(`/source-documents/${item.id}`).then(detail => {
+                    setPreviewText({ id: detail.id, title: detail.title, content: detail.content ?? "", accessMode: detail.accessMode })
+                  }).catch(error => setLoadError(errorMessage(error)))
+                }}
+                onDelete={item.scope === "PUBLIC" && account.role !== "ADMIN" ? undefined : () => setDeleteTarget({ kind: "source", item })}
               />
             ))
           ) : (
             <Card>
               <EmptyState
                 title="등록된 작품 자료가 없습니다"
-                desc="자료 업로드 버튼으로 작품 파일을 추가해 주세요."
+                desc="텍스트 직접 입력 또는 자료 업로드로 작품을 추가해 주세요."
               />
             </Card>
           )}
@@ -3619,30 +3614,16 @@ function WorksScreen() {
           {loadError}
         </p>
       )}
-      {ocrDialog && (
-        <OcrDialog
-          model={ocrDialog}
-          busy={ocrBusy}
-          error={ocrError}
-          onChangePage={(pageNumber, text) =>
-            setOcrDialog((current) =>
-              current
-                ? {
-                    ...current,
-                    pages: current.pages.map((page) =>
-                      page.pageNumber === pageNumber ? { ...page, text } : page,
-                    ),
-                  }
-                : current,
-            )
-          }
-          onRun={() => void runSourceOcr()}
-          onSave={() => void saveSourceOcr()}
-          onClose={() => {
-            if (!ocrBusy) setOcrDialog(null)
-          }}
-        />
-      )}
+      {scopeMessage && <p role="status" className="text-[14px] text-[#087F8C]">{scopeMessage}</p>}
+      {scopeTarget && <ConfirmDialog
+        title={scopeTarget.scope === "PUBLIC" ? "자료 공개를 중지할까요?" : "공용으로 전환할까요?"}
+        description={`‘${scopeTarget.title || scopeTarget.originalName}’ 자료${scopeTarget.scope === "PUBLIC" ? "를 일반 사용자의 목록과 새 선택에서 제외합니다." : "의 확인된 판본을 로그인한 사용자에게 제공합니다."} 원문 열람·다운로드 범위는 바뀌지 않습니다.`}
+        confirmLabel={scopeTarget.scope === "PUBLIC" ? "공개 중지" : "공용으로 전환"}
+        busy={scopeBusy}
+        errorText={scopeError}
+        onConfirm={() => void changeScope()}
+        onClose={() => { if (!scopeBusy) setScopeTarget(null) }}
+      />}
       {deleteTarget && (
         <ConfirmDialog
           title={
@@ -3652,7 +3633,7 @@ function WorksScreen() {
           }
           description={
             deleteTarget.kind === "source"
-              ? `'${deleteTarget.item.title}' 자료와 저장된 OCR 결과가 삭제됩니다.`
+              ? `'${deleteTarget.item.title}' 자료와 연결되지 않은 판본이 삭제됩니다. 서버가 사용 중인 자료의 삭제는 차단합니다.`
               : "선택한 인용문 근거 카드가 삭제됩니다."
           }
           confirmLabel="삭제"
@@ -3670,6 +3651,7 @@ function WorksScreen() {
 
 // ─── Rules ────────────────────────────────────────────────────────────────────
 function RulesScreen() {
+  const [view, setView] = useState<"detectors" | "reference">("detectors")
   const [sel, setSel] = useState(0)
   const [rules, setRules] = useState<RuleData[]>([])
   const [loadError, setLoadError] = useState("")
@@ -3680,13 +3662,31 @@ function RulesScreen() {
       .catch((error) => setLoadError(errorMessage(error)))
   }, [])
   const r = rules[sel]
+  const reference = rules.find((rule) => rule.primaryReference)?.primaryReference
+  const checkedDate = (value: string | null | undefined) => {
+    if (!value) return "확인일 미등록"
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? "확인일 미등록" : date.toLocaleDateString("ko-KR")
+  }
   return (
     <div className="p-3 sm:p-8 max-w-[1184px] mx-auto space-y-5">
+      {reference && (
+        <Card className="p-4 text-[14px] text-[#334155] leading-6">
+          <p className="font-semibold">기본 규범 자료: {reference.reference.title}</p>
+          <p>문화체육관광부 한글 맞춤법과 국립국어원 규정 해설을 담은 제공 자료집 · {reference.reference.pdfPageCount}쪽 · {reference.normsCatalogue.provisionCount}개 규정</p>
+          <p className="text-[#64748B]">규정 원문과 해설을 기본 근거로 사용합니다. 문맥·허용 표기·예외를 확인한 규칙만 자동 탐지하며, 모든 규정을 자동 검사하는 것은 아닙니다.</p>
+        </Card>
+      )}
+      <div className="flex flex-wrap gap-2" aria-label="규칙 보기 선택">
+        <button className="px-4 py-2 rounded-lg border border-[#E2E8F0]" aria-pressed={view === "detectors"} onClick={() => setView("detectors")}>자동 탐지 후보 {rules.length}개</button>
+        <button className="px-4 py-2 rounded-lg border border-[#E2E8F0]" aria-pressed={view === "reference"} onClick={() => setView("reference")}>전체 규범 원문 134개</button>
+      </div>
+      {view === "reference" ? <NormsReferencePanel /> : (
       <div className="flex flex-col lg:flex-row gap-5">
-        <Card className="w-full lg:w-72 shrink-0 overflow-hidden">
+        <Card className="w-full lg:w-72 shrink-0 max-h-[640px] overflow-y-auto">
           {rules.map((rule, i) => (
             <button
-              key={rule.name}
+              key={rule.id}
               onClick={() => setSel(i)}
               className={`w-full text-left px-4 py-4 border-b border-[#F1F5F9] transition-colors ${
                 i === sel
@@ -3696,12 +3696,11 @@ function RulesScreen() {
             >
               <p className="text-[14px] font-semibold text-[#17212B]">
                 {rule.name}
+                {!rule.active && <span className="ml-2 text-[12px] text-[#64748B]">비활성</span>}
               </p>
               <p className="text-[12px] text-[#64748B] mt-0.5">
                 {rule.clause} ·{" "}
-                {rule.source
-                  ? new Date(rule.source.checkedAt).toLocaleDateString("ko-KR")
-                  : "확인일 없음"}
+                {checkedDate(rule.source?.checkedAt)}
               </p>
             </button>
           ))}
@@ -3719,11 +3718,10 @@ function RulesScreen() {
               </h3>
               <p className="text-[14px] text-[#64748B] mb-5">
                 {r.clause} · 마지막 확인:{" "}
-                {r.source
-                  ? new Date(r.source.checkedAt).toLocaleDateString("ko-KR")
-                  : "확인일 없음"}
+                {checkedDate(r.source?.checkedAt)}
               </p>
               <div className="space-y-4">
+                <p className="text-[13px] text-[#64748B]">{r.categoryLabel} · {r.id} · {r.version}</p>
                 <div className="p-4 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0]">
                   <p className="text-[13px] font-semibold text-[#64748B] mb-2">
                     학생용 설명
@@ -3731,35 +3729,48 @@ function RulesScreen() {
                   <p className="text-[15px] text-[#334155] leading-6">
                     {r.explanation}
                   </p>
+                  <p className="text-[13px] text-[#64748B] mt-2">검사 범위: {r.scope}</p>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-[#FDECEC] border border-[#C62828]/20">
                     <p className="text-[12px] font-semibold text-[#C62828] mb-1">
-                      잘못된 예
+                      {r.status === "오류 후보" ? "오류 후보 예문" : "확인할 표현"}
                     </p>
                     <p className="text-[16px] font-semibold text-[#17212B]">
-                      {r.pattern}
+                      {r.incorrectExamples?.join(" / ") || "예문 검토 중"}
                     </p>
                   </div>
                   <div className="p-4 rounded-lg bg-[#E9F7EF] border border-[#237A45]/20">
                     <p className="text-[12px] font-semibold text-[#237A45] mb-1">
-                      올바른 예
+                      비교할 정상 표현
                     </p>
                     <p className="text-[16px] font-semibold text-[#17212B]">
-                      {r.replacement || "문맥에 따라 직접 판단"}
+                      {r.correctExamples?.join(" / ") || "예문 검토 중"}
                     </p>
                   </div>
                 </div>
+                {r.exceptionExamples?.length > 0 && (
+                  <div className="p-4 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[14px] text-[#334155]">
+                    <p className="font-semibold mb-1">예외·보호 표현</p>
+                    <p>{r.exceptionExamples.join(" / ")}</p>
+                    <p className="text-[#64748B] mt-1">고유 어휘와 직접 인용은 문맥을 확인합니다.</p>
+                  </div>
+                )}
+                {r.primaryReference && (
+                  <p className="text-[14px] text-[#64748B]">
+                    기본 규범집 근거: PDF {r.primaryReference.location.pdfPages.join(", ")}쪽
+                  </p>
+                )}
                 <div className="flex items-center gap-3">
                   <span className="text-[14px] text-[#64748B]">
-                    판정 신뢰도:
+                    검사 상태:
                   </span>
                   <Badge
-                    type={r.autoFixable ? "success" : "warning"}
-                    label={r.autoFixable ? "높음" : "사람의 확인 필요"}
+                    type="warning"
+                    label={r.active ? r.status : "비활성 · 분석에 적용 안 함"}
                   />
                 </div>
-                {r.source && (
+                {r.source?.url ? (
                   <a
                     href={r.source.url}
                     target="_blank"
@@ -3768,10 +3779,93 @@ function RulesScreen() {
                   >
                     {r.source.name}에서 출처 확인
                   </a>
-                )}
+                ) : <p className="text-[14px] text-[#64748B]">{r.source?.name}</p>}
               </div>
             </>
           )}
+        </Card>
+      </div>
+      )}
+    </div>
+  )
+}
+
+interface NormProvisionSummary {
+  id: string
+  title: string
+  category: string
+  categoryLabel: string
+  execution: string
+  executionReason: string
+  detectorRuleIds: string[]
+  pages: number[]
+}
+interface NormProvisionDetail {
+  rule_id: string
+  detectorRuleIds: string[]
+  exception: { markers: { label: string; page: number }[] }
+  passages: { page: number; text: string; start: number; end: number }[]
+}
+
+function NormsReferencePanel() {
+  const [items, setItems] = useState<NormProvisionSummary[]>([])
+  const [indexLoading, setIndexLoading] = useState(true)
+  const [selected, setSelected] = useState("")
+  const [detail, setDetail] = useState<NormProvisionDetail | null>(null)
+  const [query, setQuery] = useState("")
+  const [category, setCategory] = useState("")
+  const [error, setError] = useState("")
+  useEffect(() => {
+    let cancelled = false
+    api.get<{ provisions: NormProvisionSummary[] }>("/rules/reference").then((data) => {
+      if (!cancelled) { setItems(data.provisions); setSelected(data.provisions[0]?.id || "") }
+    }).catch((e) => { if (!cancelled) setError(errorMessage(e)) }).finally(() => { if (!cancelled) setIndexLoading(false) })
+    return () => { cancelled = true }
+  }, [])
+  useEffect(() => {
+    setDetail(null); setError("")
+    if (!selected) return
+    let cancelled = false
+    api.get<NormProvisionDetail>(`/rules/reference/${encodeURIComponent(selected)}`).then((data) => {
+      if (!cancelled) setDetail(data)
+    }).catch((e) => { if (!cancelled) setError(errorMessage(e)) })
+    return () => { cancelled = true }
+  }, [selected])
+  const filtered = items.filter((item) => (!category || item.category === category) && `${item.title} ${item.id}`.includes(query.trim()))
+  useEffect(() => {
+    const matching = items.filter((item) => (!category || item.category === category) && `${item.title} ${item.id}`.includes(query.trim()))
+    if (!matching.some((item) => item.id === selected)) setSelected(matching[0]?.id || "")
+  }, [items, query, category, selected])
+  const current = items.find((item) => item.id === selected)
+  return (
+    <div className="space-y-4">
+      <p className="text-[14px] text-[#64748B]">전체 규정·붙임·허용·예외를 원문과 함께 확인합니다. ‘부분 탐지’도 해당 조항 전체를 자동 판정한다는 뜻은 아닙니다. 발음 규정은 글의 맞춤법 오류로 단정하지 않습니다.</p>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <input className="border border-[#E2E8F0] rounded-lg p-3 flex-1 min-w-0" aria-label="규정명 또는 조항 번호 검색" placeholder="규정명 또는 조항 번호 검색" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <select className="border border-[#E2E8F0] rounded-lg p-3" aria-label="규범 분야" value={category} onChange={(e) => setCategory(e.target.value)}>
+          <option value="">모든 분야</option><option value="SPELLING">한글 맞춤법</option><option value="PUNCTUATION">문장 부호</option><option value="STANDARD_WORD">표준어 사정</option><option value="PRONUNCIATION">표준 발음</option>
+        </select>
+      </div>
+      <p className="text-[13px] text-[#64748B]">{indexLoading ? "규정 목록을 불러오는 중입니다." : `${filtered.length}개 규정`}</p>
+      <div className="flex flex-col lg:flex-row gap-5">
+        <Card className="w-full lg:w-72 shrink-0 max-h-[560px] overflow-y-auto">
+          {filtered.map((item) => <button key={item.id} aria-pressed={selected === item.id} onClick={() => setSelected(item.id)} className={`w-full text-left px-4 py-3 border-b border-[#F1F5F9] ${selected === item.id ? "bg-[#F0FAF9]" : "hover:bg-[#F8FAFC]"}`}>
+            <p className="text-[14px] font-semibold">{item.title}</p><p className="text-[12px] text-[#64748B]">{item.detectorRuleIds.length ? "부분 탐지 · 원문 참조" : "원문 참조 전용"} · PDF {item.pages.join(", ")}쪽</p>
+          </button>)}
+          {!indexLoading && !filtered.length && <p className="p-4 text-[14px]">일치하는 규정이 없습니다.</p>}
+        </Card>
+        <Card className="flex-1 min-w-0 p-6 space-y-4">
+          <h3 className="text-[20px] font-bold">{current?.title || "규정 원문"}</h3>
+          <p className="text-[14px] text-[#64748B]">{current?.detectorRuleIds.length ? `연결된 제한적 검사: ${current.detectorRuleIds.join(", ")}` : "참조 전용 · 자동 오류 판정 없음"}</p>
+          {current && <p className="text-[13px] text-[#64748B]">{current.executionReason}</p>}
+          {error ? <p role="alert">{error}</p> : !selected && !indexLoading ? <p>검색어나 분야를 바꿔 규정을 선택해 주세요.</p> : !detail ? <p>규정 원문을 불러오는 중입니다.</p> : <>
+            <p className="text-[13px] text-[#64748B]">제공 PDF의 추출 원문입니다. 표의 열·띄어쓰기는 추출 시 배열이 달라질 수 있으므로 정상·허용·오류를 표의 순서만으로 판단하지 않습니다. 원자료 발행본은 2017·2018년이며 현행 규범 전체 대조는 미완료입니다.</p>
+            {!!detail.exception.markers.length && <p className="text-[13px] text-[#64748B]">붙임·허용·예외 표지 위치: {Array.from(new Set(detail.exception.markers.map((m) => `${m.label}(${m.page}쪽)`))).join(", ")}</p>}
+            {detail.passages.map((passage) => <section key={`${passage.page}:${passage.start}:${passage.end}`} className="border-t border-[#E2E8F0] pt-4">
+              <h4 className="font-semibold text-[14px] mb-2">PDF {passage.page}쪽</h4>
+              <p className="whitespace-pre-wrap break-words text-[14px] leading-7">{passage.text}</p>
+            </section>)}
+          </>}
         </Card>
       </div>
     </div>
@@ -3781,16 +3875,27 @@ function RulesScreen() {
 // ─── Settings ─────────────────────────────────────────────────────────────────
 function SettingsScreen({
   workspace,
+  workspaceReady = false,
+  workspaceLoadError = "",
   onWorkspaceUpdate,
   onWorkspaceReset,
 }: {
   workspace: WorkspaceConfig
+  workspaceReady?: boolean
+  workspaceLoadError?: string
   onWorkspaceUpdate: (w: WorkspaceConfig) => Promise<void>
   onWorkspaceReset: () => Promise<void>
 }) {
   const [section, setSection] = useState("작업 공간")
-  const [editName, setEditName] = useState(workspace.userName)
-  const [editWsName, setEditWsName] = useState(workspace.workspaceName)
+  const [workspaceDraft, setWorkspaceDraft] = useState<Partial<WorkspaceConfig>>({})
+  const editName = workspaceDraft.userName ?? (workspaceReady ? workspace.userName : "")
+  const editWsName = workspaceDraft.workspaceName ?? (workspaceReady ? workspace.workspaceName : "")
+  const setEditName = (value: string) => setWorkspaceDraft(draft => ({ ...draft, userName: value }))
+  const setEditWsName = (value: string) => setWorkspaceDraft(draft => ({ ...draft, workspaceName: value }))
+  const retainWorkspaceDraft = (draft: Partial<WorkspaceConfig>, submitted: WorkspaceConfig) => ({
+    ...(draft.userName !== undefined && draft.userName !== submitted.userName ? { userName: draft.userName } : {}),
+    ...(draft.workspaceName !== undefined && draft.workspaceName !== submitted.workspaceName ? { workspaceName: draft.workspaceName } : {}),
+  })
   const [resetInput, setResetInput] = useState("")
   const [showReset, setShowReset] = useState(false)
   const [settings, setSettings] = useState<SettingsData | null>(null)
@@ -3825,12 +3930,26 @@ function SettingsScreen({
     try {
       const saved = await api.patch<SettingsData>("/settings", changes)
       setSettings(saved)
+      window.dispatchEvent(new Event("geulbit-settings-updated"))
       setActionMessage("설정을 저장했습니다.")
     } catch (error) {
       setActionMessage(errorMessage(error))
     } finally {
       setBusy(false)
     }
+  }
+
+  const saveWorkspace = async () => {
+    if (!workspaceReady || busy) return
+    const submitted = { userName: editName, workspaceName: editWsName }
+    setBusy(true);setActionMessage("")
+    try {
+      await onWorkspaceUpdate(submitted)
+      setWorkspaceDraft(draft => retainWorkspaceDraft(draft, submitted))
+      if (settings) await saveSettings({ autosaveInterval: settings.autosaveInterval })
+      else setActionMessage("작업 공간 정보를 저장했습니다.")
+    } catch (error) { setActionMessage(errorMessage(error)) }
+    finally { setBusy(false) }
   }
 
   const createBackup = async () => {
@@ -4025,9 +4144,10 @@ function SettingsScreen({
                 <h2 className="text-[18px] font-bold text-[#17212B] mb-5">
                   작업 공간
                 </h2>
+                {!workspaceReady && <p role={workspaceLoadError ? "alert" : "status"} className="mb-4 text-sm leading-7">{workspaceLoadError || "작업 공간 정보를 불러오는 중입니다."}</p>}
                 <div className="space-y-5">
                   {[
-                    { label: "사용자 이름", val: editName, set: setEditName },
+                    { label: "작업 공간 표시 이름 (Google 계정과 별개)", val: editName, set: setEditName },
                     {
                       label: "작업 공간 이름",
                       val: editWsName,
@@ -4038,6 +4158,7 @@ function SettingsScreen({
                       <Label>{f.label}</Label>
                       <input
                         value={f.val}
+                        disabled={!workspaceReady || busy}
                         onChange={(e) => f.set(e.target.value)}
                         className="w-full max-w-sm h-12 px-4 rounded-lg border border-[#CBD5E1] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#087F8C]"
                       />
@@ -4074,17 +4195,8 @@ function SettingsScreen({
                 </div>
                 <div className="pt-5 mt-5 border-t border-[#E2E8F0]">
                   <PrimaryBtn
-                    onClick={async () => {
-                      await onWorkspaceUpdate({
-                        userName: editName,
-                        workspaceName: editWsName,
-                      })
-                      if (settings)
-                        await saveSettings({
-                          autosaveInterval: settings.autosaveInterval,
-                        })
-                    }}
-                    disabled={busy}
+                    onClick={() => void saveWorkspace()}
+                    disabled={!workspaceReady || busy}
                     className="h-10 px-6 text-[14px]"
                   >
                     변경사항 저장
@@ -4096,6 +4208,7 @@ function SettingsScreen({
                 <h3 className="text-[16px] font-bold text-[#17212B] mb-4">
                   백업 및 복원
                 </h3>
+                <p className="text-[14px] text-[#64748B] mb-4">전체 DB 백업·복원은 로컬 운영자 CLI로만 수행합니다. 개인 분석 보고서는 글 화면의 PDF 저장을 이용해 주세요.</p>
                 <div className="space-y-3">
                   <input
                     ref={restoreRef}
@@ -4122,7 +4235,8 @@ function SettingsScreen({
                       </div>
                       <button
                         onClick={() => runBackupAction(index)}
-                        disabled={busy}
+                        disabled
+                        title="전체 DB 백업·복원은 로컬 운영자 CLI에서만 수행할 수 있습니다."
                         className={`h-9 px-4 text-[14px] ml-4 shrink-0 disabled:opacity-40 ${OUTLINE_BTN}`}
                       >
                         {item.btn}
@@ -4137,7 +4251,7 @@ function SettingsScreen({
                   위험 영역
                 </h3>
                 <p className="text-[13px] text-[#64748B] mb-5">
-                  아래 작업은 되돌릴 수 없습니다. 신중하게 진행해 주세요.
+                  전체 삭제·초기화는 현재 서버에서 제공하지 않습니다. 승인되지 않은 삭제 정책을 적용하지 않습니다.
                 </p>
                 <div className="space-y-3">
                   {[
@@ -4167,6 +4281,8 @@ function SettingsScreen({
                         </p>
                       </div>
                       <button
+                        disabled
+                        title="현재 서버에서 지원하지 않는 작업입니다."
                         onClick={
                           item.danger
                             ? () => setShowReset(true)
@@ -4211,34 +4327,24 @@ function SettingsScreen({
               <div>
                 <Label>기본 분석 종류</Label>
                 <select
-                  value={settings?.defaultAnalysisType ?? "전체 분석"}
-                  onChange={(event) =>
-                    void saveSettings({
-                      defaultAnalysisType: event.target.value,
-                    })
-                  }
+                  value="전체 분석"
+                  disabled
                   className="h-12 px-4 rounded-lg border border-[#CBD5E1] text-[16px] text-[#17212B] bg-white focus:outline-none focus:ring-2 focus:ring-[#087F8C] min-w-[220px]"
                 >
                   <option>전체 분석</option>
-                  <option>논증 구조</option>
-                  <option>맞춤법</option>
                 </select>
+                <p className="text-sm leading-7 text-[#64748B]">현재 분석은 전체 분석으로 실행합니다. 결과 화면에서 필요한 피드백을 골라 볼 수 있습니다.</p>
               </div>
               <div>
                 <Label>주장과 근거 연결 점수 기준</Label>
                 <select
-                  value={settings?.argumentLinkThreshold ?? 7}
-                  onChange={(event) =>
-                    void saveSettings({
-                      argumentLinkThreshold: Number(event.target.value),
-                    })
-                  }
+                  value={7}
+                  disabled
                   className="h-12 px-4 rounded-lg border border-[#CBD5E1] text-[16px] text-[#17212B] bg-white focus:outline-none focus:ring-2 focus:ring-[#087F8C] min-w-[220px]"
                 >
                   <option value={7}>7점 이상 (높음)</option>
-                  <option value={5}>5점 이상 (보통)</option>
-                  <option value={3}>3점 이상 (낮음)</option>
                 </select>
+                <p className="text-sm leading-7 text-[#64748B]">연결은 구조적 단서와 출처를 함께 확인하는 고정 기준으로 판단합니다. 이 화면에서 승인 기준을 변경하지 않습니다.</p>
               </div>
               <div>
                 <Label>인용문 유사도 기준</Label>
@@ -4259,36 +4365,17 @@ function SettingsScreen({
               <div className="flex items-center justify-between max-w-sm py-4 border-t border-[#E2E8F0]">
                 <div>
                   <p className="text-[15px] font-semibold text-[#334155]">
-                    맞춤법 전체 적용 허용
+                    맞춤법 제안 검토
                   </p>
                   <p className="text-[13px] text-[#64748B]">
-                    명백한 오류를 한 번에 적용할 수 있습니다.
+                    일괄 자동 적용은 지원하지 않습니다. 원문과 제안을 비교한 뒤 개별적으로 확인하세요.
                   </p>
                 </div>
                 <button
-                  onClick={() =>
-                    void saveSettings({
-                      allowBulkSpellingFix: !(
-                        settings?.allowBulkSpellingFix ?? true
-                      ),
-                    })
-                  }
-                  aria-pressed={settings?.allowBulkSpellingFix ?? true}
-                  className="w-11 h-6 rounded-full relative cursor-pointer"
-                  style={{
-                    background:
-                      (settings?.allowBulkSpellingFix ?? true)
-                        ? "#087F8C"
-                        : "#CBD5E1",
-                  }}
+                  disabled
+                  className="rounded-lg border px-3 py-2 text-sm"
                 >
-                  <span
-                    className={`w-5 h-5 rounded-full bg-white absolute top-0.5 shadow-sm transition-all ${
-                      (settings?.allowBulkSpellingFix ?? true)
-                        ? "right-0.5"
-                        : "left-0.5"
-                    }`}
-                  />
+                  개별 확인
                 </button>
               </div>
             </Card>
@@ -4297,9 +4384,10 @@ function SettingsScreen({
           {section === "OCR 설정" && (
             <Card className="p-6 space-y-6">
               <h2 className="text-[18px] font-bold text-[#17212B]">OCR 설정</h2>
+              <p className="leading-7">스캔 PDF와 이미지는 작품과 근거에 업로드한 뒤 원본과 대조해 검수하세요. 검수창에서 선택 영역을 재인식할 수 있습니다. 인식은 서버의 고정된 한국어·영어 구성으로 실행합니다.</p>
               <div>
                 <Label>낮은 신뢰도 기준</Label>
-                <input
+                <input disabled
                   type="number"
                   min={0}
                   max={100}
@@ -4322,7 +4410,7 @@ function SettingsScreen({
               </div>
               <div>
                 <Label>OCR 언어</Label>
-                <select
+                <select disabled
                   value={settings?.ocrLanguage ?? "kor+eng"}
                   onChange={(event) =>
                     setSettings((current) =>
@@ -4347,7 +4435,7 @@ function SettingsScreen({
                     ocrLanguage: settings.ocrLanguage,
                   })
                 }
-                disabled={busy}
+                disabled
                 className="h-10 px-6 text-[14px]"
               >
                 OCR 설정 저장
@@ -4375,7 +4463,6 @@ function SettingsScreen({
               {[
                 ["고대비 모드", "highContrast"],
                 ["움직임 줄이기", "reduceMotion"],
-                ["색상 외 상태 표시", "nonColorStatus"],
               ].map(([label, key]) => {
                 const active = Boolean(settings?.[(key as keyof SettingsData)])
                 return (
@@ -4400,6 +4487,7 @@ function SettingsScreen({
                   </div>
                 )
               })}
+              <p className="text-sm leading-7 text-[#475569]">색상 외 상태 표시 · 항상 사용합니다. 상태는 색상뿐 아니라 글자로도 안내합니다.</p>
             </Card>
           )}
 
@@ -4409,7 +4497,7 @@ function SettingsScreen({
                 데이터 관리
               </h2>
               <p className="text-[14px] text-[#64748B]">
-                자료와 분석 기록은 이 컴퓨터의 SQLite 데이터베이스에 저장됩니다.
+                자료와 분석 기록은 검증된 로컬 SQLite 저장소에 저장됩니다. DB 백업은 로컬 운영자 CLI에서, 개인 보고서는 글 화면의 PDF 저장에서 처리합니다.
               </p>
               <p className="text-[14px] text-[#64748B]">
                 마지막 백업:{" "}
@@ -4420,12 +4508,14 @@ function SettingsScreen({
               <div className="flex gap-3">
                 <PrimaryBtn
                   onClick={() => void createBackup()}
-                  disabled={busy}
+                  disabled
                   className="h-10 px-5 text-[14px]"
                 >
                   백업 만들기
                 </PrimaryBtn>
                 <button
+                  disabled
+                  title="현재 서버에서 지원하지 않는 내보내기입니다."
                   onClick={() => window.location.assign("/api/backups/export")}
                   className={`h-10 px-5 text-[14px] ${OUTLINE_BTN}`}
                 >
@@ -4447,21 +4537,26 @@ function SettingsScreen({
 
 // ─── App Root ─────────────────────────────────────────────────────────────────
 interface ScreenProps {
+  account: AccountSession
   onNav: (screen: Screen) => void
   onOpenAnalysis: (id: string) => void
   activeAnalysisId: string | null
   workspace: WorkspaceConfig
+  workspaceReady?: boolean
+  workspaceLoadError?: string
   onWorkspaceUpdate: (workspace: WorkspaceConfig) => Promise<void>
   onWorkspaceReset: () => Promise<void>
 }
 
 const SCREENS: Partial<Record<Screen, (props: ScreenProps) => React.ReactNode>> = {
   criteria: () => <CriteriaScreen />,
-  works: () => <WorksScreen />,
+  works: ({ account }) => <WorksScreen account={account} />,
   rules: () => <RulesScreen />,
-  settings: ({ workspace, onWorkspaceUpdate, onWorkspaceReset }) => (
+  settings: ({ workspace, workspaceReady, workspaceLoadError, onWorkspaceUpdate, onWorkspaceReset }) => (
     <SettingsScreen
       workspace={workspace}
+      workspaceReady={workspaceReady}
+      workspaceLoadError={workspaceLoadError}
       onWorkspaceUpdate={onWorkspaceUpdate}
       onWorkspaceReset={onWorkspaceReset}
     />
@@ -4488,25 +4583,91 @@ function screenFromPath(pathname: string): Screen {
   return match?.[0] ?? "dashboard"
 }
 
+function AdminOperations() {
+  const [users, setUsers] = useState<{id: string; role: string; status: string}[]>([])
+  const [message, setMessage] = useState("")
+  const load = async () => { try { setUsers(await api.get("/admin/users")); const state = await api.get<{database: string; retention: string}>("/admin/operations"); setMessage(`${state.database} · ${state.retention}`) } catch (e) { setMessage(errorMessage(e)) } }
+  useEffect(() => { void load() }, [])
+  return <section style={{padding: 20}}><h2>계정 승인 및 운영</h2><p>{message}</p>{users.map(u => <p key={u.id} style={{overflowWrap: "anywhere"}}>{u.id} · {u.role} · {u.status}{["ACTIVE", "INACTIVE"].map(status => <button className="gb-outline" key={status} onClick={async () => { try { await api.patch(`/admin/users/${u.id}`, {status}); await load() } catch(e) { setMessage(errorMessage(e)) } }}>{status === "ACTIVE" ? "승인" : "비활성화"}</button>)}</p>)}<button className="gb-outline" onClick={async () => {try {await api.patch("/admin/ai",{enabled:false});setMessage("AI 기능을 껐습니다.")} catch(e) {setMessage(errorMessage(e))}}}>AI 기능 끄기</button></section>
+}
+
 export default function App() {
+  const sessionIdentity = useRef<string | null>(null)
+  const [sessionReady, setSessionReady] = useState(false)
+  const [entered, setEntered] = useState(false)
+  const [account, setAccount] = useState<AccountSession | null>(null)
+  const [sessionError, setSessionError] = useState("")
+  const [sessionCode, setSessionCode] = useState("")
+  const checkSession = useRef<() => void>(() => undefined)
+  useEffect(() => {
+    let alive = true, serial = 0
+    const check = () => {
+      const request = ++serial
+      api.get<AccountSession>("/auth/session").then(session => {
+        if (!alive || request !== serial) return
+        if (sessionIdentity.current && sessionIdentity.current !== session.id) {
+          resetApiSession(); clearGlbitStorage(); setResetVersion(v => v + 1); setWorkspace(DEFAULT_WORKSPACE); setWorkspaceOwner(null);setWorkspaceLoadError("");setScreen("dashboard"); setActiveAnalysisId(null)
+        }
+        sessionIdentity.current = session.id; setAccount(session); setSessionReady(true); setEntered(true); setSessionError(""); setSessionCode("")
+      }).catch(e => {
+        if (!alive || request !== serial) return
+        setSessionReady(false); setSessionError(errorMessage(e)); setSessionCode(e instanceof ApiError ? e.code : "NETWORK_ERROR")
+      })
+    }
+    const required = () => { setSessionReady(false); check() }
+    const restored = (event: PageTransitionEvent) => { if (event.persisted) required() }
+    checkSession.current = check
+    check(); window.addEventListener("geulbit-auth-required", required); window.addEventListener("focus", check); window.addEventListener("pageshow", restored)
+    return () => { alive = false; window.removeEventListener("geulbit-auth-required", required); window.removeEventListener("focus", check); window.removeEventListener("pageshow", restored) }
+  }, [])
   const [screen, setScreen] = useState<Screen>(() =>
     screenFromPath(window.location.pathname),
   )
   const [workspace, setWorkspace] = useState<WorkspaceConfig>(DEFAULT_WORKSPACE)
+  const [workspaceOwner, setWorkspaceOwner] = useState<string | null>(null)
+  const [workspaceLoadError, setWorkspaceLoadError] = useState("")
+  const workspaceReady = sessionReady && !!account && workspaceOwner === account.id
   const [resetVersion, setResetVersion] = useState(0)
   const [activeAnalysisId, setActiveAnalysisId] = useState<string | null>(() =>
     new URLSearchParams(window.location.search).get("analysis"),
   )
+  const navigationEntries = useRef<{ key: string; path: string }[]>([])
+  const navigationIndex = useRef(0)
+  const undoNavigation=useRef(false)
+  const canNavigate=()=>window.dispatchEvent(new Event('geulbit-before-navigation',{cancelable:true}))
 
   useEffect(() => {
+    if (!sessionReady || !account) return
+    const owner = account.id
+    let alive = true
+    setWorkspaceOwner(null);setWorkspaceLoadError("")
     api
       .get<WorkspaceConfig>("/workspace")
-      .then(setWorkspace)
-      .catch(() => undefined)
-  }, [])
+      .then(value => { if (alive && sessionIdentity.current === owner) { setWorkspace(value);setWorkspaceOwner(owner) } })
+      .catch(error => { if (alive && sessionIdentity.current === owner) setWorkspaceLoadError(errorMessage(error)) })
+    return () => { alive = false }
+  }, [sessionReady, account?.id])
 
   useEffect(() => {
+    if (!navigationEntries.current.length) {
+      const key = crypto.randomUUID()
+      navigationEntries.current = [{ key, path: window.location.pathname + window.location.search }]
+      window.history.replaceState({ ...window.history.state, geulbitNavigationKey: key }, "")
+    }
     const handlePopState = () => {
+      const index = navigationEntries.current.findIndex(e => e.key === window.history.state?.geulbitNavigationKey)
+      if(undoNavigation.current){undoNavigation.current=false;return}
+      if(!canNavigate()){
+        if(index>=0 && index!==navigationIndex.current){undoNavigation.current=true;window.history.go(navigationIndex.current-index)}
+        else {const entry=navigationEntries.current[navigationIndex.current];if(entry)window.history.replaceState({geulbitNavigationKey:entry.key},'',entry.path)}
+        return
+      }
+      if (index >= 0) navigationIndex.current = index
+      else {
+        const key = crypto.randomUUID()
+        navigationEntries.current = [{ key, path: window.location.pathname + window.location.search }];navigationIndex.current = 0
+        window.history.replaceState({ ...window.history.state, geulbitNavigationKey: key }, "")
+      }
       setScreen(screenFromPath(window.location.pathname))
       setActiveAnalysisId(
         new URLSearchParams(window.location.search).get("analysis"),
@@ -4516,15 +4677,36 @@ export default function App() {
     return () => window.removeEventListener("popstate", handlePopState)
   }, [])
 
+  const rememberNavigation = (path: string, replace: boolean) => {
+    const key = crypto.randomUUID()
+    if (replace) { navigationEntries.current = [{ key, path }];navigationIndex.current = 0 }
+    else { navigationEntries.current = navigationEntries.current.slice(0, navigationIndex.current + 1);navigationEntries.current.push({ key, path });navigationIndex.current++ }
+    window.history[replace ? "replaceState" : "pushState"]({ geulbitNavigationKey: key }, "", path)
+  }
+  const back = (): boolean | Promise<boolean> => {
+    if(!canNavigate())return false
+    if (navigationIndex.current < 1 || window.history.state?.geulbitNavigationKey !== navigationEntries.current[navigationIndex.current]?.key) return false
+    return new Promise(resolve => {
+      const done = () => { clearTimeout(timer);window.removeEventListener("popstate", done);resolve(true) }
+      const timer = window.setTimeout(() => { window.removeEventListener("popstate", done);resolve(false) }, 1000)
+      window.addEventListener("popstate", done, { once: true });window.history.back()
+    })
+  }
+  useEscapeLayer("navigation", entered && sessionReady, back)
+
   const navigate = (target: Screen, replace = false) => {
+    if(!canNavigate())return
     setScreen(target)
     const path = SCREEN_PATHS[target]
     if (target !== "analysis-results") setActiveAnalysisId(null)
-    window.history[replace ? "replaceState" : "pushState"]({}, "", path)
+    rememberNavigation(path, replace)
   }
 
   const updateWorkspace = async (value: WorkspaceConfig) => {
+    const owner = sessionIdentity.current
+    if (!workspaceReady || !owner || owner !== account?.id) throw new Error("작업 공간 정보를 불러온 뒤 다시 시도해 주세요.")
     const saved = await api.patch<WorkspaceConfig>("/workspace", value)
+    if (sessionIdentity.current !== owner) throw new Error("계정이 변경되어 작업 공간 응답을 적용하지 않았습니다.")
     setWorkspace(saved)
   }
 
@@ -4539,36 +4721,53 @@ export default function App() {
   const openAnalysis = (id: string) => {
     setActiveAnalysisId(id)
     setScreen("analysis-results")
-    window.history.pushState(
-      {},
-      "",
-      `${SCREEN_PATHS["analysis-results"]}?analysis=${encodeURIComponent(id)}`,
-    )
+    rememberNavigation(`${SCREEN_PATHS["analysis-results"]}?analysis=${encodeURIComponent(id)}`, false)
   }
+
+  const logout = async () => {
+    await api.post("/auth/logout")
+    resetApiSession(); clearGlbitStorage(); sessionIdentity.current = null
+    setAccount(null); setSessionReady(false); setEntered(false); setResetVersion(v => v + 1)
+    setWorkspace(DEFAULT_WORKSPACE);setWorkspaceOwner(null);setWorkspaceLoadError("");setActiveAnalysisId(null); navigate("dashboard", true)
+    setSessionCode("LOGGED_OUT"); setSessionError("로그아웃했습니다.")
+    return true
+  }
+  const loginScreen = <main className="gb auth-screen"><section className="auth-card"><h1>글빛</h1><h2>{sessionCode === "LOGGED_OUT" ? "로그아웃 완료" : "로그인 상태 확인"}</h2><p role={sessionError ? "alert" : undefined}>{sessionError || "서버에서 로그인 상태를 확인하고 있습니다…"}</p>{sessionCode && <p className="auth-code">{sessionCode}</p>}{sessionError && <><p>{sessionCode === "NETWORK_ERROR" ? "네트워크 연결을 확인하고 다시 시도해 주세요." : "Google 로그인 후 승인된 계정으로 이용할 수 있습니다. 세션이 만료됐다면 다시 로그인해 주세요."}</p><div className="account-actions"><a className="gb-primary" href="/api/auth/login">Google 로그인</a><button className="gb-outline" onClick={() => checkSession.current()}>상태 다시 확인</button></div></>}</section></main>
 
   // Writing and analysis routes belong to the current two-theme UI.
   // Keep existing resource/settings implementations inside that same shell.
   const auxiliary = ["criteria", "works", "rules", "settings"].includes(screen)
   const render = auxiliary ? SCREENS[screen] : undefined
 
-  return (
+  if (!entered || !account) return loginScreen
+  return (<>
+    {!sessionReady && loginScreen}
+    <div hidden={!sessionReady} inert={!sessionReady}>
     <Library
       key={resetVersion}
       active={!auxiliary}
       section={screen}
       activeAnalysisId={activeAnalysisId}
-      userName={workspace.userName}
+      userName={account.displayName || account.email || ""}
+      account={account}
+      onLogout={logout}
       onNav={navigate}
+      onBack={back}
       onOpenAnalysis={openAnalysis}
     >
-      {render?.({
+      {render ? <>{render({
+        account,
         onNav: navigate,
         onOpenAnalysis: openAnalysis,
         activeAnalysisId,
         workspace,
+        workspaceReady,
+        workspaceLoadError,
         onWorkspaceUpdate: updateWorkspace,
         onWorkspaceReset: resetWorkspace,
       })}
+      {screen === "settings" && account.role === "ADMIN" && <AdminOperations />}</> : null}
     </Library>
-  )
+    </div>
+  </>)
 }

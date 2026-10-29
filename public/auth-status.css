@@ -1,0 +1,22 @@
+body{margin:0;background:#f7f8f5;color:#263e34;font:16px/1.8 system-ui,sans-serif}main{box-sizing:border-box;max-width:480px;margin:12vh auto;padding:32px;background:#fff;border:1px solid #e5e4db;border-radius:12px}h1{color:#31594b}a{display:inline-block;margin:8px 12px 8px 0;color:#31594b}a:focus-visible{outline:2px solid #8b9c72;outline-offset:4px}@media(max-width:520px){main{margin:32px 16px;padding:24px}}
+.enrollment-form label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}.enrollment-form input[type=checkbox]{width:18px;height:18px;flex-shrink:0;margin-top:6px;accent-color:#285740}.enrollment-form button{display:block;width:100%;min-height:44px;border:0;border-radius:10px;padding:12px 16px;background:#285740;color:#fff;font:600 15px/1.5 system-ui,sans-serif;cursor:pointer}.enrollment-form :focus-visible{outline:3px solid #597c4c;outline-offset:3px}
+.enrollment-page{max-width:600px;margin:6vh auto;padding:32px}
+.enrollment-page h1{margin:0 0 8px;font-size:28px;line-height:1.5}
+.enrollment-page h2{margin:0;font-size:22px;line-height:1.6}
+.enrollment-intro{margin:14px 0 24px;color:#5b6c62;font-size:14px;line-height:1.8}
+.privacy-sections{display:grid;gap:10px}
+.privacy-sections details{border:1px solid #dfe6dc;border-radius:10px;background:#fbfcf8;overflow:hidden}
+.privacy-sections summary{display:flex;align-items:center;justify-content:space-between;gap:16px;box-sizing:border-box;min-height:54px;padding:14px 16px;list-style:none;cursor:pointer;font-size:15px;font-weight:600;line-height:1.7;touch-action:manipulation}
+.privacy-sections summary::-webkit-details-marker{display:none}
+.privacy-sections summary::after{content:"+";flex-shrink:0;color:#58735b;font-size:20px;font-weight:400;line-height:1}
+.privacy-sections details[open]>summary::after{content:"−"}
+.privacy-sections details[open]>summary{color:#285740;background:#f0f4eb}
+.privacy-sections summary:hover{background:#f0f4eb}
+.privacy-sections summary:focus-visible{outline:3px solid #597c4c;outline-offset:-3px;border-radius:9px}
+.privacy-section-content{margin:0;padding:16px;color:#526258;font-size:14px;line-height:1.9;white-space:pre-line;overflow-wrap:anywhere}
+.enrollment-page .enrollment-form{margin-top:24px;padding-top:16px;border-top:1px solid #e5e9e0}
+.enrollment-page .enrollment-form p{margin:12px 0}
+.enrollment-page .enrollment-form label{min-height:44px;font-size:14px;line-height:1.8}
+.enrollment-page .enrollment-form button{margin-top:18px;min-height:48px}
+.enrollment-note{margin:16px 0 0;color:#65736a;font-size:13px;line-height:1.8}
+@media(max-width:650px){.enrollment-page{margin:24px 12px;padding:24px 20px}.enrollment-page h2{font-size:20px}.privacy-sections summary{padding:14px;font-size:14px}.privacy-section-content{padding:14px}}
