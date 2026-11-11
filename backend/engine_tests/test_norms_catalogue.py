@@ -4,7 +4,7 @@ from pathlib import Path
 import unicodedata
 
 import pytest
-from backend.app.analysis.norms_catalogue import load_catalogue, catalogue_manifest, detector_provisions, CATALOGUE_SHA256
+from backend.app.analysis.norms_catalogue import load_catalogue, catalogue_manifest, detector_provisions, CATALOGUE_PATH, CATALOGUE_SHA256
 from backend.app.analysis.norms_catalogue import provision_reference
 from backend.app.analysis.norms_catalogue import provision_index
 
@@ -53,6 +53,13 @@ def test_all_normalized_display_entries_cover_the_pinned_source():
         assert summary['autoApply'] is False
     index[0]['detectorRuleIds'].append('fake')
     assert 'fake' not in provision_index()[0]['detectorRuleIds']
+
+
+def test_windows_checkout_uses_canonical_catalogue_hash(tmp_path):
+    path = tmp_path / "windows.json"
+    canonical = CATALOGUE_PATH.read_bytes().replace(b"\r\n", b"\n")
+    path.write_bytes(canonical.replace(b"\n", b"\r\n"))
+    assert load_catalogue(path) == load_catalogue()
 
 
 def test_corrupted_catalogue_rejected(tmp_path):
