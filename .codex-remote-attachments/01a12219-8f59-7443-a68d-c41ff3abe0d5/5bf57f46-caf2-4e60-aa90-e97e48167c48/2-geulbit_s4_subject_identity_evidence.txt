@@ -1,0 +1,87 @@
+# S4 local-scope-v3: 원문 명사구 비교 검토
+검토 범위: 첨부 ZIP·Checkpoint·저장된 Trace·소스 정적 대조. 엔진 pytest 재실행 아님.
+ZIP: geulbit-s4-local-scope-v3-blocked-handoff.zip
+ZIP entries: 19
+CRC: PASS
+Manifest SHA-256: 18/18 match (SHA256SUMS.txt 자체 제외)
+외부 checkpoint (6).json 동일: True
+
+# 기록된 재현 입력
+소설 「가상 기록」에서 서윤은 외롭다. 서윤은 입장을 금지한다.
+
+# 기록된 비교 키
+previous = [["서", "NNP"], ["윤", "NNG"]]
+current = [["서", "NNG"], ["윤", "NNG"]]
+recorded form/POS keys equal = False
+recorded adjacent = True
+recorded repeated_subject = False
+
+# 저장된 위치에서 원문을 다시 잘라 확인한 결과 — 수정안의 엔진 검증이 아님
+sentence-1: [13, 15) = '서윤'
+sentence-2: [22, 24) = '서윤'
+raw nominal text equal = True
+
+# structure.py 발췌
+--- lines 383-395 ---
+383:     def nominal_at(part,case_index):
+384:         # Surface-bound nominal head/possessor, not a semantic entity resolver.
+385:         first=case_index-1
+386:         if first<0 or not part[first]['pos'].startswith(('NN','NP')):return None
+387:         while first:
+388:             before=part[first-1]
+389:             if before['pos'].startswith(('NN','NP')) and before['end']==part[first]['start']:
+390:                 first-=1
+391:             elif before['pos']=='JKG' and first>=2 and part[first-2]['pos'].startswith(('NN','NP')):
+392:                 first-=2
+393:             else:break
+394:         return {'first':first,'case':case_index,'key':tuple((x['form'],x['pos']) for x in part[first:case_index]),
+395:                 'start':part[first]['start'],'head':part[case_index-1]}
+--- lines 530-536 ---
+530:                 subject=subject_before(observed_tokens,i-2,declared_scope_start or start)
+531:                 # Supported local proposition: subject + interpretation head
+532:                 # FROM + emerge + -다고 볼 수 있다. The concept must be the
+533:                 # predicate's actual immediately observed origin argument.
+534:                 attributed=bool(subject and (declared_scope_start is not None or
+535:                                  (previous_declared_scope and previous_declared_scope['paragraph']==sentence['paragraph']
+536:                                   and previous_declared_scope['work']==work_frame and subject['key'] in previous_declared_scope['participants'])))
+--- lines 566-586 ---
+566:         if not (action or quotes or page_reference) and literary_context and factual and event_report:
+567:             for i,t in enumerate(observed_tokens):
+568:                 subject=subject_before(observed_tokens,i,declared_scope_start or start)
+569:                 if not subject:continue
+570:                 prefix=[x for x in observed_tokens if (declared_scope_start or start)<=x['start']<subject['start']]
+571:                 closed_background=any(x['pos']=='EC' for x in prefix) or any(
+572:                     x['pos']=='ETM' and j+1<len(prefix) and prefix[j+1]['form'] in {'뒤','후','때'} for j,x in enumerate(prefix))
+573:                 direct_scope=declared_scope_start is not None and not closed_background
+574:                 adjacent=bool(previous_declared_scope and previous_declared_scope['paragraph']==sentence['paragraph']
+575:                               and previous_declared_scope['work']==work_frame)
+576:                 repeated_subject=adjacent and subject['key'] in previous_declared_scope['participants']
+577:                 order_reference=False
+578:                 if adjacent and previous_declared_scope['prohibitions']==1:
+579:                     for j in range(2,i):
+580:                         if ((observed_tokens[j-2]['form'],observed_tokens[j-2]['pos'])==('그','MM')
+581:                             and (observed_tokens[j-1]['form'],observed_tokens[j-1]['pos'])==('명령','NNG')
+582:                             and observed_tokens[j]['pos']=='JKO' and j+1<=i
+583:                             and observed_tokens[j+1]['form']=='어기' and observed_tokens[j+1]['pos'].startswith('VV')):
+584:                             actor=subject_before(observed_tokens,j+1,start)
+585:                             order_reference=bool(actor and actor['key']==subject['key'])
+586:                 if not (direct_scope or repeated_subject or order_reference):continue
+--- lines 619-631 ---
+619:         # Only the immediately preceding explicit, unquoted work declaration
+620:         # can supply participant/order anchors. Never propagate a name through
+621:         # the document or treat a role prediction as independent source proof.
+622:         previous_declared_scope=None
+623:         if declared_scope_start is not None and factual and event_report:
+624:             part=[x for x in observed_tokens if x['start']>=declared_scope_start]
+625:             participants={n['key'] for j,x in enumerate(part) if x['pos'] in {'JKS','JX','JKO'}
+626:                           for n in [nominal_at(part,j)] if n and n['head']['pos'].startswith('NN')}
+627:             prohibitions=sum((x['form'],x['pos'])==('금지','NNG') and j+2<len(part)
+628:                              and (part[j+1]['form'],part[j+1]['pos'])==('하','XSV')
+629:                              and part[j+2]['pos'] in {'EP','EF'} for j,x in enumerate(part))
+630:             previous_declared_scope={'paragraph':sentence['paragraph'],'work':work_frame,
+631:                                      'participants':participants,'prohibitions':prohibitions}
+
+# 주의
+전체 역할·관계 결과를 재검증한 것이 아니다. 원문 표면형의 동일성만 확인했다.
+표면형이 같아도 작품·주체 연결이 항상 같다는 의미는 아니다. 기존 작품/직전 문장/인용/주체 자격 조건을 유지해야 한다.
+S4 199개 전체 검사·57건·16쌍·24편·기술 검증은 최신 첨부에서 NOT_RUN이다.

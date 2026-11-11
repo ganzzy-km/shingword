@@ -1,0 +1,173 @@
+글빛 S4 contract-v2 추가 검토 발췌
+검토 방식: 첨부 ZIP의 소스·저장된 재현 기록 대조. 사용자 Windows에서 엔진/pytest를 재실행하지 않았음.
+ZIP CRC PASS. SHA256SUMS.txt 기재 파일 18/18 일치. 별도 checkpoint-final.json과 내부 checkpoint.json 바이트 일치.
+이 검사로 로컬 저장소 전체 무결성이나 실행 결과의 독립 재현이 인증되는 것은 아님.
+
+caseId: UNRELATED_SCHOOL_REGULATION
+입력: 소설 「가상 기록」에서 서윤은 외롭다. 내가 다니는 학교는 휴대전화 사용을 금지한다.
+자료 내 기대조건: No new event or interpretive claim observation on the unrelated/quoted clause
+before: {"id": "sentence-1", "start": 0, "end": 21, "roles": [], "claimSignals": [], "evidenceTypes": [], "actionLemmas": [], "workFrame": "가상 기록"}
+before: {"id": "sentence-2", "start": 22, "end": 47, "roles": [], "claimSignals": [], "evidenceTypes": [], "actionLemmas": [], "workFrame": "가상 기록"}
+after: {"id": "sentence-1", "start": 0, "end": 21, "roles": [], "claimSignals": [], "evidenceTypes": [], "actionLemmas": [], "workFrame": "가상 기록"}
+after: {"id": "sentence-2", "start": 22, "end": 47, "roles": ["EVIDENCE_CANDIDATE"], "claimSignals": [], "evidenceTypes": ["SCOPED_TRANSITIVE_EVENT", "CHARACTER_ACTION", "WORK_EVENT_REFERENCE"], "actionLemmas": ["금지하"], "workFrame": "가상 기록"}
+
+caseId: UNSCOPED_INTERPRETATION_NOUN
+입력: 소설 「가상 기록」에서 책임감을 설명한 뒤 화면은 음성 합성 장치에서 나온다고 볼 수 있다.
+자료 내 기대조건: No new event or interpretive claim observation on the unrelated/quoted clause
+before: {"id": "sentence-1", "start": 0, "end": 51, "roles": [], "claimSignals": [], "evidenceTypes": [], "actionLemmas": [], "workFrame": "가상 기록"}
+after: {"id": "sentence-1", "start": 0, "end": 51, "roles": ["CLAIM_CANDIDATE"], "claimSignals": ["LITERARY_INFERENTIAL_VIEW"], "evidenceTypes": [], "actionLemmas": [], "workFrame": "가상 기록"}
+
+source: structure.py (첨부 후보)
+SHA256: 5de8c3316e8488ee1a03af01225df34b65dd6f5ede68e274f90b327c936a49b0
+390:         explicit_frame=re.search(r'(?:소설|시|희곡)\s*[「〈<]([^」〉>]+)[」〉>]',author_text)
+391:         if explicit_frame:
+392:             work_frame=explicit_frame.group(1)
+393:             literary_paragraph=None
+394:         tokens=sentence['morphology']['tokens']
+395:         if explicit_frame and any(t['pos']=='JKB' and t['form']=='에서'
+396:                                   and t['start']>=start+explicit_frame.end()
+397:                                   and not author_text[explicit_frame.end():t['start']-start].strip() for t in tokens):
+398:             # Reading/naming a book is not a declaration that the following
+399:             # school rules or essay instructions are events in that book.
+400:             literary_paragraph=sentence['paragraph']
+
+461:         # Extend only missing role observations. Existing cues and the S3
+462:         # reading-complement path above remain independent and unchanged.
+463:         # A title supplies bounded literary context, never relationship points.
+464:         literary_context=bool(work_frame and literary_paragraph==sentence['paragraph'])
+465:         observed_tokens=[t for t in author_tokens if not explicit_frame or not
+466:                          start+explicit_frame.start()<=t['start']<start+explicit_frame.end()]
+467:         final_tokens=[t for t in observed_tokens if t['pos']!='SF']
+468:         factual=bool(final_tokens and final_tokens[-1]['pos']=='EF'
+469:                      and final_tokens[-1]['form'] in {'다','ᆫ다','ㄴ다','는다'}
+470:                      and not any(t['pos']=='EC' and t['form'].endswith('면') for t in observed_tokens))
+471:         if not claim and interpretive_topic and factual and any(x in author_text for x in CLAIM_CLUES if x in {'보여준다','보여 준다'}):
+472:             for i,t in enumerate(observed_tokens):
+473:                 if (t['form'],t['pos'])!=('보이','VV') or i<2:continue
+474:                 head,particle=observed_tokens[i-2:i];tail=observed_tokens[i+1:]
+475:                 if (head['pos']=='NNG' and head['form'] in INTERPRETATION_NOUNS|{'비극'}
+476:                     and particle['pos']=='JKO' and len(tail)>=3
+477:                     and (tail[0]['form'],tail[0]['pos'])==('어','EC')
+478:                     and (tail[1]['form'],tail[1]['pos'])==('주','VX') and tail[2]['pos']=='EF'
+479:                     and all(x['pos']=='SF' for x in tail[3:])):
+480:                     claim.append('LITERARY_INTERPRETIVE_SHOWING');break
+481:         if not claim and literary_context and factual and nouns & (INTERPRETATION_NOUNS|{'책임감'}):
+482:             for i,t in enumerate(observed_tokens):
+483:                 # Quoted proposition + terminal "can be viewed" is inference;
+484:                 # bare "can see" and somebody reporting it are not this form.
+485:                 if (t['form'],t['pos'])!=('보','VV') or i<2:continue
+486:                 prior=observed_tokens[i-1];tail=observed_tokens[i+1:]
+487:                 if (prior['pos']=='EC' and prior['form'] in {'다고','ᆫ다고','ㄴ다고','는다고','라고'}
+488:                     and len(tail)>=4 and tail[0]['pos']=='ETM' and tail[0]['form'] in {'ᆯ','ㄹ'}
+489:                     and (tail[1]['form'],tail[1]['pos'])==('수','NNB')
+490:                     and (tail[2]['form'],tail[2]['pos'])==('있','VA') and tail[3]['pos']=='EF'
+491:                     and all(x['pos']=='SF' for x in tail[4:])
+492:                     and any(x['pos'] in {'JX','JKS'} for x in observed_tokens[:i-1])):
+493:                     claim.append('LITERARY_INFERENTIAL_VIEW');break
+
+508:         scoped_actions=set();event_state=False
+509:         # These are observed transitive event forms inside a declared work's
+510:         # same paragraph. Do not extend ACTION_LEMMAS: R1 event/uniqueness and
+511:         # competing-target rules must retain their original observations.
+512:         report_subject=any(t['pos'] in {'JKS','JX'} and i and observed_tokens[i-1]['pos'].startswith(('NN','NP'))
+513:                            for i,t in enumerate(observed_tokens))
+514:         event_report=not any((t['pos']=='EC' and t['form'].endswith(('다고','라고')))
+515:                              or (t['pos']=='ETM' and t['form'].endswith(('다는','라는'))) for t in observed_tokens)
+516:         if not (action or quotes or page_reference) and literary_context and factual and event_report and report_subject:
+517:             for i,t in enumerate(observed_tokens):
+518:                 if (t['form'],t['pos'])==('숨지','VV'):
+519:                     tail=observed_tokens[i+1:]
+520:                     if len(tail)>=3 and (tail[0]['form'],tail[0]['pos'])==('어','EC') and (tail[1]['form'],tail[1]['pos'])==('있','VX') and tail[2]['pos']=='EF':
+521:                         event_state=True
+522:                 verb=t['pos'].startswith('VV') and t['form'] in {'업','어기','행하'}
+523:                 prohibition=(t['form'],t['pos'])==('하','XSV') and i and (observed_tokens[i-1]['form'],observed_tokens[i-1]['pos'])==('금지','NNG')
+524:                 if not (verb or prohibition):continue
+525:                 boundary=max((j for j,x in enumerate(observed_tokens[:i]) if x['pos'] in {'ETM','JKS','EC'}),default=-1)
+526:                 objects=[j for j in range(boundary+1,i) if observed_tokens[j]['pos']=='JKO']
+527:                 if len(objects)!=1 or objects[0]<=boundary+1 or not observed_tokens[objects[0]-1]['pos'].startswith('NN'):continue
+528:                 # A connective/adnominal/finite event is required; nominalized
+529:                 # instructions and an unbounded word occurrence do not qualify.
+530:                 if i+1==len(observed_tokens) or observed_tokens[i+1]['pos'] not in {'EC','ETM','EP','EF'}:continue
+531:                 scoped_actions.add('금지하' if prohibition else t['form'])
+532:             if event_state:
+533:                 evidence.extend(['CONCRETE_EVENT_STATE','SCENE_DESCRIPTION','WORK_EVENT_REFERENCE'])
+534:             if scoped_actions:
+535:                 evidence.extend(['SCOPED_TRANSITIVE_EVENT','CHARACTER_ACTION'])
+536:                 if 'WORK_EVENT_REFERENCE' not in evidence:evidence.append('WORK_EVENT_REFERENCE')
+
+source: final-read-only-review.json
+{
+  "decision": "BLOCKED_QUALITY",
+  "independent": true,
+  "reviewer": "/root/comparison_scope_review",
+  "phase": "v22-s4-role-coverage-release-prep",
+  "subjectHash": "5de8c3316e8488ee1a03af01225df34b65dd6f5ede68e274f90b327c936a49b0",
+  "testSha": "77e45224790177933b33cec5636f6384d6cdd30dbb2aace288a500a4363e074c",
+  "legacySha": "04b18ece57fe9fb721a8268c5c3572d4db753149ab645d5590bca854690a1132",
+  "knownPreviousFourFixed": true,
+  "findings": [
+    {
+      "caseId": "UNRELATED_SCHOOL_REGULATION",
+      "span": [
+        22,
+        47
+      ],
+      "symbol": "analyze_structure",
+      "lines": [
+        464,
+        512,
+        516
+      ],
+      "reason": "Same-paragraph work context and any noun subject cannot distinguish the narrator school regulation from a work character event."
+    },
+    {
+      "caseId": "UNSCOPED_INTERPRETATION_NOUN",
+      "span": [
+        0,
+        51
+      ],
+      "symbol": "analyze_structure",
+      "lines": [
+        481
+      ],
+      "reason": "An interpretation noun in a different preceding clause supplies the inference cue without a link to the actual inferred proposition."
+    }
+  ],
+  "productModifiedByReviewer": false,
+  "fullEvaluationExecutedByReviewer": false,
+  "noAutomaticRepairAuthorized": true
+}
+source: N08-stage-clarification.json
+{
+  "status": "EVIDENCE_LABEL_CORRECTION_ONLY",
+  "originalEvidenceUnchanged": true,
+  "additionalEngineRuns": 0,
+  "reason": "The earlier N08PairPolicyReachability label held candidate-retrieval state. Distinguish retrieval from source policy, using stored actual relations/sourceDecision and the existing final-relations policy loop.",
+  "stages": [
+    {
+      "mode": "STANDALONE",
+      "retrieval": "RETRIEVED",
+      "sourcePolicy": "NOT_REACHED_NO_FINAL_RELATION",
+      "relationId": null,
+      "assessment": null,
+      "reasonCode": null,
+      "policyUnitEffect": null,
+      "policyUnitReason": null,
+      "sourceTextMatch": "NOT_MEASURED_METADATA_FIXTURE_ONLY",
+      "approvedTargetArrowCount": 0
+    },
+    {
+      "mode": "DECLARED_TITLE_FIXTURE",
+      "retrieval": "RETRIEVED",
+      "sourcePolicy": "REACHED",
+      "relationId": "relation-1-2",
+      "assessment": "REJECTED",
+      "reasonCode": "EXPLICIT_DIFFERENT_WORK_IDS",
+      "policyUnitEffect": "REJECT",
+      "policyUnitReason": "EXPLICIT_DIFFERENT_WORK_IDS",
+      "sourceTextMatch": "NOT_MEASURED_METADATA_FIXTURE_ONLY",
+      "approvedTargetArrowCount": 0
+    }
+  ],
+  "correctedREADME": "The pair is retrieved in both modes. Standalone emits no final relation, while the declared-title fixture reaches source policy and rejects the pair explicitly."
+}

@@ -1,0 +1,192 @@
+글빛 S4 v5 Handoff 검토 발췌
+
+검토 범위: 첨부 ZIP의 파일 무결성, 소비자 코드, 저장된 검사 기록. 로컬 Windows 제품/브라우저 테스트는 재실행하지 않음.
+ZIP: geulbit-s4-api-display-v5-blocked-handoff.zip
+ZIP SHA-256: 506b1debd76dc735b64b889f79eef8d97b35fa997159d3d178eff4b390ed2bb4
+ZIP 항목 20개 CRC PASS. manifest.json에 등록된 19개 파일 SHA-256 일치. 별도 checkpoint-final.json은 ZIP checkpoint.json과 바이트 동일.
+
+1. 현재 차단의 근거 (browser-fixture-review.json)
+{
+  "fixtureCodePoints": 30000,
+  "approvedArrows": 1,
+  "fixtureStart": "😀 가 커튼과 창문과 가림막은 안전과 책임을 상징한다.\n",
+  "claimReplacementNeedle": "사랑과 희생",
+  "claimNeedleOccurrences": 0,
+  "claimReplacementChangesBody": false,
+  "evidenceReplacementNeedle": "꽃을 지킨다",
+  "evidenceNeedleOccurrences": 0,
+  "evidenceReplacementChangesBody": false
+}
+This is an input/consumer contract incompatibility, not an established product STALE defect. No browser execution was required to establish that both endpoint mutations are no-ops. Exact browser failure line/timing is not claimed as observed.
+
+2. scripts/verify-argument-links.cjs의 첨부 복사본 blocked-consumer.cjs
+5: const smoke=process.env.ARGUMENT_SMOKE_ONLY==='1';
+6: const dir=path.resolve('artifacts/argument-links'),base=process.env.UI_PREVIEW_URL || 'http://127.0.0.1:8447';
+7: const actual=JSON.parse(fs.readFileSync(dir+'/kiwi-fixture.json','utf8')),empty=JSON.parse(fs.readFileSync(dir+'/empty-fixture.json','utf8'));
+
+10:  const context=await browser.newContext({viewport:{width,height:1000},hasTouch:width===390});let data=structuredClone(actual);
+11:  await context.route('**/*',async route=>{
+12:   const req=route.request(),url=new URL(req.url());if(url.origin!==new URL(base).origin)return route.abort();
+13:   if(!url.pathname.startsWith('/api/'))return route.continue();
+14:   const p=url.pathname;let value=[];
+15:   if(p==='/api/auth/session')value={id:'synthetic-user',role:'USER',status:'ACTIVE',csrfToken:'synthetic-only'};
+16:   else if(p==='/api/settings')value={theme,pageAnimation:false};
+17:   else if(p==='/api/workspace')value={userName:'',workspaceName:'가상 구조 검증'};
+18:   else if(p==='/api/writings')value=[data.writing];
+19:   else if(p==='/api/writings/'+data.writing.id){if(req.method()==='PATCH')data.writing={...data.writing,...req.postDataJSON(),revisionNumber:data.writing.revisionNumber+1};value=data.writing;}
+20:   else if(p==='/api/analyses/'+data.analysis.id)value=data.analysis;
+21:   await route.fulfill({json:{data:value}});
+
+25:  const claim=actual.analysis.argumentCandidates.find(c=>c.roles.includes('CLAIM_CANDIDATE'));
+26:  const evidence=actual.analysis.argumentCandidates.find(c=>c.roles.includes('EVIDENCE_CANDIDATE'));
+27:  if(theme==='bookshelf')await page.getByRole('button',{name:'편집하기',exact:true}).click();
+28:  const editor=page.getByRole('textbox',{name:'에세이 본문'});
+29:  await editor.waitFor();assert.equal(await editor.inputValue(),actual.analysis.sourceVersion.content);
+
+42:  const work=page.getByPlaceholder('작품명 (선택)',{exact:true}),question=page.getByPlaceholder('이 글에서 탐구하고 싶은 질문',{exact:true});
+43:  await work.fill('다른 작품');assert.equal(await page.locator('.argument-editor-controls .argument-link').count(),0);await work.fill(actual.writing.work);
+44:  await question.fill('다른 탐구 문맥');assert.equal(await page.locator('.argument-editor-controls .argument-link').count(),0);await question.fill(actual.writing.inquiryQuestion);
+45:  // Modified semantic context hides all roles, not only the edited endpoint.
+46:  await editor.fill(actual.writing.content.replace('사랑과 희생','자유와 선택'));
+47:  assert.equal(await mirror.locator('.argument-claim,.argument-evidence,.argument-link').count(),0);
+48:  await page.getByText('본문 또는 문맥이 바뀌어 주장·근거 표시를 숨겼습니다. 재분석하면 새 관계를 표시합니다.',{exact:true}).waitFor();
+49:  await editor.fill(actual.writing.content);
+50:  await mirror.locator('.argument-claim').waitFor();
+51:  await editor.fill(actual.writing.content.replace('꽃을 지킨다','잎을 버린다'));
+52:  assert.equal(await page.locator('.argument-editor-controls .argument-link').count(),0);
+53:  await page.screenshot({path:dir+`/${theme}-${width}-stale.png`,fullPage:true});
+54:  await editor.fill(actual.writing.content);
+55:  await page.getByRole('button',{name:'책으로 읽기',exact:true}).click();
+
+66:  // Exact full-body reconstruction also checks page cuts through annotations.
+67:  let reconstructed='';if(!smoke)for(;;){
+68:   reconstructed+=await page.locator('.page-body .argument-fragment').evaluateAll(es=>es.map(e=>e.textContent).join(''));
+69:   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+70:   assert.ok(await page.locator('.page-body').evaluateAll(es=>es.every(e=>e.scrollHeight<=e.clientHeight+1)));
+71:   pagesChecked++;if(await next.isDisabled())break;await next.click();
+72:  }
+73:  if(!smoke){assert.equal(reconstructed,actual.analysis.sourceVersion.content);assert.equal(Array.from(reconstructed).length,30000);}
+74:  checks.push({theme,width,actualKiwiFixture:true,claimHighlight:true,evidenceUnderline:true,linkedArrowsOnly:true,editorCursorPreserved:true,previousPageClaimJump:true,keyboardOrTouch:true,staleClaimEvidence:true,bodyCodePoints:30000,overflow:false});
+75:  data=structuredClone(empty);await page.goto(base);await page.getByRole('button',{name:new RegExp(data.writing.title)}).first().click();
+76:  assert.equal(await page.locator('.argument-claim,.argument-evidence,.argument-link').count(),0);
+77:  await context.close();
+78:  }
+79:  assert.deepEqual(errors,[]);fs.writeFileSync(dir+(smoke?'/browser-final-results.json':'/browser-results.json'),JSON.stringify({status:'PASS',mode:'ACTUAL_ISOLATED_KIWI_RESULT_BROWSER_TRANSPORT_FIXTURE',checks,errors,pagesChecked,fullReconstruction:!smoke},null,2));console.log(JSON.stringify({status:'PASS',cases:checks.length,pagesChecked,errors:errors.length}));
+
+3. 성능: 기준 일부만 측정, S4 비교 미완료
+{
+  "status": "STOPPED_FOR_REQUIRED_SCOPE_GATE_NOT_PERFORMANCE_REGRESSION",
+  "baselineOnly": true,
+  "completedGroupsEmittedByOriginalMeasurement": [
+    {
+      "stage": "s3",
+      "count": 0,
+      "sampleCount": 30,
+      "warmupCount": 3,
+      "p50Ms": 1045.123599999999,
+      "p95Ms": 1072.455799999996,
+      "queryP50Ms": 134.11290000000008,
+      "queryP95Ms": 172.8708999999999,
+      "memoryBefore": {
+        "peakRssBytes": 726249472,
+        "rssBytes": 683720704
+      },
+      "memoryAfter": {
+        "peakRssBytes": 726249472,
+        "rssBytes": 690233344
+      }
+    },
+    {
+      "stage": "s3",
+      "count": 1,
+      "sampleCount": 30,
+      "warmupCount": 3,
+      "p50Ms": 16590.18829999998,
+      "p95Ms": 20853.035200000042,
+      "queryP50Ms": 2429.371899999969,
+      "queryP95Ms": 3423.7266999999993,
+      "memoryBefore": {
+        "peakRssBytes": 1659224064,
+        "rssBytes": 698990592
+      },
+      "memoryAfter": {
+        "peakRssBytes": 4464590848,
+        "rssBytes": 823574528
+      }
+    }
+  ],
+  "progressEmitted": [
+    {
+      "stage": "s3",
+      "count": 0,
+      "measured": 10
+    },
+    {
+      "stage": "s3",
+      "count": 0,
+      "measured": 20
+    },
+    {
+      "stage": "s3",
+      "count": 0,
+      "measured": 30
+    },
+    {
+      "stage": "s3",
+      "count": 1,
+      "measured": 10
+    },
+    {
+      "stage": "s3",
+      "count": 1,
+      "measured": 20
+    },
+    {
+      "stage": "s3",
+      "count": 1,
+      "measured": 30
+    },
+    {
+      "stage": "s3",
+      "count": 3,
+      "measured": 10
+    },
+    {
+      "stage": "s3",
+      "count": 3,
+      "measured": 20
+    }
+  ],
+  "isolatedDbRunStates": {
+    "completed": 92,
+    "queued": 1
+  },
+  "groupStatisticsNotReconstructedFromDb": true,
+  "rawTimingRowsNotPersistedBeforeStop": true,
+  "candidateMeasurements": 0,
+  "source3FinalP50P95": "NOT_AVAILABLE",
+  "p95Ratio": "NOT_MEASURED",
+  "coldPair": "NOT_COMPLETED",
+  "actualMatchOnlyExplicitOutputChecks": "NOT_RUN_AFTER_BLOCK",
+  "reason": "Independent review confirmed existing browser consumer STALE mutations are no-ops for frozen positive input; consumer correction outside authorized one-file scope."
+}
+
+4. 증거 재사용 한계 (README.md)
+# S4 API display contract v5 — BLOCKED_VALIDATION
+
+Engine frozen; only the two API display tests and internal helpers amended. Incremental source change one test file in isolated candidate; original worktree unchanged. Cumulative four-file candidate is preserved, not formally submitted. Algorithm repair cycles 4, test contract amendment 1, formal attempts 0.
+
+Four candidate tests, same four on S3, technical 63, actual HTTP four and DOM 24, existing actual integration six passed. Prior 223 tests, 57 replays/16 approved pairs, synthetic24/96 engine calls, typecheck/build are explicitly reused with source/config/build hashes and persistent environment continuity, not new executions. Historical installed-tree hashes were unavailable; do not claim cryptographic historical dependency identity.
+
+Mandatory blocker: old browser consumer replaces literal phrases absent from the frozen positive fixture. Both changes are no-ops and cannot test endpoint STALE. Read-only review confirmed input/consumer contract conflict. Consumer correction is outside the current scope; this does not certify a product STALE bug. No consumer or frozen expectations changed.
+
+Performance halted for this gate, not measured performance failure. S3 0/1-source 30-sample groups were emitted; source3 and S4 comparison/cold measurements incomplete. Explicit MATCH_ONLY output HTTP checks and formal138 were not run. Owned QA servers/browsers stopped. No production access, external AI, commit/push/merge/deploy. Accuracy remains BLOCKED_DATA, R2 DISABLED, main4B NOT_STARTED, G5 WAIVED_BY_USER.
+
+This ZIP contains only scoped candidate source/tests and compact evidence; no DB, user data, credentials, TLS keys, large logs or whole repository. Full preserved artifacts and exact original file hashes are referenced in checkpoint/binding/reuse receipts.
+
+
+5. 다음 작업 제안 — 원본 실행 결과가 아님
+추가 엔진 수정 없이 소비자의 두 STALE 편집을 승인 관계 endpoint의 코드포인트 span 기반으로 바꾼다. 본문이 실제 바뀌었음을 먼저 검증하고 기존 stale/복원/페이지 재구성 검사를 수행한다.
+이 소비자는 실제 Kiwi 출력 fixture를 브라우저의 mock transport로 제공한다. 이미 완료한 실제 HTTP/DOM 검증과 별도로 기록한다.
+추가 성능 표본을 즉시 영속 기록한다. 과거 원시 표본이 없으므로 요약 통계만으로 미완료 그룹을 재구성하지 않는다. 기존 프로토콜의 기준/S4 비교를 끝낸다.
+기술 준비와 독립 정확도 인증·운영 배포 승인은 분리한다.

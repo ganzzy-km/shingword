@@ -49,3 +49,15 @@
 - 검증 서버는 `scripts/ui-verification-server.py`로 별도 5055 포트와 `.tmp-ui-verification/test.db`를 사용. 테스트 글은 사용자 DB에 넣지 않음.
 - 재검증: 검증 서버 실행 → build → `node scripts/verify-library.cjs`.
 - 다음 단계는 승인된 분석 버전 연결·만료 정책·PDF 에세이 복원 API 계약을 확인하고 해당 UI를 연결하는 것. 기존 데이터/권한/보존 정책을 임의로 변경하지 않음.
+
+
+## 2026-10-11 — 두 테마 UI 정리 및 개별 흐름 검수
+- 기존 기본·책장 테마, 책 표지·페이지 계산·분석 API를 유지하고 화면 위계, 사용 순서 안내, 버튼·카드·모달·자료실 제목을 정리했다. 문단 이동 선택창의 세로 잘림을 수정했다.
+- 변경: src/Library.tsx, src/ui-polish.css, src/App.tsx(공통 자료 버튼 테마색만), scripts/verify-ui-design.cjs, scripts/verify-v2-e2e.cjs. 기존 미커밋 변경은 보존했다.
+- UI fixture: UI_ARTIFACT_ROOT=artifacts/ui-polish/after node scripts/verify-ui-design.cjs after; exit 0; 1440/1024/820/390/320px, 110 screenshots, browser errors 0, 모든 폭에서 30,000 code points 정확히 재구성. 계정창 Escape, PDF 가져오기 창, 메뉴 포커스, 검색, 반복 구절 이동, 키보드·스와이프, 테마 전환, 자료·설정 화면 및 API 실패 표시 확인.
+- 실제 격리 API: V2_ARTIFACT_ROOT=artifacts/ui-polish/api node scripts/verify-v2-e2e.cjs; exit 0; 43 screenshots, browser errors 0; 저장·분석·판본 인용·두 테마·PDF 생성/가져오기·revision 충돌·계정 비활성화 시 미저장 초안 보존·다른 계정 격리 PASS. 합성 로그인 세션이며 실제 Google 재검증으로 표시하지 않는다. 분석 30,000자 833ms (단일 측정).
+- node node_modules/typescript/bin/tsc --noEmit; exit 0. node node_modules/vite/bin/vite.js build; exit 0, 24 modules, 238ms, JS gzip 88.38KB/CSS gzip 16.95KB.
+- node scripts/book-layout.test.mjs; node scripts/feedback-spans.test.mjs; node scripts/account-session.test.mjs: 각각 exit 0. 10k/30k 페이지·Unicode·STALE·반복 구절 및 계정 격리 10 cases PASS.
+- 전후 이미지: artifacts/ui-polish/before / artifacts/ui-polish/after. 실제 격리 API 증거: artifacts/ui-polish/api/evidence.json.
+- 운영 DB SHA-256 28909344b85e958eec0bdb88d87a04b6abd64d1dd2757e567c91470fd52b1235 유지. 운영 DB·migration·비밀 저장소·외부 터널 변경 없음. 검증 서버만 종료, loopback Vite 미리보기 유지.
+- 기존 P13 출시 차단 및 G4/G5 상태는 변경하지 않는다. 실제 휴대폰 하드웨어·외부 Google 재로그인·운영 공개 검증은 이번 UI 검수 범위 밖이다.

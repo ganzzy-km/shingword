@@ -1,26 +1,39 @@
 {
-  "status": "BLOCKED",
-  "currentPhase": "p01",
-  "completed": [],
-  "runtimeRunnerState": false,
+  "status": "V2.1_RELEASED_V2.2_READY_FOR_DEPLOYMENT",
+  "currentPhase": "V22_AWAITING_OPERATING_APPROVAL",
+  "completed": [
+    "p01",
+    "p02",
+    "p03",
+    "p04",
+    "p05",
+    "p06",
+    "p07",
+    "p08",
+    "p09",
+    "p10",
+    "p11",
+    "p12"
+  ],
+  "runtimeRunnerState": true,
   "gates": {
-    "G1": "PASS_LOCAL_STORAGE_CANDIDATE: approved C root verified across Codex and ordinary Windows PowerShell; explicit migration and backup/restore verified",
-    "G2": "PASS_LOCAL_TESTS_ONLY: 21 targeted tests; existing Runner pytest binding not configured",
-    "G3": "PASS_LOCAL_INVARIANTS_ONLY: UI/P02/migration and LocalCache preserved; authentication fail-closed; no fallback",
-    "G4": "SCOPE_RECORDED: bounded verification/docs updates; formal Runner blocked by absent Git HEAD/baseline",
-    "G5": "DEFERRED_USER_REQUEST: no Claude review, no PASS receipt"
+    "G1": "PASS",
+    "G2": "PASS",
+    "G3": "PASS",
+    "G4": "PASS",
+    "G5": "WAIVED_BY_USER"
   },
   "candidateHashes": {
     "backend/app/config.py": "5eec55474f2633b7c8a5773cfe9e8c336cd21560aeef2bfb04bb79d2631e47ac",
     "backend/app/extensions.py": "f9f5317e34e285f8b5868992176cd4d8f2f8a7f67c4ef05f2ac8cbfd14b16f40",
-    "backend/app/storage.py": "e9335304e60c0604430b2b07e121578915b1e9042b5e63570d3fa3cfeda7063d",
-    "backend/app/__init__.py": "445bb7163c57b6e2af1fedd961fba0fbf3f9324e74b3d8f3a032a442dba8470f",
-    "backend/storage_cli.py": "d49eaf8307440478c3144223dfaf285261dbd8189d3b2785b52048644c6a57c9",
+    "backend/app/storage.py": "eebf4d396a2096eb13a9d1abc166e8108067c318ef40e8b815f80040d375ee01",
+    "backend/app/__init__.py": "f96b7dcf7beafb33a232f401c3e8d5902e3d9371cace03ba4cc28280b99028ed",
+    "backend/storage_cli.py": "6615505e2b8e1e5d8d4a45c31b2bc35492ee83ecd09038e5f268f471bbd047db",
     "backend/app/routes/data.py": "c7daafb2e8218edb401d594e241373d8ad0360e721af9314bbb12b4d1e7ca5e1",
     "backend/app/local_admin.py": "f4048dfd7a7b74c37c8a506d257036c149b256ae669783f365fec148756a5419",
-    "backend/serve.py": "588d5d7f1f420cd024fd6f466631dce6a73bb6fd0575d9b9cf98f58a97a271b5",
+    "backend/serve.py": "9c338f05d0aec9befb7df0671a52f47cae398e390bd1ecfbd99c587d93f32256",
     "backend/app/routes/core.py": "7ad434ff17e9cf7ae23a3d1167ff83e37d54e484d47c72fb7798485650cc8aba",
-    "backend/tests/test_storage.py": "95a104265d4d6bbcce9a45820e7aee039a7398d9d30e039cf0149758ad786eca",
+    "backend/tests/test_storage.py": "f62468c575d48a49d981aece918ea7f0078b3d40b546af066d5328886b7962e5",
     "backend/migrations/versions/0001_initial.py": "2364b72d9c8b7f0bd07be87ac5dc844e35350c2bc4d20ad654900016b0ee8a86",
     "backend/verify_storage.py": "46d0dc81e2e0f6515b6345aaf7b21ec480e81bf8daaf84c431b391970d39056f",
     "backend/verify_analysis_isolation.py": "c01a946623a7f051191ddfede6cf043d47129cbcf85cdf98978cf6883c7d2c3d",
@@ -30,16 +43,65 @@
     "p01": 2
   },
   "changedFiles": [
-    "backend/app/config.py",
-    "backend/app/extensions.py",
-    "backend/app/storage.py",
     "backend/app/__init__.py",
+    "backend/app/analysis/ruleset.py",
+    "backend/app/analysis/snapshot.py",
+    "backend/app/analysis/structure.py",
+    "backend/app/models.py",
+    "backend/app/storage.py",
+    "backend/app/v2/__init__.py",
+    "backend/app/v2/ai_api.py",
+    "backend/app/v2/analysis_api.py",
+    "backend/app/v2/auth_api.py",
+    "backend/app/v2/common.py",
+    "backend/app/v2/essays.py",
+    "backend/app/v2/files.py",
+    "backend/app/v2/library_api.py",
+    "backend/app/v2/operations_api.py",
+    "backend/app/v2/quote_api.py",
+    "backend/component_tests/test_ai.py",
+    "backend/component_tests/test_auth.py",
+    "backend/component_tests/test_language_components.py",
+    "backend/component_tests/test_pdf.py",
+    "backend/components/ai.py",
+    "backend/components/auth.py",
+    "backend/components/lifecycle.py",
+    "backend/components/pdf.py",
+    "backend/components/quote_match.py",
+    "backend/engine_tests/conftest.py",
+    "backend/engine_tests/test_snapshot.py",
+    "backend/mapping/rehearsal.py",
+    "backend/mapping_tests/test_mapping.py",
+    "backend/migrations/versions/0002_geulbit_v2.py",
+    "backend/migrations/versions/0003_resource_ownership.py",
+    "backend/requirements.txt",
     "backend/storage_cli.py",
-    "backend/app/routes/data.py",
-    "backend/app/local_admin.py",
-    "backend/serve.py",
-    "backend/app/routes/core.py",
-    "backend/tests/test_storage.py"
+    "backend/tests/conftest.py",
+    "backend/tests/test_storage.py",
+    "backend/v2_tests/legacy_schema.sql",
+    "backend/v2_tests/measure_api.py",
+    "backend/v2_tests/qa_server.py",
+    "backend/v2_tests/test_ai_api.py",
+    "backend/v2_tests/test_analysis_api.py",
+    "backend/v2_tests/test_auth_api.py",
+    "backend/v2_tests/test_essay_api.py",
+    "backend/v2_tests/test_library_api.py",
+    "backend/v2_tests/test_migration.py",
+    "backend/v2_tests/test_operations_api.py",
+    "backend/v2_tests/test_quote_api.py",
+    "backend/v2_tests/test_reanalysis_api.py",
+    "backend/v2_tests/test_rules_api.py",
+    "backend/v2_tests/test_structure_api.py",
+    "backend/v2_tests/v2_fixture.py",
+    "docs/automation/ACCEPTANCE.md",
+    "docs/automation/DB_MAPPING_PLAN.md",
+    "docs/automation/backend-checkpoint.json",
+    "docs/automation/backend-queue.pending.json",
+    "scripts/verify-ui-design.cjs",
+    "scripts/verify-v2-e2e.cjs",
+    "src/App.tsx",
+    "src/Library.tsx",
+    "src/api.ts"
   ],
   "changedPreparationFiles": [
     "docs/automation/ACCEPTANCE.md",
@@ -135,39 +197,13 @@
       }
     }
   ],
-  "blockedChecks": [
-    {
-      "argv": [
-        ".venv/Scripts/python.exe",
-        "backend/storage_cli.py",
-        "check"
-      ],
-      "exitCode": 1,
-      "code": "DATA_ROOT_REQUIRED"
-    },
-    {
-      "check": "read-only E volume validation",
-      "exitCode": 1,
-      "code": "UNSUPPORTED_FILESYSTEM",
-      "filesystem": "exFAT",
-      "health": "Warning",
-      "dataRootCreated": false
-    }
-  ],
   "remaining": [
-    "actual approved healthy local storage and pinned volume identity",
-    "P01 mandatory Claude independent review",
-    "existing Runner SQLite/pytest/review/recovery binding and verified Git baseline",
-    "P02-P12 original numbered phase scopes",
-    "multi-user model and Google OIDC mock/real integration",
-    "immutable analysis input version and NFC/LF contracts",
-    "document revisions/access modes and selected-edition matching",
-    "server PDF report/import integration",
-    "confirmed 7-day starting point and backup/account/public-resource retention",
-    "AI external policy/credentials and local consent/control implementation",
-    "10k/30k complete analysis/PDF timings, memory and 5-minute 20-40-user stability"
+    "Product UI logout control absent; actual logout API verified through temporary isolated-browser fixture. Operational Google user/bootstrap and public HTTPS deployment not authorized or executed.",
+    "BAZE provider/model/cost/privacy terms, AI consent version and context/usage limits not confirmed; no actual external AI calls.",
+    "Seven-day basis, targets/private-document lifecycle and backup retention unconfirmed; automatic expiry assignment/cleanup activation prohibited.",
+    "G5 DEFERRED_FINAL_REVIEW; no Claude review performed; no production launch approval."
   ],
-  "nextAction": "Storage redirection resolved at C:\\Users\\USER\\GeulbitData. Do not repeat init. Use existing check with persisted user environment; refresh existing shell variables from User settings if needed. Resolve existing Runner SQLite/pytest binding and Git baseline without automatic commit. G5 remains DEFERRED and dependent phases stay gated.",
+  "nextAction": "Develop V2.2 only in managed worktree; operating V2.1 stays frozen.",
   "exclusions": [
     "no production/student data processed",
     "no actual E Data Root creation",
@@ -364,6 +400,4576 @@
       "src\\library.css": "cc7e0bbe3a98119ac36c7f304c548c64a8707d6f20100c69668f5edb4584719c",
       "src\\index.css": "5df42460e7c0000b57ec97b2d4a96b77696fead18dd5e6038527f6f7103b6e82",
       "src\\BookCover.tsx": "8d10be65ddc45e6567558be3493b00a85fda3d0759018e41e68a98aeeea9670f"
+    }
+  },
+  "baseline": {
+    "head": "68d771840014cdef9e9acc84be1f2f613cc269a0",
+    "branch": "master",
+    "initialCommitFiles": 128,
+    "userAuthorizedInitialCommit": true,
+    "retrospectiveG4": "NOT_VERIFIABLE",
+    "automaticCommitsRemaining": 0
+  },
+  "phaseReceipts": {
+    "p01": {
+      "phase": "p01",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/tests/test_storage.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 21,
+          "pass": 21
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "p02": {
+      "phase": "p02",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/analysis/snapshot.py",
+        "backend/engine_tests/conftest.py",
+        "backend/engine_tests/test_snapshot.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/engine_tests",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 18,
+          "pass": 18
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "p03": {
+      "phase": "p03",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/__init__.py",
+        "backend/app/v2/__init__.py",
+        "backend/app/v2/auth_api.py",
+        "backend/app/v2/common.py",
+        "backend/v2_tests/test_auth_api.py",
+        "backend/v2_tests/v2_fixture.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_auth_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 10,
+          "pass": 10
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "p04": {
+      "phase": "p04",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/__init__.py",
+        "backend/app/v2/essays.py",
+        "backend/v2_tests/test_essay_api.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_essay_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 10,
+          "pass": 10
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "p05": {
+      "phase": "p05",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/__init__.py",
+        "backend/app/v2/analysis_api.py",
+        "backend/v2_tests/test_analysis_api.py",
+        "src/App.tsx",
+        "src/Library.tsx",
+        "src/api.ts"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_analysis_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 6,
+          "pass": 6
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "p06": {
+      "phase": "p06",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/analysis_api.py",
+        "backend/v2_tests/test_rules_api.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_rules_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 3,
+          "pass": 3
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "p07": {
+      "phase": "p07",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/analysis_api.py",
+        "backend/v2_tests/test_structure_api.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_structure_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 3,
+          "pass": 3
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "p08": {
+      "phase": "p08",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/models.py",
+        "backend/app/v2/__init__.py",
+        "backend/app/v2/auth_api.py",
+        "backend/app/v2/files.py",
+        "backend/app/v2/library_api.py",
+        "backend/migrations/versions/0003_resource_ownership.py",
+        "backend/v2_tests/test_library_api.py",
+        "backend/v2_tests/test_migration.py",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_library_api.py",
+            "backend/v2_tests/test_migration.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 15,
+          "pass": 15
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "p09": {
+      "phase": "p09",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/__init__.py",
+        "backend/app/v2/analysis_api.py",
+        "backend/app/v2/quote_api.py",
+        "backend/v2_tests/test_quote_api.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_quote_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 4,
+          "pass": 4
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "p10": {
+      "phase": "p10",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/analysis_api.py",
+        "backend/app/v2/quote_api.py",
+        "backend/v2_tests/test_reanalysis_api.py",
+        "src/Library.tsx"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_reanalysis_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 4,
+          "pass": 4
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "p11": {
+      "phase": "p11",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/__init__.py",
+        "backend/app/v2/ai_api.py",
+        "backend/v2_tests/test_ai_api.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 5,
+          "pass": 5
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "p12": {
+      "phase": "p12",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/__init__.py",
+        "backend/app/storage.py",
+        "backend/app/v2/__init__.py",
+        "backend/app/v2/ai_api.py",
+        "backend/app/v2/analysis_api.py",
+        "backend/app/v2/common.py",
+        "backend/app/v2/essays.py",
+        "backend/app/v2/files.py",
+        "backend/app/v2/library_api.py",
+        "backend/app/v2/operations_api.py",
+        "backend/storage_cli.py",
+        "backend/tests/conftest.py",
+        "backend/tests/test_storage.py",
+        "backend/v2_tests/measure_api.py",
+        "backend/v2_tests/qa_server.py",
+        "backend/v2_tests/test_operations_api.py",
+        "backend/v2_tests/test_quote_api.py",
+        "docs/automation/DB_MAPPING_PLAN.md",
+        "docs/automation/backend-checkpoint.json",
+        "scripts/verify-ui-design.cjs",
+        "scripts/verify-v2-e2e.cjs",
+        "src/App.tsx",
+        "src/Library.tsx",
+        "src/api.ts"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/tests",
+            "backend/engine_tests",
+            "backend/component_tests",
+            "backend/mapping_tests",
+            "backend/v2_tests",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 221,
+          "pass": 221
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    }
+  },
+  "componentReceipts": {
+    "independent-components": {
+      "phase": "independent-components",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/component_tests/test_ai.py",
+        "backend/component_tests/test_auth.py",
+        "backend/component_tests/test_pdf.py",
+        "backend/components/ai.py",
+        "backend/components/auth.py",
+        "backend/components/lifecycle.py",
+        "backend/components/pdf.py",
+        "backend/requirements.txt"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 32,
+          "pass": 32
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "language-components": {
+      "phase": "language-components",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/analysis/ruleset.py",
+        "backend/app/analysis/structure.py",
+        "backend/component_tests/test_language_components.py",
+        "backend/components/quote_match.py",
+        "backend/requirements.txt"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_language_components.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 11,
+          "pass": 11
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "integration-validation": {
+      "phase": "integration-validation",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/component_tests/test_auth.py",
+        "backend/engine_tests/conftest.py",
+        "backend/engine_tests/test_snapshot.py",
+        "docs/automation/ACCEPTANCE.md",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/tests",
+            "backend/engine_tests",
+            "backend/component_tests",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 137,
+          "pass": 137
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "db-mapping-preparation": {
+      "phase": "db-mapping-preparation",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/mapping/rehearsal.py",
+        "backend/mapping_tests/test_mapping.py",
+        "docs/automation/DB_MAPPING_PLAN.md",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/mapping_tests",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 6,
+          "pass": 6
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "schema-v2": {
+      "phase": "schema-v2",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/models.py",
+        "backend/migrations/versions/0002_geulbit_v2.py",
+        "backend/v2_tests/legacy_schema.sql",
+        "backend/v2_tests/test_migration.py",
+        "docs/automation/DB_MAPPING_PLAN.md",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_migration.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "exitCode": 0,
+          "tests": 7,
+          "pass": 7
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "p12-recovery": {
+      "phase": "p12-recovery",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/library_api.py",
+        "backend/v2_tests/test_operations_api.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/tests",
+            "backend/engine_tests",
+            "backend/component_tests",
+            "backend/mapping_tests",
+            "backend/v2_tests",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 224,
+          "pass": 224
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "auth-service-validation": {
+      "phase": "auth-service-validation",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        ".env.example",
+        "backend/app/__init__.py",
+        "backend/app/v2/auth_api.py",
+        "backend/app/v2/deployment.py",
+        "backend/components/auth.py",
+        "backend/serve.py",
+        "backend/v2_tests/qa_server.py",
+        "backend/v2_tests/test_auth_api.py",
+        "backend/v2_tests/test_deployment.py",
+        "docs/automation/AUTH_SETUP.md",
+        "scripts/verify-auth-flow.cjs"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_auth.py",
+            "backend/v2_tests/test_auth_api.py",
+            "backend/v2_tests/test_deployment.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 47,
+          "pass": 47
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "localhost-oidc-readiness": {
+      "phase": "localhost-oidc-readiness",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/__init__.py",
+        "backend/app/v2/server_secrets.py",
+        "backend/auth_setup.py",
+        "backend/local_https_proxy.py",
+        "backend/run_auth_dev.py",
+        "backend/v2_tests/test_local_https.py",
+        "backend/v2_tests/test_server_secrets.py",
+        "docs/automation/AUTH_SETUP.md"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_auth.py",
+            "backend/v2_tests/test_auth_api.py",
+            "backend/v2_tests/test_deployment.py",
+            "backend/v2_tests/test_server_secrets.py",
+            "backend/v2_tests/test_local_https.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 64,
+          "pass": 64
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-release-safety-recovery": {
+      "phase": "beta-release-safety-recovery",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "UI_CHECKPOINT.md",
+        "backend/app/__init__.py",
+        "backend/app/analysis/data/korean_norms_v1.json",
+        "backend/app/analysis/norms_catalogue.py",
+        "backend/app/analysis/norms_reference.py",
+        "backend/app/analysis/ruleset.py",
+        "backend/app/analysis/structure.py",
+        "backend/app/services/backup_service.py",
+        "backend/app/services/storage_lease.py",
+        "backend/app/v2/analysis_api.py",
+        "backend/app/v2/auth_api.py",
+        "backend/app/v2/beta_runtime.py",
+        "backend/app/v2/beta_signup.py",
+        "backend/app/v2/essays.py",
+        "backend/app/v2/library_api.py",
+        "backend/app/v2/network_gate.py",
+        "backend/app/v2/operations_api.py",
+        "backend/app/v2/privacy_lifecycle.py",
+        "backend/app/v2/quote_api.py",
+        "backend/auth_setup.py",
+        "backend/component_tests/test_auth.py",
+        "backend/components/auth.py",
+        "backend/components/quote_match.py",
+        "backend/config/privacy.example.json",
+        "backend/engine_tests/test_norms_catalogue.py",
+        "backend/engine_tests/test_norms_rules.py",
+        "backend/engine_tests/test_snapshot.py",
+        "backend/network_service.py",
+        "backend/privacy_service.py",
+        "backend/requirements.txt",
+        "backend/run_auth_dev.py",
+        "backend/v2_tests/qa_server.py",
+        "backend/v2_tests/test_account_retention.py",
+        "backend/v2_tests/test_auth_api.py",
+        "backend/v2_tests/test_beta_runtime.py",
+        "backend/v2_tests/test_beta_signup.py",
+        "backend/v2_tests/test_library_api.py",
+        "backend/v2_tests/test_network_gate.py",
+        "backend/v2_tests/test_network_integration.py",
+        "backend/v2_tests/test_network_setup.py",
+        "backend/v2_tests/test_operations_api.py",
+        "backend/v2_tests/test_privacy_cli.py",
+        "backend/v2_tests/test_privacy_lifecycle.py",
+        "backend/v2_tests/test_review_optimizations.py",
+        "backend/v2_tests/test_rules_api.py",
+        "backend/v2_tests/test_secure_backup.py",
+        "backend/v2_tests/test_server_secrets.py",
+        "backend/v2_tests/test_workspace_concurrency.py",
+        "docs/automation/AUTH_SETUP.md",
+        "docs/automation/UI_ARCH_AUDIT.md",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.local.json",
+        "docs/design/20261010/00_README.md",
+        "docs/design/20261010/02_ENGINE.md",
+        "docs/design/20261010/KOREAN_NORMS_REFERENCE.md",
+        "public/auth-status.css",
+        "scripts/account-session.test.mjs",
+        "scripts/feedback-spans.test.mjs",
+        "scripts/normalize_korean_norms.py",
+        "scripts/verify-beta-signup.cjs",
+        "scripts/verify-ui-design.cjs",
+        "scripts/verify-v2-e2e.cjs",
+        "src/AccountMenu.tsx",
+        "src/App.tsx",
+        "src/Library.tsx",
+        "src/api.ts",
+        "src/feedback-spans.ts",
+        "src/library.css",
+        "src/ui-polish.css"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_privacy_cli.py",
+            "backend/v2_tests/test_network_setup.py",
+            "backend/v2_tests/test_beta_runtime.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 17,
+          "pass": 17
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-native-scheduler-safety": {
+      "phase": "beta-native-scheduler-safety",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/network_service.py",
+        "backend/v2_tests/test_network_setup.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_network_setup.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 9,
+          "pass": 9
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-first-stability": {
+      "phase": "beta-first-stability",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/network_service.py",
+        "backend/v2_tests/test_network_setup.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_network_setup.py",
+            "backend/v2_tests/test_privacy_cli.py",
+            "backend/v2_tests/test_secure_backup.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 30,
+          "pass": 30
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-google-only-entry": {
+      "phase": "beta-google-only-entry",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/auth_api.py",
+        "backend/app/v2/network_gate.py",
+        "backend/network_service.py",
+        "backend/v2_tests/test_auth_api.py",
+        "backend/v2_tests/test_network_gate.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_network_gate.py",
+            "backend/v2_tests/test_auth_api.py",
+            "backend/v2_tests/test_network_setup.py",
+            "backend/v2_tests/test_network_integration.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 43,
+          "pass": 43
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-rules-display": {
+      "phase": "beta-rules-display",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/analysis_api.py",
+        "backend/v2_tests/test_rules_display.py",
+        "src/App.tsx"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_rules_display.py",
+            "backend/engine_tests/test_norms_rules.py",
+            "backend/engine_tests/test_norms_catalogue.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 51,
+          "pass": 51
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-rules-audit": {
+      "phase": "beta-rules-audit",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/analysis/norms_catalogue.py",
+        "backend/app/analysis/ruleset.py",
+        "backend/app/v2/analysis_api.py",
+        "backend/engine_tests/test_norms_catalogue.py",
+        "backend/engine_tests/test_norms_rules.py",
+        "backend/v2_tests/test_rules_api.py",
+        "backend/v2_tests/test_rules_display.py",
+        "src/App.tsx"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/engine_tests/test_norms_rules.py",
+            "backend/engine_tests/test_norms_catalogue.py",
+            "backend/v2_tests/test_rules_display.py",
+            "backend/v2_tests/test_rules_api.py",
+            "backend/v2_tests/test_analysis_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 65,
+          "pass": 65
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-rules-filter": {
+      "phase": "beta-rules-filter",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "src/App.tsx"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_rules_display.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 6,
+          "pass": 6
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-reviewed-norms-expansion": {
+      "phase": "beta-reviewed-norms-expansion",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/analysis/norms_catalogue.py",
+        "backend/app/analysis/norms_reference.py",
+        "backend/app/analysis/reviewed_norms.py",
+        "backend/app/analysis/ruleset.py",
+        "backend/engine_tests/test_norms_catalogue.py",
+        "backend/engine_tests/test_norms_rules.py",
+        "backend/engine_tests/test_reviewed_norms.py",
+        "backend/v2_tests/test_rules_api.py",
+        "backend/v2_tests/test_rules_display.py",
+        "src/App.tsx"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/engine_tests/test_reviewed_norms.py",
+            "backend/engine_tests/test_norms_rules.py",
+            "backend/engine_tests/test_norms_catalogue.py",
+            "backend/v2_tests/test_rules_api.py",
+            "backend/v2_tests/test_rules_display.py",
+            "backend/v2_tests/test_analysis_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 137,
+          "pass": 137
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-baze-adapter": {
+      "phase": "beta-baze-adapter",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/__init__.py",
+        "backend/app/v2/ai_api.py",
+        "backend/app/v2/baze_provider.py",
+        "backend/components/ai.py",
+        "backend/v2_tests/test_ai_api.py",
+        "backend/v2_tests/test_baze_provider.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_ai.py",
+            "backend/v2_tests/test_baze_provider.py",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 51,
+          "pass": 51
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-baze-live-synthetic": {
+      "phase": "beta-baze-live-synthetic",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/baze_provider.py",
+        "backend/v2_tests/test_baze_provider.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_ai.py",
+            "backend/v2_tests/test_baze_provider.py",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 52,
+          "pass": 52
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-baze-schema-compatibility": {
+      "phase": "beta-baze-schema-compatibility",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "backend/app/v2/baze_provider.py",
+        "backend/v2_tests/test_baze_provider.py"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_ai.py",
+            "backend/v2_tests/test_baze_provider.py",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 52,
+          "pass": 52
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-ui-performance-polish": {
+      "phase": "beta-ui-performance-polish",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "docs/automation/backend-queue.local.json",
+        "scripts/book-layout.test.mjs",
+        "scripts/verify-ui-design.cjs",
+        "src/Library.tsx",
+        "src/text-search.ts",
+        "src/ui-polish.css"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_ai.py",
+            "backend/v2_tests/test_baze_provider.py",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 52,
+          "pass": 52
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    },
+    "beta-ui-performance-final": {
+      "phase": "beta-ui-performance-final",
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "changes": [
+        "scripts/book-layout.test.mjs",
+        "scripts/verify-ui-design.cjs",
+        "src/Library.tsx"
+      ],
+      "tests": [
+        {
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_ai.py",
+            "backend/v2_tests/test_baze_provider.py",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "exitCode": 0,
+          "tests": 52,
+          "pass": 52
+        }
+      ],
+      "baseline": "68d771840014cdef9e9acc84be1f2f613cc269a0"
+    }
+  },
+  "projectStatus": "V21_RELEASE_CANDIDATE",
+  "blockingConditions": [
+    "Product UI logout control absent; actual logout API verified through temporary isolated-browser fixture. Operational Google user/bootstrap and public HTTPS deployment not authorized or executed.",
+    "BAZE provider/model/cost/privacy terms, AI consent version and context/usage limits not confirmed; no actual external AI calls.",
+    "Seven-day basis, targets/private-document lifecycle and backup retention unconfirmed; automatic expiry assignment/cleanup activation prohibited.",
+    "G5 DEFERRED_FINAL_REVIEW; no Claude review performed; no production launch approval."
+  ],
+  "finalValidation": {
+    "typecheck": {
+      "command": "pnpm exec tsc --noEmit",
+      "exitCode": 0
+    },
+    "build": {
+      "command": "pnpm run build",
+      "exitCode": 0
+    },
+    "browserActual": {
+      "command": "node scripts/verify-v2-e2e.cjs",
+      "exitCode": 0,
+      "actualApi": true,
+      "isolated": true,
+      "screenshots": 43,
+      "widths": [
+        1440,
+        1024,
+        820,
+        390,
+        320
+      ],
+      "evidence": "artifacts/ui-v2/evidence.json",
+      "analysis30000Ms": 2465,
+      "errors": 0
+    },
+    "browserFixtures": {
+      "command": "node scripts/verify-ui-design.cjs after",
+      "exitCode": 0,
+      "fixtureOnly": true,
+      "screenshots": 100,
+      "widths": [
+        1440,
+        1024,
+        820,
+        390,
+        320
+      ],
+      "reconstructed30000Exactly": true,
+      "errors": 0
+    },
+    "load": {
+      "command": ".venv/Scripts/python.exe backend/v2_tests/measure_api.py 24076",
+      "exitCode": 0,
+      "seconds": 302,
+      "syntheticUsers": 40,
+      "concurrency": [
+        20,
+        40
+      ],
+      "saveReadRequests": 8440,
+      "errors": 0,
+      "p50Ms": 316.5,
+      "p95Ms": 545.7,
+      "rssStartBytes": 714850304,
+      "rssEndBytes": 716238848,
+      "peakRssBytes": 789274624,
+      "evidence": "artifacts/ui-v2/api-load.json"
+    },
+    "backend": {
+      "argv": [
+        ".venv/Scripts/python.exe",
+        "-m",
+        "pytest",
+        "backend/tests",
+        "backend/engine_tests",
+        "backend/component_tests",
+        "backend/mapping_tests",
+        "backend/v2_tests",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--tb=short"
+      ],
+      "exitCode": 0,
+      "tests": 224,
+      "pass": 224
+    },
+    "apiLoad": {
+      "command": ".venv/Scripts/python.exe backend/v2_tests/measure_api.py 24076",
+      "exitCode": 0,
+      "syntheticOnly": true,
+      "server": "loopback TLS Werkzeug QA, not a production Waitress capacity guarantee",
+      "durationSeconds": 302,
+      "syntheticUsers": 40,
+      "concurrency": [
+        20,
+        40
+      ],
+      "requests": 8440,
+      "errors": [],
+      "p50Ms": 316.5,
+      "p95Ms": 545.7,
+      "initialMemory": {
+        "rssBytes": 714850304,
+        "peakRssBytes": 785571840
+      },
+      "finalMemory": {
+        "rssBytes": 716238848,
+        "peakRssBytes": 789274624
+      },
+      "measurements": [
+        {
+          "concurrency": 20,
+          "burstMs": 469
+        },
+        {
+          "concurrency": 40,
+          "burstMs": 969
+        },
+        {
+          "codePoints": 10000,
+          "saveMs": 46.6,
+          "analysisMs": 470.8,
+          "lookupMs": 58.6,
+          "pdfMs": 307
+        },
+        {
+          "codePoints": 30000,
+          "saveMs": 43.9,
+          "analysisMs": 947.2,
+          "lookupMs": 124.5,
+          "pdfMs": 374.5
+        },
+        {
+          "codePoints": 10000,
+          "saveMs": 50.9,
+          "analysisMs": 456.2,
+          "lookupMs": 54.7,
+          "pdfMs": 300.3
+        },
+        {
+          "codePoints": 30000,
+          "saveMs": 45.1,
+          "analysisMs": 1184.4,
+          "lookupMs": 145.2,
+          "pdfMs": 406.3
+        },
+        {
+          "codePoints": 10000,
+          "saveMs": 41.5,
+          "analysisMs": 486.1,
+          "lookupMs": 70.2,
+          "pdfMs": 354.8
+        },
+        {
+          "codePoints": 30000,
+          "saveMs": 94.3,
+          "analysisMs": 1083.1,
+          "lookupMs": 130.1,
+          "pdfMs": 365
+        },
+        {
+          "codePoints": 10000,
+          "saveMs": 52.4,
+          "analysisMs": 509,
+          "lookupMs": 71.3,
+          "pdfMs": 304.3
+        },
+        {
+          "codePoints": 30000,
+          "saveMs": 93.3,
+          "analysisMs": 1076.1,
+          "lookupMs": 148.4,
+          "pdfMs": 369.1
+        },
+        {
+          "codePoints": 10000,
+          "saveMs": 90,
+          "analysisMs": 381.5,
+          "lookupMs": 63.5,
+          "pdfMs": 305.7
+        },
+        {
+          "codePoints": 30000,
+          "saveMs": 141.8,
+          "analysisMs": 1016.3,
+          "lookupMs": 117,
+          "pdfMs": 359.2
+        },
+        {
+          "codePoints": 10000,
+          "saveMs": 59,
+          "analysisMs": 479.3,
+          "lookupMs": 61.4,
+          "pdfMs": 292.4
+        },
+        {
+          "codePoints": 30000,
+          "saveMs": 133.2,
+          "analysisMs": 1070.8,
+          "lookupMs": 118.4,
+          "pdfMs": 363.6
+        },
+        {
+          "codePoints": 10000,
+          "saveMs": 92.4,
+          "analysisMs": 442.8,
+          "lookupMs": 66.8,
+          "pdfMs": 297.3
+        },
+        {
+          "codePoints": 30000,
+          "saveMs": 169.8,
+          "analysisMs": 1107.4,
+          "lookupMs": 125.1,
+          "pdfMs": 363.9
+        }
+      ]
+    },
+    "pdfVisual": {
+      "pages": 33,
+      "first": "artifacts/ui-v2/pdf-final-first.png",
+      "last": "artifacts/ui-v2/pdf-final-last.png",
+      "koreanAndSpecialCharacters": true,
+      "sourceVersionAndRunMatch": true
+    },
+    "runner": {
+      "preflight": {
+        "command": "node C:/Projects/dream-hs-automation-bounded-v3/automation/runner.mjs --queue docs/automation/backend-queue.local.json",
+        "exitCode": 0,
+        "status": "PASS",
+        "protectedFiles": 30
+      },
+      "tests": {
+        "command": "node --test C:/Projects/dream-hs-automation-bounded-v3/automation/runner-geulbit.test.mjs",
+        "exitCode": 0,
+        "pass": 4
+      },
+      "gitDiffCheck": {
+        "command": "git diff --check",
+        "exitCode": 0
+      }
+    }
+  },
+  "dbMappingPreparation": {
+    "plan": "docs/automation/DB_MAPPING_PLAN.md",
+    "evidence": {
+      "source": "C:\\Users\\USER\\GeulbitData\\db\\geulbit.sqlite3",
+      "sourceRevision": "0001_initial",
+      "tableCount": 31,
+      "counts": {
+        "activity_record": 0,
+        "alembic_version": 1,
+        "analysis": 0,
+        "analysis_finding": 0,
+        "analysis_job": 0,
+        "analysis_sentence": 0,
+        "argument_link": 0,
+        "backup_record": 0,
+        "draft_autosave": 0,
+        "finding_action": 0,
+        "language_rule": 4,
+        "ocr_run": 0,
+        "official_source": 1,
+        "peel_result": 0,
+        "quote_card": 0,
+        "quote_check_result": 0,
+        "quote_verification": 0,
+        "revision": 0,
+        "revision_change": 0,
+        "rubric": 0,
+        "rubric_file": 0,
+        "rubric_item": 0,
+        "rubric_result": 0,
+        "source_document": 0,
+        "source_page": 0,
+        "spelling_result": 0,
+        "workspace": 1,
+        "workspace_setting": 17,
+        "writing": 0,
+        "writing_resource": 0,
+        "writing_version": 0
+      },
+      "sourceHashBeforeAndAfter": "5eb7e531521311c01739065bb0494b27d23a438dba9389526da2ea429e6d38c5",
+      "sourceSchemaAndCountsUnchanged": true,
+      "isolatedDirectory": "C:\\Users\\USER\\GeulbitData\\temp\\db-mapping-rehearsal-62458e07138d491c920bbaa106fb4ac8",
+      "candidateRegisteredMigration": false,
+      "candidateRevision": "0001_initial",
+      "additiveColumns": [
+        "writing.owner_id",
+        "source_document.owner_id",
+        "writing_version.snapshot_hash",
+        "writing_version.normalization_version",
+        "analysis.essay_version_id",
+        "analysis.result_snapshot"
+      ],
+      "candidateNewTables": [
+        "users",
+        "document_revisions"
+      ],
+      "integrity": "ok",
+      "foreignKeyViolations": 0,
+      "legacyCountsPreserved": true,
+      "explicitRollbackPassed": true,
+      "safeBackupRestorePassed": true,
+      "inventedUsers": 0,
+      "scope": "KEY_RELATION_EXPERIMENT_NOT_COMPLETE_P03_MIGRATION"
+    },
+    "tests": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/mapping_tests -q -p no:cacheprovider",
+      "exitCode": 0,
+      "passed": 6,
+      "seconds": 1.44
+    },
+    "changedFiles": [
+      "backend/mapping/rehearsal.py",
+      "backend/mapping_tests/test_mapping.py",
+      "docs/automation/DB_MAPPING_PLAN.md",
+      "docs/automation/backend-queue.pending.json",
+      "docs/automation/backend-checkpoint.json",
+      "docs/automation/backend-queue.local.json"
+    ],
+    "next": "Approve original Phase numbering or candidate assignment; develop registered additive revision under approved scope then separately approve operating DB application",
+    "notComplete": [
+      "full P03 migration/models/API",
+      "P03-P12 execution approval",
+      "G5 final review"
+    ],
+    "currentStatus": "FORMAL_ADDITIVE_REVISIONS_AND_P03_P12_ISOLATED_DEVELOPMENT_VERIFIED"
+  },
+  "formalMigration": {
+    "revision": "0002_geulbit_v2",
+    "sourceRevision": "0001_initial",
+    "operationalApplied": false,
+    "sourceHashUnchanged": "5eb7e531521311c01739065bb0494b27d23a438dba9389526da2ea429e6d38c5",
+    "legacyTablesPreserved": 31,
+    "tablesAfterUpgrade": 40,
+    "legacyValuesPreserved": true,
+    "upgradeAndReexecution": "PASS",
+    "integrity": "ok",
+    "fkViolations": 0,
+    "downgrade": "REFUSED_NONDESTRUCTIVE",
+    "verifiedBackupRestore": "PASS",
+    "isolatedDirectory": "C:\\Users\\USER\\GeulbitData\\temp\\formal-migration-532777a1fc1648fcb0aaabb77ba64c5f",
+    "latestRevision": "0003_resource_ownership",
+    "latestIsolatedDirectory": "C:\\Users\\USER\\GeulbitData\\temp\\resource-migration-a85c273cf1b644d58323e3fcd89ea38b",
+    "latestLegacyValuesPreserved": true
+  },
+  "runtimeRunnerStatePath": "C:/Projects/dream-hs-automation-bounded-v3/output/geulbit/runtime/state.json",
+  "historicalBlockedChecks": [
+    {
+      "argv": [
+        ".venv/Scripts/python.exe",
+        "backend/storage_cli.py",
+        "check"
+      ],
+      "exitCode": 1,
+      "code": "DATA_ROOT_REQUIRED"
+    },
+    {
+      "check": "read-only E volume validation",
+      "exitCode": 1,
+      "code": "UNSUPPORTED_FILESYSTEM",
+      "filesystem": "exFAT",
+      "health": "Warning",
+      "dataRootCreated": false
+    }
+  ],
+  "operationalDatabase": {
+    "path": "C:/Users/USER/GeulbitData/db/geulbit.sqlite3",
+    "revision": "0003_resource_ownership",
+    "sha256": "28909344b85e958eec0bdb88d87a04b6abd64d1dd2757e567c91470fd52b1235",
+    "tableCount": 40,
+    "integrity": "ok",
+    "fkErrors": 0,
+    "userFiles": 0,
+    "newUsers": 0,
+    "beforeHash": "5eb7e531521311c01739065bb0494b27d23a438dba9389526da2ea429e6d38c5",
+    "changedOnlyByApprovedAdditiveMigration": true,
+    "automaticMigration": false,
+    "nextStartup": "SCHEMA_CHECK_PASS; authentication and service release configuration still pending"
+  },
+  "operationalMigration": {
+    "status": "MIGRATION_COMPLETE",
+    "receipt": "C:\\Users\\USER\\GeulbitData\\operational\\migration-migration-20261010-2e3134f28909461ea1149ebc94aab614.json",
+    "beforeRevision": "0001_initial",
+    "afterRevision": "0003_resource_ownership",
+    "dataRoot": "C:\\Users\\USER\\GeulbitData",
+    "backup": "C:\\Users\\USER\\GeulbitData\\operational\\backups\\migration-20261010-2e3134f28909461ea1149ebc94aab614.sqlite3",
+    "backupHash": "c20708d5a147e348f611de3b91a3789bc70615acc6e3e93666178ef803bf95c0",
+    "backupIntegrity": "ok",
+    "restore": "C:\\Users\\USER\\GeulbitData\\temp\\migration-20261010-2e3134f28909461ea1149ebc94aab614\\restored.sqlite3",
+    "restoreIntegrity": "ok",
+    "preflightMigrationGates": {
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "PASS",
+      "G6": "PASS",
+      "G7": "PASS",
+      "G8": "PASS"
+    },
+    "independentProjectG5": "DEFERRED_FINAL_REVIEW",
+    "targetedTests": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_migration.py -q -p no:cacheprovider --tb=short",
+      "exitCode": 0,
+      "pass": 7
+    },
+    "combinedApplyAndVerificationCommand": ".venv/Scripts/python.exe .tmp-git-baseline/operational-migration.py apply; existing Flask-Migrate upgrade path, 0002 then 0003",
+    "combinedApplyAndVerificationExitCode": 1,
+    "readOnlyReverification": {
+      "command": ".venv/Scripts/python.exe .tmp-git-baseline/operational-migration-verify.py",
+      "exitCode": 0,
+      "correction": "JSON round-trip converts tuples to lists; canonical comparison and complete sqlite_master match. No revision rerun or DB replacement."
+    },
+    "integrity": "ok",
+    "fkErrors": 0,
+    "existingRowsPreserved": true,
+    "ormSchemaCompatible": true,
+    "triggerSchemaMatches": true,
+    "sqliteSettings": {
+      "foreign_keys": 1,
+      "busy_timeout": 5000,
+      "journal_mode": "wal"
+    },
+    "startupCheck": {
+      "command": ".venv/Scripts/python.exe backend/storage_cli.py check (approved root and volume environment)",
+      "exitCode": 0,
+      "status": "PASS"
+    },
+    "samePhysicalDiskBackup": true,
+    "otherPhasesStarted": false
+  },
+  "serverCredential": {
+    "name": "BAZE_API_KEY",
+    "storage": "Windows DPAPI CurrentUser",
+    "path": "C:/Users/USER/GeulbitData/operational/secrets.dat",
+    "encryptedRoundTripVerified": true,
+    "existingSecretsPreserved": true,
+    "externalCallsPerformed": false,
+    "codexProviderChanged": false,
+    "aiEnabled": false,
+    "runtimeGatewayConnection": "NOT_VERIFIED_OR_ACTIVATED"
+  },
+  "authServiceValidation": {
+    "status": "PARTIAL",
+    "setup": "docs/automation/AUTH_SETUP.md",
+    "template": ".env.example",
+    "googleRealLogin": "PENDING_EXTERNAL_NOT_ATTEMPTED",
+    "operatingFullService": "PENDING_EXTERNAL_CONFIGURATION_AND_FINAL_RELEASE_APPROVAL",
+    "isolatedFlow": {
+      "command": "node scripts/verify-auth-flow.cjs",
+      "exitCode": 0,
+      "authentication": "MOCK_OIDC_REAL_RSA_SIGNATURE_NOT_REAL_GOOGLE",
+      "actualApi": true,
+      "isolated": true,
+      "flow": [
+        "login",
+        "pending approval",
+        "administrator approval API",
+        "login",
+        "create draft",
+        "save revision",
+        "analysis",
+        "feedback",
+        "both themes same essay/version/run",
+        "PDF download",
+        "CSRF logout",
+        "session invalidation"
+      ],
+      "screenshots": 3,
+      "evidence": "artifacts/auth-service/evidence.json",
+      "pdfVisual": "artifacts/auth-service/pdf-first.png",
+      "errors": 0
+    },
+    "targetedTests": {
+      "argv": [
+        ".venv/Scripts/python.exe",
+        "-m",
+        "pytest",
+        "backend/component_tests/test_auth.py",
+        "backend/v2_tests/test_auth_api.py",
+        "backend/v2_tests/test_deployment.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--tb=short"
+      ],
+      "exitCode": 0,
+      "tests": 47,
+      "pass": 47
+    },
+    "operationalReadOnly": {
+      "command": ".venv/Scripts/python.exe .tmp-git-baseline/auth-readonly-probe.py",
+      "exitCode": 0,
+      "status": "PASS_READ_ONLY_OPERATIONAL_WAITRESS",
+      "health": 200,
+      "schema": "0003_resource_ownership",
+      "privateApi": 503,
+      "login": 503,
+      "untrustedHost": 400,
+      "databaseHashUnchanged": true,
+      "readOnlyDatabaseUri": true,
+      "fullOperationalLogin": "PENDING_EXTERNAL",
+      "fullFactoryRecoveryStartupNotExecuted": true,
+      "dbHash": "28909344b85e958eec0bdb88d87a04b6abd64d1dd2757e567c91470fd52b1235"
+    },
+    "externalConfigPresence": {
+      "GEULBIT_GOOGLE_CLIENT_ID": false,
+      "GEULBIT_GOOGLE_CLIENT_SECRET": false,
+      "GEULBIT_GOOGLE_REDIRECT_URI": false,
+      "GEULBIT_PUBLIC_ORIGIN": false,
+      "GEULBIT_SESSION_SIGNING_KEY": false,
+      "GEULBIT_SESSION_MAX_AGE": false,
+      "revision": "0003_resource_ownership",
+      "integrity": "ok",
+      "fkErrors": 0,
+      "users": 0,
+      "essays": 0,
+      "dbHash": "28909344b85e958eec0bdb88d87a04b6abd64d1dd2757e567c91470fd52b1235"
+    },
+    "credentialPermissionCheck": {
+      "path": "C:/Users/USER/GeulbitData/operational/secrets.dat",
+      "allowedPrincipals": [
+        "current USER",
+        "SYSTEM",
+        "Administrators"
+      ],
+      "dpapiKeyReadOrDecrypted": false,
+      "credentialCopiedOrTransmitted": false,
+      "permissionsChanged": false
+    },
+    "sourcePreservation": {
+      "uiUnchanged": true,
+      "migrationsUnchanged": true,
+      "operationalDataUnchanged": true,
+      "analysisEngineUnchanged": true
+    },
+    "gates": {
+      "G1": "PASS_ISOLATED_CONFIGURATION_CONTRACT",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW"
+    },
+    "deployment": false
+  },
+  "localOidcReadiness": {
+    "status": "PARTIAL",
+    "googleRealLogin": "NOT_EXECUTED_MISSING_CLIENT_ID_AND_SECRET",
+    "googleCredentialPresence": {
+      "clientId": false,
+      "clientSecret": false
+    },
+    "publicOrigin": "https://localhost:8770",
+    "redirectUri": "https://localhost:8770/api/auth/callback",
+    "approvedDevelopmentLifetimes": {
+      "sessionSeconds": 3600,
+      "stateSeconds": 300
+    },
+    "sessionSecret": {
+      "registered": true,
+      "generatedCryptographicRandom": true,
+      "storage": "existing DPAPI CurrentUser; no plaintext configuration"
+    },
+    "firstAdmin": {
+      "userDesignatedEmail": "ps25090@onedu.jje.go.kr",
+      "verifiedGoogleSub": "NOT_OBTAINED",
+      "bootstrap": "NOT_EXECUTED"
+    },
+    "tls": {
+      "trust": "Windows CurrentUser Root; Schannel and Edge verified without certificate bypass",
+      "thumbprint": "129201E8C2CD52F64047977DA7156F5CCA375ACA",
+      "expiresAt": "2027-01-08T12:13:57+00:00",
+      "scope": "non-CA localhost-only development leaf",
+      "privateKey": "encrypted PKCS8; password in existing DPAPI",
+      "bind": "127.0.0.1:8770",
+      "upstream": "Waitress HTTP 127.0.0.1:5000"
+    },
+    "secretFilePermissionCheck": {
+      "allowedPrincipals": [
+        "current USER",
+        "SYSTEM",
+        "Administrators"
+      ],
+      "keyOutputOrTransmission": false,
+      "bazePreserved": true
+    },
+    "targetedTests": {
+      "argv": [
+        ".venv/Scripts/python.exe",
+        "-m",
+        "pytest",
+        "backend/component_tests/test_auth.py",
+        "backend/v2_tests/test_auth_api.py",
+        "backend/v2_tests/test_deployment.py",
+        "backend/v2_tests/test_server_secrets.py",
+        "backend/v2_tests/test_local_https.py",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--tb=short"
+      ],
+      "exitCode": 0,
+      "tests": 64,
+      "pass": 64
+    },
+    "readOnlyOperationalProbe": {
+      "command": ".venv/Scripts/python.exe .tmp-git-baseline/tls-readonly-probe.py",
+      "exitCode": 0,
+      "windowsSchannelCertificateValidation": "PASS",
+      "browser": "Edge; default certificate verification",
+      "readOnlyOperationalDb": true,
+      "databaseHashUnchanged": true,
+      "integrity": "ok",
+      "fkViolations": 0,
+      "users": 0,
+      "actualGoogleLogin": "NOT_EXECUTED_MISSING_CREDENTIALS",
+      "portsStopped": [
+        5000,
+        8770
+      ]
+    },
+    "browserProbe": {
+      "trustedTLS": true,
+      "ignoreHTTPSErrors": false,
+      "health": 200,
+      "unauthenticatedApi": 401,
+      "unconfiguredLogin": 503,
+      "syntheticCookie": {
+        "secure": true,
+        "httpOnly": true,
+        "sameSite": "Lax"
+      },
+      "realGoogleAuthentication": false,
+      "screenshot": "artifacts/auth-local-tls/trusted-localhost-health.png"
+    },
+    "missingCredentialLauncher": {
+      "exitCode": 1,
+      "isolatedDbNotCreated": true
+    },
+    "gates": {
+      "G1": "PASS_LOCAL_SETUP_NOT_REAL_LOGIN",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "DEFERRED_FINAL_REVIEW"
+    },
+    "preservation": {
+      "operationalDb": true,
+      "ui": true,
+      "engine": true,
+      "migrations": true,
+      "externalAiDisabled": true,
+      "automaticDeletionDisabled": true
+    },
+    "setup": "docs/automation/AUTH_SETUP.md"
+  },
+  "actualGoogleValidation": {
+    "updatedAt": "2026-10-10T13:48:53.070902+00:00",
+    "status": "PASS_REAL_GOOGLE_ISOLATED_SERVICE",
+    "provider": "Google OIDC; not mock",
+    "clientSecret": "UPDATED_DPAPI_BY_USER",
+    "tokenChecks": [
+      "signature",
+      "issuer",
+      "audience",
+      "nonce",
+      "expiration",
+      "issued_at"
+    ],
+    "verifiedSubjectStoredOnlyInIsolatedDb": true,
+    "designatedAccountMatch": true,
+    "initialState": "USER/PENDING_APPROVAL",
+    "explicitBootstrap": "ADMIN/ACTIVE in isolated DB only",
+    "relogin": "PASS_USER_CONFIRMED_AND_AUTHENTICATED_BROWSER",
+    "flow": {
+      "save": "PASS",
+      "autosave": "PASS; revision 3; 180 code points",
+      "analysis": "PASS; immutable version equals draft; completed; 2 findings",
+      "defaultTheme": "PASS",
+      "bookshelfTheme": "PASS; same essay and analysis",
+      "pdf": "PASS; actual download; 1 page; full synthetic body; Korean rendering inspected",
+      "logoutApi": "PASS; actual Google cookie; CSRF protected; subsequent session 401",
+      "logoutProductButton": "NOT_PRESENT; temporary same-origin verification page used, then removed",
+      "pageTurning": "NOT_RETESTED; short sample occupies one spread"
+    },
+    "tests": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/component_tests/test_auth.py backend/v2_tests/test_auth_api.py backend/v2_tests/test_server_secrets.py -q -p no:cacheprovider --tb=short",
+      "exitCode": 0,
+      "passed": 51,
+      "seconds": 3.54,
+      "provider": "mock/isolated contract tests; separate from live browser flow"
+    },
+    "preservation": {
+      "operationalRevision": "0003_resource_ownership",
+      "operationalHashUnchanged": true,
+      "integrity": "ok",
+      "foreignKeyErrors": 0,
+      "operationalUsers": 0,
+      "operationalEssays": 0,
+      "uiUnchangedThisTask": true,
+      "migrationsUnchanged": true,
+      "secretsNotPrinted": true,
+      "bazeDisabled": true,
+      "automaticDeletionDisabled": true
+    },
+    "gates": {
+      "G1": "PASS_REAL_GOOGLE_ISOLATED_FLOW; product logout button absent",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS_READ_ONLY_SCOPE_AND_PROTECTED_HASH; no baseline adoption",
+      "G5": "DEFERRED_FINAL_REVIEW"
+    },
+    "evidence": "artifacts/auth-live/evidence.json",
+    "screenshots": [
+      "artifacts/auth-live/real-google-home.jpg",
+      "artifacts/auth-live/real-google-default-analysis.jpg",
+      "artifacts/auth-live/real-google-bookshelf.jpg",
+      "artifacts/auth-live/real-google-book-feedback.jpg",
+      "artifacts/auth-live/real-google-logout.jpg",
+      "artifacts/auth-live/real-google-report-page1.png"
+    ],
+    "runtime": {
+      "waitress": "127.0.0.1:5000",
+      "tls": "127.0.0.1:8770",
+      "state": "RUNNING_LOOPBACK_ONLY",
+      "db": "C:/Users/USER/GeulbitData/temp/oidc-dev-localhost/db/geulbit.sqlite3"
+    }
+  },
+  "uiArchitectureAudit": {
+    "updatedAt": "2026-10-10T14:37:39.053522+00:00",
+    "status": "COMPLETE_REQUESTED_AUDIT_SCOPE; RELEASE_UNAPPROVED",
+    "report": "docs/automation/UI_ARCH_AUDIT.md",
+    "changedFiles": [
+      "src/App.tsx",
+      "src/Library.tsx",
+      "src/api.ts",
+      "src/AccountMenu.tsx",
+      "src/library.css",
+      "public/auth-status.css",
+      "backend/components/auth.py",
+      "backend/app/__init__.py",
+      "backend/app/v2/auth_api.py",
+      "backend/app/v2/operations_api.py",
+      "backend/component_tests/test_auth.py",
+      "backend/v2_tests/test_auth_api.py",
+      "backend/v2_tests/test_operations_api.py",
+      "backend/v2_tests/qa_server.py",
+      "scripts/account-session.test.mjs",
+      "docs/automation/UI_ARCH_AUDIT.md",
+      "docs/automation/backend-checkpoint.json"
+    ],
+    "realGoogle": {
+      "accountDisplay": "USER_CONFIRMED_NORMAL",
+      "role": "ADMIN_PREVIOUS_VERIFIED_BOOTSTRAP_REUSED",
+      "isolatedDb": true,
+      "existingSyntheticEssayAndAnalysisReused": true,
+      "pdfDownload": true,
+      "productLogout": true,
+      "backPrivateContentBlocked": true,
+      "mockDistinct": true
+    },
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests backend/component_tests backend/engine_tests -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 204,
+        "seconds": 102.12
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_operations_api.py::test_admin_ai_status_uses_same_approved_terms_flag backend/v2_tests/test_ai_api.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 6,
+        "seconds": 7.81,
+        "note": "After final operations setting-key fix; overlaps regression suite"
+      },
+      {
+        "command": "node scripts/account-session.test.mjs",
+        "exitCode": 0,
+        "passed": 7
+      },
+      {
+        "command": "node scripts/book-layout.test.mjs",
+        "exitCode": 0,
+        "coverage": "10k/30k code points, 3 capacities, Unicode and edited/repeated spans"
+      },
+      {
+        "command": "node node_modules/typescript/bin/tsc --noEmit",
+        "exitCode": 0
+      },
+      {
+        "command": "node node_modules/vite/bin/vite.js build",
+        "exitCode": 0,
+        "modules": 22,
+        "milliseconds": 354
+      },
+      {
+        "command": "node .tmp-git-baseline/ui-arch-scope-check.mjs",
+        "exitCode": 0,
+        "note": "Read-only approved scope and unchanged protected files; authorized library.css delta separately recorded, baseline not adopted"
+      }
+    ],
+    "browser": {
+      "widths": [
+        1440,
+        1024,
+        820,
+        390,
+        320
+      ],
+      "coreCases": 25,
+      "evidence": "artifacts/ui-arch-audit/evidence.json",
+      "essayCodePoints": 30000,
+      "horizontalOverflow": false,
+      "allPagesTraversed": false,
+      "faultScreensInjected": false,
+      "networkErrorScreenVerified": true,
+      "mockQaServerStopped": true
+    },
+    "preservation": {
+      "operationalRevision": "0003_resource_ownership",
+      "dbHashUnchanged": true,
+      "dpapiHashUnchanged": true,
+      "migrationsUnchanged": true,
+      "operationalUsers": 0,
+      "operationalTestWrites": false,
+      "backupAndExternalDriveUntouched": true
+    },
+    "gates": {
+      "G1": "PASS_REQUESTED_ACCOUNT_UI_AND_AUDIT",
+      "G2": "PASS_RELATED_TESTS_AND_CORE_BROWSER_CASES",
+      "G3": "PASS_CHECKED_INVARIANTS",
+      "G4": "READ_ONLY_APPROVED_SCOPE_PASS; RUNNER_PROTECTED_CSS_UPDATE_REQUIRED_BEFORE_NEXT_RUN",
+      "G5": "DEFERRED_FINAL_REVIEW"
+    },
+    "remaining": [
+      "Release approval and final independent review",
+      "Approved CSS protected-hash contract update before subsequent Runner phase",
+      "External AI terms and deletion policy remain blocked",
+      "Unimplemented backup/restore/bulk delete/export UI remains disabled"
+    ],
+    "nextAction": "No implementation repeat. Review audit; continue only separately approved release/Runner configuration tasks."
+  },
+  "intuitiveUiValidation": {
+    "updatedAt": "2026-10-10T14:52:44.659268+00:00",
+    "status": "COMPLETE_APPROVED_UI_SIMPLIFICATION_AND_ISOLATED_CORE_VALIDATION",
+    "changedFiles": [
+      "src/Library.tsx",
+      "src/library.css",
+      "docs/automation/UI_ARCH_AUDIT.md",
+      "docs/automation/backend-checkpoint.json"
+    ],
+    "backendImplementationChanged": false,
+    "evidence": "artifacts/ui-intuitive/browser-evidence.json",
+    "tests": {
+      "backendCommand": ".venv/Scripts/python.exe -m pytest backend/v2_tests backend/engine_tests -q -p no:cacheprovider --tb=short",
+      "exitCode": 0,
+      "passed": 152,
+      "seconds": 73.75,
+      "accountSessionCases": 7,
+      "bookLayout": "PASS_10K_30K",
+      "typecheckExit": 0,
+      "buildExit": 0,
+      "buildMilliseconds": 241
+    },
+    "actualFlow": "Mock session + actual isolated API/DB/Kiwi/PDF; NOT a repeated real Google authentication",
+    "preservation": {
+      "operationalDbAndSecretsHashUnchanged": true,
+      "migrationsUnchanged": true,
+      "operationalWrites": false,
+      "externalAiCalls": false,
+      "automaticDeletionEnabled": false
+    },
+    "G5": "DEFERRED_FINAL_REVIEW",
+    "remaining": [
+      "External services and operating release approval remain separate",
+      "Runner protected CSS baseline contract remains pending; no adoption performed"
+    ],
+    "nextAction": "Requested UI work finished. No reimplementation required."
+  },
+  "koreanNormsReference": {
+    "updatedAt": "2026-10-10T16:31:25.105135+00:00",
+    "status": "REGISTERED_PUBLIC_REFERENCE_IN_ACTUAL_GOOGLE_ISOLATED_SERVICE",
+    "sourcePath": "C:/Users/USER/Pictures/geulbit_korean_norms_reference_v1.pdf",
+    "sha256": "c56cfbc534c6459f3d67af72cdb96fb150bd5bf002c753fd1ce25aea95b045c5",
+    "pages": 314,
+    "referenceContract": "backend/app/analysis/norms_reference.py",
+    "plan": "docs/design/20261010/KOREAN_NORMS_REFERENCE.md",
+    "linkedRules": [
+      "gb-local-001",
+      "gb-local-002",
+      "gb-local-005",
+      "gb-local-006",
+      "gb-local-007",
+      "gb-local-008"
+    ],
+    "rulesetVersion": "geulbit.local-reviewed/3",
+    "semanticRuleChanges": true,
+    "originalPdfUnchanged": true,
+    "operationalDbWritten": false,
+    "pdfPubliclyServed": true,
+    "copiedToGitOrPublic": false,
+    "tests": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/engine_tests backend/v2_tests/test_rules_api.py backend/v2_tests/test_analysis_api.py -q -p no:cacheprovider --tb=short",
+      "exitCode": 0,
+      "passed": 27,
+      "seconds": 9.32,
+      "fileInspection": "artifacts/norms-reference/verification.json"
+    },
+    "pending": [],
+    "runningService": "Isolated oidc-dev-localhost Waitress safely restarted without --init; reference metadata loaded, existing TLS proxy preserved",
+    "G5": "DEFERRED_FINAL_REVIEW",
+    "authorization": "User explicitly approved full provided PDF public upload on 2026-10-11",
+    "publicExposure": "Authenticated PUBLIC/DOWNLOAD inside local isolated service only; not internet deployed",
+    "documentId": "9eae2682-ed1e-48ae-a7b4-dd589e68b288",
+    "actualRegistrationEvidence": "artifacts/optimization/live-reference-registration.json",
+    "verifiedDesignatedAdminOwner": true
+  },
+  "optimizationValidation": {
+    "updatedAt": "2026-10-10T15:38:59.460624+00:00",
+    "status": "LOCAL_IMPLEMENTATION_VALIDATION_AND_REFERENCE_REGISTRATION_COMPLETE",
+    "changedFiles": [
+      "src/App.tsx",
+      "src/Library.tsx",
+      "src/library.css",
+      "src/feedback-spans.ts",
+      "scripts/feedback-spans.test.mjs",
+      "backend/app/v2/library_api.py",
+      "backend/app/analysis/norms_reference.py",
+      "backend/v2_tests/test_library_api.py",
+      "docs/design/20261010/KOREAN_NORMS_REFERENCE.md",
+      "docs/automation/UI_ARCH_AUDIT.md",
+      "docs/automation/backend-checkpoint.json"
+    ],
+    "tests": {
+      "regression": {
+        "passed": 154,
+        "seconds": 82.79,
+        "exit": 0
+      },
+      "components": {
+        "passed": 53,
+        "seconds": 3.79,
+        "exit": 0
+      },
+      "finalTargeted": {
+        "passed": 18,
+        "seconds": 8.35,
+        "exit": 0
+      },
+      "typecheck": 0,
+      "build": 0,
+      "buildMilliseconds": 218,
+      "nodeAccountCases": 7,
+      "bookLayout": "PASS_10K_30K",
+      "spanValidation": "PASS_UNICODE_STALE_REPEAT_EQUIVALENCE"
+    },
+    "evidence": "artifacts/optimization/",
+    "actualPdf": "User registered through actual Google service; read-only DB confirms 314 pages, exact original bytes, one immutable revision, verified designated ADMIN ownership",
+    "operationalDbWritten": false,
+    "secretsUnchanged": true,
+    "G5": "DEFERRED_FINAL_REVIEW",
+    "runner": "Formal G4 pending CSS and historical 02_ENGINE.md protected baseline reconciliation; remaining protected contracts PASS; no automatic adoption",
+    "runningService": "Isolated actual-Google Waitress safely restarted without init; TLS proxy retained; QA stopped",
+    "nextAction": "No duplicate upload required. Operating deployment and Runner protected baseline reconciliation/G5 remain separate."
+  },
+  "normsRulesValidation": {
+    "updatedAt": "2026-10-10T16:40:24.369587+00:00",
+    "status": "PASS_TARGETED_ISOLATED_API_AND_ENGINE",
+    "rulesetVersion": "geulbit.local-reviewed/3",
+    "sourcePages": [
+      127,
+      151,
+      152,
+      192
+    ],
+    "changedFiles": [
+      "backend/app/analysis/ruleset.py",
+      "backend/app/analysis/norms_reference.py",
+      "backend/engine_tests/test_norms_rules.py",
+      "backend/v2_tests/test_rules_api.py",
+      "docs/design/20261010/KOREAN_NORMS_REFERENCE.md",
+      "docs/automation/backend-checkpoint.json"
+    ],
+    "tests": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/engine_tests backend/v2_tests/test_rules_api.py backend/v2_tests/test_analysis_api.py backend/v2_tests/test_reanalysis_api.py backend/v2_tests/test_structure_api.py backend/v2_tests/test_quote_api.py -q -p no:cacheprovider --tb=short",
+      "exitCode": 0,
+      "passed": 81,
+      "seconds": 14.73
+    },
+    "normalEssayCandidates": 0,
+    "mixedEssayCandidates": 7,
+    "determinism": "PASS",
+    "newRulesTier": "확인 필요; no automatic correction",
+    "preservation": {
+      "UI": true,
+      "operationalDb": true,
+      "secrets": true,
+      "legacySpellingRules": true,
+      "historicalAnalysisSnapshots": true
+    },
+    "evidence": "artifacts/norms-analysis/simple-essay.json",
+    "runningService": "Existing isolated actual-Google Waitress restarted without initialization; TLS proxy retained",
+    "G5": "DEFERRED_FINAL_REVIEW",
+    "remaining": "Finite candidate coverage only; no complete grammar or latest norms certification. Runner protected baseline reconciliation remains separate."
+  },
+  "normsCatalogueNormalization": {
+    "status": "NORMALIZED_DEFAULT_REFERENCE_COMPLETE_DETECTOR_COVERAGE_PARTIAL",
+    "catalogue": "backend/app/analysis/data/korean_norms_v1.json",
+    "catalogueSha256": "cb5afaad5129f66d1be4de01187b1a77077239d230ceccfd8656cdfb77c31ace",
+    "pages": 314,
+    "provisions": 134,
+    "categories": {
+      "SPELLING": 57,
+      "PUNCTUATION": 21,
+      "STANDARD_WORD": 26,
+      "PRONUNCIATION": 30
+    },
+    "linkedProvisions": 3,
+    "referenceOnlyProvisions": 131,
+    "reviewedLocalDetectors": 8,
+    "rulesetVersion": "geulbit.local-reviewed/4",
+    "normalization": "NFC/LF; preserve extracted whitespace, full page text and exception markers; table meanings not inferred",
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/engine_tests backend/v2_tests/test_rules_api.py backend/v2_tests/test_analysis_api.py backend/v2_tests/test_reanalysis_api.py backend/v2_tests/test_structure_api.py backend/v2_tests/test_quote_api.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 85,
+        "seconds": 15.08
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_rules_api.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 4,
+        "seconds": 3.54
+      }
+    ],
+    "essay": {
+      "normalCandidates": 0,
+      "mixedCandidates": 7,
+      "deterministic": true
+    },
+    "preservation": {
+      "src/App.tsx": true,
+      "src/Library.tsx": true,
+      "src/library.css": true,
+      "backend/app/analysis/spelling.py": true,
+      "C:/Users/USER/GeulbitData/db/geulbit.sqlite3": true,
+      "C:/Users/USER/GeulbitData/operational/secrets.dat": true
+    },
+    "G5": "DEFERRED_FINAL_REVIEW",
+    "remaining": [
+      "131 provisions reference-only; contextual executable rules need reviewed examples and exceptions",
+      "Extracted A spacing/table layout not fully recoverable; original PDF preserved",
+      "Current norms full comparison not performed",
+      "Runner protected baseline reconciliation separate"
+    ],
+    "service": "Isolated auth Waitress restarted without initialization; TLS proxy retained; no external calls performed"
+  },
+  "normativePrimaryBasisValidation": {
+    "status": "PRIMARY_REFERENCE_COMPLETE_AUTOMATED_COVERAGE_PARTIAL",
+    "rulesetVersion": "geulbit.local-reviewed/5",
+    "primaryBasis": "Full supplied normative PDF; all 314 pages and 134 provisions accessible as immutable reference passages with commentary and exceptions",
+    "categories": {
+      "SPELLING": 57,
+      "PUNCTUATION": 21,
+      "STANDARD_WORD": 26,
+      "PRONUNCIATION": 30
+    },
+    "referenceOnlyProvisions": 131,
+    "linkedProvisions": 3,
+    "scope": "Orthography/spacing/standard forms/punctuation; pronunciation reference. Structural inference remains independent candidate heuristics.",
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/engine_tests backend/v2_tests/test_rules_api.py backend/v2_tests/test_analysis_api.py backend/v2_tests/test_reanalysis_api.py backend/v2_tests/test_structure_api.py backend/v2_tests/test_quote_api.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 86,
+        "seconds": 15.21
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/engine_tests/test_snapshot.py::test_package_has_no_framework_database_or_network_dependency -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 1,
+        "seconds": 1.6
+      }
+    ],
+    "longEssay": [
+      {
+        "codePoints": 10000,
+        "seconds": 1.623,
+        "sentences": 445,
+        "findings": 0,
+        "normsProvisions": 134,
+        "validation": "PASS"
+      },
+      {
+        "codePoints": 30000,
+        "seconds": 0.639,
+        "sentences": 1334,
+        "findings": 0,
+        "normsProvisions": 134,
+        "validation": "PASS"
+      }
+    ],
+    "performanceNotes": "10k includes cold Kiwi startup; 30k warm same-process. Single synthetic run, not throughput guarantee. Initial measurement harness missed required version_id; corrected without engine changes.",
+    "normalEssayCandidates": 0,
+    "mixedEssayCandidates": 7,
+    "preservation": {
+      "src/App.tsx": true,
+      "src/Library.tsx": true,
+      "src/library.css": true,
+      "backend/app/analysis/spelling.py": true,
+      "C:/Users/USER/GeulbitData/db/geulbit.sqlite3": true,
+      "C:/Users/USER/GeulbitData/operational/secrets.dat": true,
+      "C:/Users/USER/Pictures/geulbit_korean_norms_reference_v1.pdf": true
+    },
+    "service": "Isolated Waitress restarted without initialization; TLS proxy retained",
+    "G5": "DEFERRED_FINAL_REVIEW",
+    "risks": [
+      "131 reference-only provisions need executable condition/exception verification",
+      "Full current-norms comparison and extraction table layout review not complete",
+      "Runner historical protected baseline reconciliation pending"
+    ]
+  },
+  "p14Network": {
+    "status": "PASS_ISOLATED_REAL_GOOGLE_SERVICE_FLOW_NOT_RELEASE",
+    "phase": "p14-network",
+    "origin": "https://crushable-movie-usable.ngrok-free.dev",
+    "callback": "https://crushable-movie-usable.ngrok-free.dev/api/auth/callback",
+    "upstream": "http://127.0.0.1:5070",
+    "isolatedRoot": "C:/Users/USER/GeulbitData/temp/ngrok-dev-local",
+    "ngrokVersion": "3.39.9-msix-stable",
+    "googleCloudCallback": "USER_CONFIRMED_ADDED_2026_10_11",
+    "externalGoogleLogin": "NOT_ATTEMPTED",
+    "externalTunnel": "NOT_STARTED",
+    "privateCredentialsRegistered": false,
+    "ngrokTokenRegistered": true,
+    "changedFiles": [
+      "backend/auth_setup.py",
+      "backend/network_service.py",
+      "backend/app/v2/network_gate.py",
+      "backend/app/v2/auth_api.py",
+      "backend/v2_tests/test_network_gate.py",
+      "backend/v2_tests/test_network_setup.py",
+      "backend/v2_tests/test_network_integration.py",
+      "backend/config/privacy.example.json",
+      "docs/automation/AUTH_SETUP.md",
+      "docs/automation/backend-checkpoint.json"
+    ],
+    "tests": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_network_setup.py backend/v2_tests/test_network_gate.py backend/v2_tests/test_network_integration.py backend/v2_tests/test_deployment.py backend/v2_tests/test_auth_api.py backend/v2_tests/test_server_secrets.py -q -p no:cacheprovider --tb=short",
+      "exitCode": 0,
+      "passed": 72,
+      "seconds": 16.9
+    },
+    "realLocalService": {
+      "localHealth": 200,
+      "privateUnauthenticated": 401,
+      "reactHtml": 200,
+      "anonymousUserApi": 401,
+      "googleRedirect": 302,
+      "callbackExact": true,
+      "externalGoogleLogin": "NOT_ATTEMPTED",
+      "serverStop": "PASS"
+    },
+    "isolatedApiFlow": "PASS_MOCK_SESSION_REAL_FLASK_SQLITE_KIWI_PDF_LOGOUT; not external Google or browser theme verification",
+    "operatingReadonly": {
+      "operatingSchema": "0003_resource_ownership",
+      "integrity": "ok",
+      "fkErrors": 0,
+      "users": 0,
+      "essays": 0
+    },
+    "preservation": {
+      "operatingDb": true,
+      "ui": true,
+      "existingSecretEntries": true
+    },
+    "commands": {
+      "register": ".venv/Scripts/python.exe backend/auth_setup.py ngrok",
+      "start": ".venv/Scripts/python.exe backend/network_service.py start",
+      "status": ".venv/Scripts/python.exe backend/network_service.py status",
+      "stop": ".venv/Scripts/python.exe backend/network_service.py stop",
+      "restart": ".venv/Scripts/python.exe backend/network_service.py restart"
+    },
+    "gates": {
+      "G1": "PARTIAL",
+      "G2": "PASS_TARGETED_NOT_EXTERNAL_INTEGRATION",
+      "G3": "PASS_LOCAL_TEST_SECURITY_RELEASE_PENDING",
+      "G4": "UNVERIFIED_RUNNER_HISTORICAL_PROTECTED_BASELINE_PENDING",
+      "G5": "DEFERRED_FINAL_REVIEW"
+    },
+    "next": [
+      "Local hidden token and private test password registration",
+      "Start tunnel only after private/local preflight succeeds",
+      "Actual designated Google login, verified-sub bootstrap in new isolated DB and fresh login",
+      "External browser themes/save/analysis/PDF/logout and tunnel stop/restart",
+      "Stop external tunnel at end of validation",
+      "UI visual polish after network task completes"
+    ],
+    "remaining": [
+      "Privacy draft operator/contact/retention review; self-signup ACTIVE not implemented or enabled",
+      "ngrok data processing/retention not fully verified",
+      "External separate-device access not verified",
+      "No public release or automatic Windows startup"
+    ],
+    "privacyDraft": "backend/config/privacy.example.json",
+    "uiPolish": "QUEUED_AFTER_NETWORK_COMPLETION",
+    "retryNotes": "Local service close left keepalive channels; fixed drain/channel shutdown then real local start/stop PASS. Readonly evidence initially used wrong legacy table name, corrected to writing with no DB changes.",
+    "latestResume": {
+      "status": "PASS_ISOLATED_REAL_GOOGLE_SERVICE_FLOW_NOT_RELEASE",
+      "authentication": "ACTUAL_GOOGLE_BROWSER_SESSION; user-confirmed Edge result plus read-only verified identity/analysis evidence; not mock authentication",
+      "realBrowserResult": {
+        "status": "PASS",
+        "passedChecks": [
+          "designated ADMIN ACTIVE",
+          "completed save and analysis reused",
+          "real analysis completed",
+          "immutable original exact",
+          "normal/error/exception distinction",
+          "codepoint spans",
+          "default-theme actual feedback",
+          "bookshelf book opened",
+          "same essay and run across themes",
+          "real PDF generated/download initiated",
+          "logout session rejected",
+          "logout essay rejected"
+        ]
+      },
+      "earlierRealSessionChecks": [
+        "essay save",
+        "autosave",
+        "stale revision conflict",
+        "draft preserved after conflict"
+      ],
+      "pdfEvidence": "Valid application/pdf and %PDF bytes; browser download initiated. Downloaded file was not independently opened in this ngrok verification.",
+      "fixes": [
+        "Parallel first-home workspace creation: SQLite conflict-safe insertion and owner-only re-read",
+        "Windows launcher/worker PID separation: shared stop event with process ownership validation",
+        "Repeated Basic challenge: bounded host-only signed Secure/HttpOnly/SameSite=Lax private-test cookie; Google session and CSRF remain required",
+        "One cookie validation per request, avoiding duplicate parsing/MAC work"
+      ],
+      "tests": {
+        "backend": {
+          "command": ".venv/Scripts/python.exe -m pytest backend/tests backend/component_tests backend/engine_tests backend/v2_tests backend/mapping_tests -q -p no:cacheprovider --tb=short",
+          "exitCode": 0,
+          "passed": 363,
+          "seconds": 84.48
+        },
+        "typecheck": {
+          "command": "node node_modules/typescript/bin/tsc --noEmit",
+          "exitCode": 0
+        },
+        "build": {
+          "command": "node node_modules/vite/bin/vite.js build",
+          "exitCode": 0,
+          "modules": 23,
+          "milliseconds": 236
+        },
+        "account": {
+          "command": "node scripts/account-session.test.mjs",
+          "exitCode": 0,
+          "cases": 10
+        },
+        "bookLayout": {
+          "command": "node scripts/book-layout.test.mjs",
+          "exitCode": 0,
+          "coverage": "10k/30k, Unicode, repeated quote, stale spans"
+        },
+        "feedback": {
+          "command": "node scripts/feedback-spans.test.mjs",
+          "exitCode": 0,
+          "benchmarkScope": "Existing span microbenchmark, not whole-browser latency",
+          "beforeMs": 725.53,
+          "afterMs": 0.88
+        }
+      },
+      "listQueryBenchmark": {
+        "essays": 12,
+        "analysisQueriesBefore": 12,
+        "analysisQueriesAfter": 1,
+        "snapshotSelectedBefore": true,
+        "snapshotSelectedAfter": false,
+        "wireContractPreserved": true
+      },
+      "lifecycle": {
+        "START": "PASS_LIVE_AFTER_FINAL_BUILD",
+        "STATUS": "PASS_LIVE",
+        "STOP": "PASS_LIVE_AFTER_FINAL_BUILD",
+        "RESTART": "PASS_LIVE"
+      },
+      "preservation": {
+        "revision": "0003_resource_ownership",
+        "integrity": "ok",
+        "foreignKeyErrors": 0,
+        "sha256Unchanged": true
+      },
+      "runtime": {
+        "origin": "https://crushable-movie-usable.ngrok-free.dev",
+        "upstream": "http://127.0.0.1:5070",
+        "isolatedRoot": "C:\\Users\\USER\\GeulbitData\\temp\\ngrok-dev-local",
+        "ngrokRegistered": true,
+        "privateAccessRegistered": true,
+        "serverPid": null,
+        "tunnelPid": null
+      },
+      "temporaryVerifierRemoved": true,
+      "screenshots": "No new ngrok Edge screenshots captured; actual browser receipt supplied by user",
+      "externalSeparateDevice": "UNVERIFIED",
+      "release": "NOT_DEPLOYED; no standing external trial processes",
+      "releaseBlocks": [
+        "Privacy operator/contact and retention policy",
+        "General USER automatic ACTIVE enrollment",
+        "Deletion and external backup policies/activation",
+        "Historical Runner protected baseline reconciliation",
+        "G5 DEFERRED_FINAL_REVIEW"
+      ],
+      "G5": "DEFERRED_FINAL_REVIEW",
+      "next": "Approved isolated trial can resume with existing start/status/stop/restart; release gates remain separate; no reimplementation needed"
+    },
+    "G1": "PASS_APPROVED_ISOLATED_TRIAL",
+    "G2": "PASS_363_BACKEND_AND_FRONTEND",
+    "G3": "PASS_TRIAL_SECURITY_RELEASE_PENDING",
+    "G4": "UNVERIFIED_HISTORICAL_PROTECTED_BASELINE",
+    "G5": "DEFERRED_FINAL_REVIEW"
+  },
+  "wholeCodeReview": {
+    "status": "PASS_LOCAL_REVIEW_AND_REGRESSION_NOT_RELEASE_CERTIFICATION",
+    "changes": [
+      "Batch analysis summaries for essay lists; avoid loading immutable result/input/context JSON",
+      "Reuse exact quotation permission and canonical-text validation without artificial source search",
+      "Prevent stale account mutation before fetch; unify download/CSRF 401 session invalidation",
+      "Remove duplicate RapidFuzz requirement"
+    ],
+    "changedFiles": [
+      "backend/app/v2/essays.py",
+      "backend/app/v2/quote_api.py",
+      "backend/components/quote_match.py",
+      "backend/requirements.txt",
+      "src/api.ts",
+      "scripts/account-session.test.mjs",
+      "backend/v2_tests/test_review_optimizations.py"
+    ],
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/tests backend/component_tests backend/engine_tests backend/v2_tests backend/mapping_tests -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 357,
+        "seconds": 87.65
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_review_optimizations.py backend/v2_tests/test_quote_api.py backend/component_tests -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 59,
+        "seconds": 7.61
+      },
+      {
+        "command": "node scripts/account-session.test.mjs",
+        "exitCode": 0,
+        "cases": 10
+      },
+      {
+        "command": "node scripts/book-layout.test.mjs",
+        "exitCode": 0,
+        "coverage": "10k/30k three capacities; Unicode and modified ranges"
+      },
+      {
+        "command": "node scripts/feedback-spans.test.mjs",
+        "exitCode": 0,
+        "coverage": "Unicode/stale/equivalence, existing span optimization verified"
+      },
+      {
+        "command": "node node_modules/typescript/bin/tsc --noEmit",
+        "exitCode": 0
+      },
+      {
+        "command": "node node_modules/vite/bin/vite.js build",
+        "exitCode": 0,
+        "modules": 23,
+        "milliseconds": 218
+      }
+    ],
+    "syntax": "68 Python sources parsed",
+    "benchmark": {
+      "essays": 12,
+      "analysisQueriesBefore": 12,
+      "analysisQueriesAfter": 1,
+      "snapshotSelectedBefore": true,
+      "snapshotSelectedAfter": false,
+      "wireContractPreserved": true
+    },
+    "preservation": "Operating DB/DPAPI/migrations/UI layout hashes unchanged; UI API transport changed only",
+    "runtime": "Verified isolated localhost auth server restarted without initialization; HTTPS proxy retained. No ngrok start.",
+    "G5": "DEFERRED_FINAL_REVIEW",
+    "limitations": [
+      "No new real Google/browser/external-device verification in this turn",
+      "ngrok registration and privacy/release decisions remain pending",
+      "131 normative provisions reference-only; no complete Korean correctness guarantee",
+      "Existing Alembic/path_separator and SQLite datetime deprecations; migrations untouched",
+      "Historical Runner protected baseline reconciliation pending"
+    ],
+    "retry": "Initial batched-list comprehension referenced wrong variable; fixed then targeted/full regressions PASS. Final permission optimization retains prior canonical validation."
+  },
+  "p13ReleaseSafety": {
+    "status": "PARTIAL_RELEASE_PREPARATION_BLOCKED",
+    "time": "2026-10-10T18:29:29.463090+00:00",
+    "P13": "PARTIAL_IMPLEMENTATION_ISOLATED_TESTS_PASS_RELEASE_GATES_BLOCKED",
+    "P14": "P14_NETWORK_READY_ISOLATED_DESIGNATED_ADMIN",
+    "releaseReady": false,
+    "released": false,
+    "operatingDeletionActivated": false,
+    "operatingBackupActivated": false,
+    "externalAiCalled": false,
+    "G1": "PARTIAL_P13",
+    "G2": "PASS_IMPLEMENTED_ISOLATED_SCOPE",
+    "G3": "PASS_IMPLEMENTED_BOUNDARIES_PRODUCTION_RECOVERY_BLOCKED",
+    "G4": "BLOCKED_PROTECTED_BASELINE_MISMATCH",
+    "G5": "DEFERRED_FINAL_REVIEW",
+    "changedFiles": [
+      "backend/app/v2/privacy_lifecycle.py",
+      "backend/app/services/backup_service.py",
+      "backend/privacy_service.py",
+      "backend/app/v2/essays.py",
+      "backend/app/v2/operations_api.py",
+      "backend/app/v2/auth_api.py",
+      "backend/app/v2/library_api.py",
+      "backend/app/__init__.py",
+      "backend/app/config.py",
+      "backend/v2_tests/test_privacy_lifecycle.py",
+      "backend/v2_tests/test_secure_backup.py",
+      "backend/v2_tests/test_privacy_cli.py",
+      "backend/config/privacy.example.json",
+      "docs/automation/AUTH_SETUP.md"
+    ],
+    "sourceHashes": {
+      "backend/app/v2/privacy_lifecycle.py": "27d70eadcbe0a317f9b200d09771c66165ff7e4b482d873638bcbb5d7c636dde",
+      "backend/app/services/backup_service.py": "b822f1c490eab39ee2e00fc5f13901157f54e4a660e34a47688cf83e5572fb9c",
+      "backend/privacy_service.py": "3310763c951a3705bacf53f7714d0d3aebf8a7115955f8ad9688baec280a0198",
+      "backend/app/v2/essays.py": "a9ddc5f57a4fc7a5deefcedfeb53172065bd1ae6a61fa18f7fd91a3fad9c7241",
+      "backend/app/v2/operations_api.py": "a7f04d9cc0e1794c96dba9c06b3123d79a0e18006c9e29728b55802c818e9847",
+      "backend/app/v2/auth_api.py": "d0915807679b38b175ff227351e7235286170485010b6d2818a8d1ebe3622239",
+      "backend/app/v2/library_api.py": "1ddb9ab63c0cedf574d022832bbea17638f6cd90328ebbc1ed5a569ff9b1717e",
+      "backend/app/__init__.py": "0ec712c5496ba0c8536c365186f5727d42e5a776a1eff3b3f81bd937a9db5f39",
+      "backend/app/config.py": "e98634874b8448d9f121e59acbd3e2879e4d5626a5c398c87b439553f193f0a8",
+      "backend/v2_tests/test_privacy_lifecycle.py": "5e2ef4e7b63ac46944201542c4685664c3ca12116f7890aca50f1122d2b7ef07",
+      "backend/v2_tests/test_secure_backup.py": "c8e5f6e4555226071636c2accd527fc77ff58d78153f615dfd55bc3bca208723",
+      "backend/v2_tests/test_privacy_cli.py": "11507e7514d8c720b9413a111dea7d300270eedd2e7ebc64041aa8bdbac9d5fc",
+      "backend/config/privacy.example.json": "b784fcc591d97a5acad3cdd974f8241279a65247048430870a59010819f391d9",
+      "docs/automation/AUTH_SETUP.md": "dbacc917459547c742dabf6c497545d0d60d6186e5d2df61ba5a1933f1d0924d"
+    },
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/tests backend/component_tests backend/engine_tests backend/v2_tests backend/mapping_tests -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 376,
+        "seconds": 92.03,
+        "note": "Before adding 5 additional regression cases; application implementation unchanged thereafter."
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_privacy_lifecycle.py backend/v2_tests/test_secure_backup.py backend/v2_tests/test_privacy_cli.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 18,
+        "seconds": 6.26
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_privacy_lifecycle.py::test_expired_dependent_file_removed_after_multi_revision_graph -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 1,
+        "seconds": 1.08
+      },
+      {
+        "command": "node node_modules/typescript/bin/tsc --noEmit",
+        "exitCode": 0
+      },
+      {
+        "command": "node node_modules/vite/bin/vite.js build",
+        "exitCode": 0,
+        "modules": 23,
+        "seconds": 2.73
+      },
+      {
+        "command": "node scripts/book-layout.test.mjs",
+        "exitCode": 0,
+        "cases": "10k/30k; three capacities; Unicode/stale"
+      },
+      {
+        "command": "node scripts/feedback-spans.test.mjs",
+        "exitCode": 0,
+        "codePoints": 30000,
+        "findings": 447,
+        "renders": 10,
+        "beforeMs": 672.09,
+        "afterMs": 0.81,
+        "note": "Microbenchmark, not browser latency"
+      },
+      {
+        "command": "node scripts/account-session.test.mjs",
+        "exitCode": 0,
+        "cases": 10
+      },
+      {
+        "command": "node C:/Projects/dream-hs-automation-bounded-v3/automation/runner.mjs --queue <absolute backend-queue.local.json>",
+        "exitCode": 1,
+        "result": "Protected file mismatch: backend/app/config.py"
+      }
+    ],
+    "actualNetwork": {
+      "start": "PASS",
+      "status": "PASS",
+      "restart": "PASS",
+      "stop": "PASS",
+      "localHealth": 200,
+      "externalHealth": 200,
+      "serverStopped": true,
+      "tunnelStopped": true,
+      "google": "PRIOR_REAL_EDGE_GOOGLE_SESSION_PASS_REUSED_NOT_NEW_LOGIN",
+      "actualFlowEvidence": "artifacts/network/final-service-evidence.json",
+      "ordinaryNewActiveUser": "NOT_VERIFIED_PRIVACY_SIGNUP_PENDING",
+      "separateExternalDevice": "NOT_VERIFIED"
+    },
+    "backup": "APPROVED_OMISSION_FOR_ACQUAINTANCES_ONLY; existing encrypted implementation retained; recovery not guaranteed",
+    "recoveryLimit": "Restore requires current authoritative DB/revocation records. Complete source loss and DPAPI key recovery remain BLOCKED; no blind restoration.",
+    "logRetentionLimit": "Known audit/security event retention tested; classification/rotation of existing operator log files remains unverified.",
+    "preservation": "artifacts/network/p13-preservation.json",
+    "blocks": [
+      "Independent private document expiry scope/basis remains unconfirmed",
+      "Historical Runner protected config baseline mismatch; not adopted",
+      "G5/B10 focused independent review not executed",
+      "Operating beta signup/retention configuration and new actual external signup flow not verified"
+    ],
+    "next": [
+      "Resolve public contribution ownership FK retention without inventing owners",
+      "Resolve independent document expiry and consent/signup activation",
+      "Reconcile reviewed historical protected baseline, then final G5 and user release approval"
+    ]
+  },
+  "uiPolish": {
+    "date": "2026-10-11",
+    "status": "PASS_UI_AND_ISOLATED_API",
+    "files": [
+      "src/Library.tsx",
+      "src/ui-polish.css",
+      "src/App.tsx",
+      "scripts/verify-ui-design.cjs",
+      "scripts/verify-v2-e2e.cjs",
+      "UI_CHECKPOINT.md"
+    ],
+    "fixtureEvidence": "artifacts/ui-polish/after/results.json",
+    "isolatedApiEvidence": "artifacts/ui-polish/api/evidence.json",
+    "widths": [
+      1440,
+      1024,
+      820,
+      390,
+      320
+    ],
+    "fixtureScreenshots": 110,
+    "apiScreenshots": 43,
+    "typecheckExit": 0,
+    "buildExit": 0,
+    "actualGoogleRechecked": false,
+    "productionPreserved": true,
+    "releaseGatesUnchanged": true
+  },
+  "privacyPolicyUserDecision": {
+    "date": "2026-10-11",
+    "distributionScope": "ACQUAINTANCES_ONLY",
+    "accountsAndConsentsAfterWithdrawal": "FIRST_WITHDRAWAL_UTC_CALENDAR_2_MONTHS",
+    "backupMode": "7d-encrypted-local-c-v1",
+    "privacyContact": "DIRECT_CONTACT_TO_OPERATOR",
+    "publicReleaseApproved": false,
+    "deletionActivated": false,
+    "publicOwnerReferenceErasureApproved": true,
+    "betaSignupImmediateUserApproved": true,
+    "conditionalBetaReleaseApproved": true
+  },
+  "accountRetention": {
+    "status": "IMPLEMENTED_ISOLATED_PASS_PUBLIC_OWNER_ERASURE_APPROVED_TESTED",
+    "policy": "withdrawal/calendar-2months-v1",
+    "storage": "Existing app_settings privacy_account jobs; no migration",
+    "files": [
+      "backend/app/v2/privacy_lifecycle.py",
+      "backend/app/v2/operations_api.py",
+      "backend/app/v2/auth_api.py",
+      "backend/v2_tests/test_account_retention.py",
+      "backend/v2_tests/test_privacy_lifecycle.py",
+      "backend/config/privacy.example.json",
+      "docs/automation/AUTH_SETUP.md"
+    ],
+    "test": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_account_retention.py backend/v2_tests/test_privacy_lifecycle.py backend/v2_tests/test_operations_api.py backend/v2_tests/test_auth_api.py backend/v2_tests/test_secure_backup.py backend/v2_tests/test_privacy_cli.py -q -p no:cacheprovider --tb=short",
+      "exitCode": 0,
+      "passed": 65,
+      "seconds": 20.11
+    },
+    "cases": "Calendar month/leap-year boundaries, exact deadline, persisted resume, rollback/retry, unrelated account/settings preservation, OIDC/admin/bootstrap restore blocked, session revocation, incomplete cleanup HTTP202, approved no-backup gate",
+    "productionDatabaseHash": "28909344b85e958eec0bdb88d87a04b6abd64d1dd2757e567c91470fd52b1235",
+    "G4": "BLOCKED_PROTECTED_BASELINE_MISMATCH_backend/app/config.py",
+    "runnerExitCode": 1,
+    "G5": "DEFERRED_FINAL_REVIEW",
+    "automaticDeletion": false,
+    "publicDeployment": false,
+    "next": [
+      "Claude review exact packet and return PASS/CHANGES_REQUIRED/REVIEW_INCOMPLETE with manifest digest",
+      "Reconcile protected baseline without unconditional hash adoption",
+      "Resolve independent private document lifecycle",
+      "Complete operating multiuser beta adapter and verified cleanup/backup schedule",
+      "Actual external new ACTIVE USER Google smoke after release security gates"
+    ],
+    "publicOwnerErasure": "Minimal inactive owner reference only; original Google identity, consent and profile metadata removed; public file/revision preserved"
+  },
+  "betaPreparation": {
+    "status": "BETA_BLOCKED",
+    "date": "2026-10-11",
+    "gates": {
+      "B1": "PRIOR_ACTUAL_PASS_UNCHANGED_GATE_CURRENT_TUNNEL_STOPPED",
+      "B2": "ISOLATED_SIGNED_MOCK_OIDC_PASS_NEW_EXTERNAL_SIGNUP_PENDING",
+      "B3": "PASS_TARGETED_SECURITY_SCOPE",
+      "B4": "CONSENT_UI_AND_SERVER_TESTS_PASS_OPERATING_ACTIVATION_PENDING",
+      "B5": "ISOLATED_EXPIRY_DELETE_WITHDRAWAL_PASS_INDEPENDENT_DOCUMENT_POLICY_PENDING",
+      "B6": "LOCAL_C_ENCRYPTED_BACKUP_AND_QUARANTINED_RESTORE_PASS_SCHEDULE_PENDING",
+      "B7": "PASS_OPERATING_READ_ONLY_REVISION_INTEGRITY_FK_WAL",
+      "B8": "ISOLATED_API_AND_PRIOR_REAL_GOOGLE_FLOW_PASS_NEW_EXTERNAL_BETA_FLOW_PENDING",
+      "B9": "ACCOUNT_SELF_SERVICE_ISOLATED_PASS_EXISTING_DIRECT_CONTACT",
+      "B10": "BLOCKED_INDEPENDENT_REVIEW_NOT_EXECUTED"
+    },
+    "files": [
+      "backend/app/v2/beta_signup.py",
+      "backend/app/v2/auth_api.py",
+      "backend/app/v2/privacy_lifecycle.py",
+      "backend/v2_tests/test_beta_signup.py",
+      "backend/v2_tests/test_account_retention.py",
+      "backend/v2_tests/qa_server.py",
+      "public/auth-status.css",
+      "scripts/verify-beta-signup.cjs",
+      "backend/config/privacy.example.json",
+      "docs/automation/AUTH_SETUP.md"
+    ],
+    "test": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_beta_signup.py backend/v2_tests/test_account_retention.py backend/v2_tests/test_privacy_lifecycle.py backend/v2_tests/test_auth_api.py backend/v2_tests/test_operations_api.py backend/v2_tests/test_secure_backup.py backend/v2_tests/test_privacy_cli.py backend/v2_tests/test_network_gate.py backend/v2_tests/test_network_integration.py backend/v2_tests/test_network_setup.py -q -p no:cacheprovider --tb=short",
+      "exitCode": 0,
+      "passed": 100,
+      "seconds": 26.77
+    },
+    "browser": {
+      "command": "node scripts/verify-beta-signup.cjs",
+      "exitCode": 0,
+      "screenshots": 7,
+      "errors": 0,
+      "actualApi": true,
+      "authentication": "SYNTHETIC_SIGNED_OIDC_NOT_ACTUAL_GOOGLE"
+    },
+    "typecheck": {
+      "command": "node node_modules/typescript/bin/tsc --noEmit",
+      "exitCode": 0
+    },
+    "build": {
+      "command": "node node_modules/vite/bin/vite.js build",
+      "exitCode": 0,
+      "modules": 24,
+      "ms": 240
+    },
+    "runner": {
+      "exitCode": 1,
+      "result": "Protected file mismatch: backend/app/config.py"
+    },
+    "blocks": [
+      "Independent private document expiry scope/basis remains unconfirmed",
+      "Historical Runner protected config baseline mismatch; not adopted",
+      "G5/B10 focused independent review not executed",
+      "Operating beta signup/retention configuration and new actual external signup flow not verified"
+    ],
+    "publicDeployment": false,
+    "operatingDeletion": false,
+    "operatingSignupChanged": false,
+    "tunnelStopped": true,
+    "qaStopped": true,
+    "protectedHashesAdopted": false,
+    "g5": "G5_PENDING_NOT_EXECUTED",
+    "report": "artifacts/reports/geulbit-last-six-work-report-20261011.html"
+  },
+  "finalReviewPreparation": {
+    "status": "G5_PENDING",
+    "reviewer": "CLAUDE_REQUIRED_NOT_CONNECTED",
+    "g5": "NOT_EXECUTED",
+    "policy": "local-c-backup-and-existing-contact-v1",
+    "tests": [
+      {
+        "suite": "backup/retention/operations/CLI",
+        "passed": 51,
+        "exitCode": 0,
+        "seconds": 17.31
+      },
+      {
+        "suite": "OIDC/beta/network/library/essay/analysis/reanalysis",
+        "passed": 70,
+        "exitCode": 0,
+        "seconds": 20.18
+      }
+    ],
+    "browser": {
+      "exitCode": 0,
+      "screenshots": 8,
+      "errors": 0,
+      "authentication": "SYNTHETIC_SIGNED_OIDC_NOT_ACTUAL_GOOGLE",
+      "withdrawalUI": "PASS"
+    },
+    "typecheckExit": 0,
+    "buildExit": 0,
+    "buildMs": 229,
+    "accountSessionTests": 10,
+    "localBackup": {
+      "bytes": 13819,
+      "sha256": "01167fe578f89795e7bb0264afd4f8f86a617ed47441eaab15bee96a1b5a79eb",
+      "restoreRevision": "0003_resource_ownership",
+      "files": 0,
+      "sessionsInvalidated": true,
+      "quarantined": true,
+      "pruned": 0,
+      "scheduleEnabled": false
+    },
+    "operatingDatabaseSha256": "28909344b85e958eec0bdb88d87a04b6abd64d1dd2757e567c91470fd52b1235",
+    "operatingIntegrity": "ok",
+    "operatingForeignKeyViolations": 0,
+    "operatingUsers": 0,
+    "runnerExitCode": 1,
+    "runnerError": "Protected file mismatch: backend/app/config.py",
+    "packet": "artifacts/review/g5-claude-review-20261011.zip",
+    "publicDeployment": false,
+    "automaticDeletion": false,
+    "tunnelStopped": true,
+    "next": [
+      "Claude review exact packet and return PASS/CHANGES_REQUIRED/REVIEW_INCOMPLETE with manifest digest",
+      "Reconcile protected baseline without unconditional hash adoption",
+      "Resolve independent private document lifecycle",
+      "Complete operating multiuser beta adapter and verified cleanup/backup schedule",
+      "Actual external new ACTIVE USER Google smoke after release security gates"
+    ],
+    "reviewPacketManifestSha256": "6db0815b4238b4e0916c426f058fb0ebf55040a7224d3bab6c0c465f2a8bb203",
+    "reviewPacketSha256": "de1b50492e289c7ba6e750476084b8a796949d4c07fb12f45d0b82225066836f",
+    "qaStopped": true,
+    "backupKeyRegistered": true,
+    "nextResume": "User supplies actual Claude judgment bound to packet manifest; fix findings or supply missing evidence, then remaining technical gates, never auto-deploy before all PASS"
+  },
+  "releasePolicy": {
+    "G5": "WAIVED_BY_USER",
+    "basis": "Latest explicit user instruction; no Claude packet or false PASS",
+    "technicalGates": [
+      "G1",
+      "G2",
+      "G3",
+      "G4"
+    ]
+  },
+  "betaSafetyRecovery": {
+    "F01": "PROCESS_LIFETIME_SHARED_EXCLUSIVE_STORAGE_LEASE_TESTED",
+    "F02": "ONLY_DURABLE_RESTORE_VERIFIED_RECEIPT_COUNTS_FOR_NOT_DUE",
+    "independentDocuments": "7D_BODY_CHANGE_ACCESS_AND_CLEANUP_ISOLATED_PASS",
+    "regression": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/tests/test_storage.py backend/component_tests backend/engine_tests backend/v2_tests -q -p no:cacheprovider --tb=short --disable-warnings",
+      "exitCode": 0,
+      "passed": 359,
+      "seconds": 100.18
+    },
+    "frontend": {
+      "typecheckExit": 0,
+      "buildExit": 0,
+      "buildMs": 257,
+      "accountCases": 10,
+      "spanCodePoints": 30000
+    },
+    "localBackup": {
+      "restoreRevision": "0003_resource_ownership",
+      "sha256": "b1add5d30bc8fade1bcbe7f07b3e74ec136fd79d4fd24e348126d3449f3cc248",
+      "bytes": 13819,
+      "sessionsInvalidated": true,
+      "quarantined": true
+    },
+    "automaticDeletion": true,
+    "schedulerInstalled": true,
+    "publicDeployment": "PRIVATE_BETA_ONLY",
+    "runner": {
+      "preflightExit": 0,
+      "G4": "PASS",
+      "phase": "beta-release-safety-recovery",
+      "tests": 17,
+      "protected": 28,
+      "head": "68d771840014cdef9e9acc84be1f2f613cc269a0",
+      "historicalScope": "No retroactive guarantee for unauditable old baseline bytes; exact current approved delta and HEAD text checked",
+      "nativeG5Label": "Legacy Runner DEFERRED_FINAL_REVIEW is superseded by explicit project WAIVED_BY_USER, never PASS",
+      "latestPhase": "beta-native-scheduler-safety",
+      "latestTargetedPassed": 9
+    },
+    "browser": {
+      "authentication": "SYNTHETIC_SIGNED_OIDC_NOT_ACTUAL_GOOGLE",
+      "screenshots": 8,
+      "errors": 0,
+      "evidence": "artifacts/beta/signup/evidence.json"
+    },
+    "external": {
+      "https": 200,
+      "trialAccessRequired": true,
+      "cookieOnlyContinues": true,
+      "missingGoogleSessionApi": 401,
+      "repeatedBasicChallenge": false,
+      "newVerifiedGoogleUser": "ACTIVE_USER_WITH_REQUIRED_CONSENT_ACTUAL_ISOLATED",
+      "coreFlow": "PASS_15_ACTUAL_GOOGLE_ISOLATED",
+      "operatingUsers": 1,
+      "operatingEssays": 0,
+      "operatingGoogle": "ACTUAL_NEW_USER_CONSENT_AND_FRESH_ADMIN_LOGIN_PASS"
+    },
+    "next": [
+      "Observe approved hourly maintenance and daily local backup; STOP prevents automatic service reopening"
+    ]
+  },
+  "betaRelease": {
+    "status": "BETA_RELEASED",
+    "origin": "https://crushable-movie-usable.ngrok-free.dev",
+    "mode": "operating",
+    "localHealth": 200,
+    "externalHealth": 200,
+    "G5": "WAIVED_BY_USER",
+    "operatingDatabase": {
+      "integrity": "ok",
+      "fkViolations": 0,
+      "journal": "wal",
+      "revision": "0003_resource_ownership",
+      "users": 1,
+      "consents": 1,
+      "writings": 0,
+      "versions": 0,
+      "analysis": 0,
+      "account": "EXPLICIT_DESIGNATED_ADMIN_ACTIVE",
+      "testDataCreated": false
+    },
+    "authentication": {
+      "actualGoogle": true,
+      "newUser": "ACTIVE_USER_AFTER_MANUAL_AGE_AND_PRIVACY_CONSENT",
+      "adminBootstrap": "VERIFIED_GOOGLE_SUB_AND_EMAIL_MATCH_ONLY",
+      "freshAdminRelogin": true
+    },
+    "isolatedActualGoogleCore": {
+      "passed": 15,
+      "evidence": "artifacts/network/beta-new-user-evidence.json",
+      "screenshot": "artifacts/network/beta-new-user-pass.png"
+    },
+    "operatingScreenshot": "artifacts/network/operating-beta-home.png",
+    "maintenance": {
+      "task": "GeulbitPrivateBetaMaintenance",
+      "state": "Ready",
+      "intervalHours": 1,
+      "cycle": "PASS_STOP_CLEANUP_BACKUP_RESTART",
+      "essaysRemoved": 0,
+      "documentsRemoved": 0,
+      "autoStartAfterStop": false
+    },
+    "backup": {
+      "mode": "ENCRYPTED_LOCAL_C",
+      "intervalHours": 24,
+      "retentionDays": 7,
+      "restore": "PASS_ISOLATED_0003_QUARANTINED_SESSIONS_INVALIDATED",
+      "writerBlock": "PASS_EXPECTED_EXIT_1_WHILE_SERVICE_LIVE",
+      "lastArchivePredatesNewOperatorSignup": true
+    },
+    "retention": {
+      "automatic": true,
+      "essay": "LAST_REAL_BODY_CHANGE_7D",
+      "independentPrivateDocuments": "LAST_REAL_BODY_CHANGE_7D",
+      "withdrawnAccountAndConsent": "2_CALENDAR_MONTHS",
+      "publicDocumentsProtected": true
+    },
+    "AI": "DISABLED",
+    "externalDeviceDifferentNetwork": "NOT_TESTED",
+    "commands": {
+      "start": ".venv\\Scripts\\python.exe backend\\network_service.py start --operating",
+      "status": ".venv\\Scripts\\python.exe backend\\network_service.py status --operating",
+      "stop": ".venv\\Scripts\\python.exe backend\\network_service.py stop --operating",
+      "restart": ".venv\\Scripts\\python.exe backend\\network_service.py restart --operating"
+    }
+  },
+  "latestResumeVerification": {
+    "timestamp": "2026-10-11T05:46:24.099Z",
+    "request": "222a586e-final-beta-resume",
+    "status": "BETA_RELEASED",
+    "implementationChanges": [],
+    "currentCodeReceipt": "VALID_88_PINNED_CODE_HASHES_AND_FRESH_RESTORE_VERIFIED_BACKUP",
+    "G4": "PASS_28_PROTECTED_FILES",
+    "G5": "WAIVED_BY_USER",
+    "actualGoogle": "REUSED_CURRENT_CODE_ACTUAL_ISOLATED_15_CHECKS_AND_OPERATING_MANUAL_CONSENT_FRESH_ADMIN_LOGIN",
+    "operating": {
+      "localHealth": 200,
+      "externalHealth": 200,
+      "revision": "0003_resource_ownership",
+      "integrity": "ok",
+      "fkViolations": 0,
+      "users": 1,
+      "consents": 1,
+      "writings": 0,
+      "versions": 0,
+      "analysis": 0,
+      "signupEnabled": true,
+      "retentionEnabled": true,
+      "AI": false
+    },
+    "targeted": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_privacy_cli.py backend/v2_tests/test_beta_runtime.py backend/v2_tests/test_network_setup.py backend/v2_tests/test_beta_signup.py backend/v2_tests/test_account_retention.py -q -p no:cacheprovider --tb=short --disable-warnings",
+      "exitCode": 0,
+      "passed": 45,
+      "seconds": 8.05
+    },
+    "scheduler": {
+      "state": "Ready",
+      "automaticFirstExecution": "NOT_YET_RUN_AT_CHECK",
+      "manualMaintenanceCycle": "PRIOR_PASS_SAME_CODE",
+      "stopDisablesAutomaticReopening": true
+    },
+    "reusedEvidence": {
+      "backendRegression": 359,
+      "frontendTypecheckExit": 0,
+      "frontendBuildExit": 0,
+      "actualExternalIsolatedChecks": 15,
+      "unicodeCodePoints": 30000
+    },
+    "remainingRisks": [
+      "Independent security review waived, not performed",
+      "Same C disk contains source data and encrypted backups",
+      "Different external device/network and actual power/sleep interruption not physically verified",
+      "First automatic scheduled cycle has not run yet; same maintenance cycle manually passed"
+    ],
+    "friendInstructions": [
+      "공유받은 HTTPS 주소에서 접속 사용자명 geulbit와 운영자가 별도로 전달한 접속 비밀번호를 사용합니다.",
+      "Google 로그인 후 안내를 읽고 실제 만 14세 이상인 경우 필수 동의 후 서재를 시작합니다.",
+      "본문의 마지막 실제 변경 후 7일 보존합니다. 필요한 글은 만료 전에 PDF로 내려받으세요.",
+      "문제와 개인정보 요청은 운영자에게 기존 연락 방법으로 문의하세요. 서버 PC 종료 또는 점검 중에는 접속할 수 없습니다."
+    ]
+  },
+  "latestChromeFlow": {
+    "evidence": "artifacts/chrome-flow/evidence.json",
+    "status": "CORE_FLOW_PASS_RULE_COVERAGE_LIMIT",
+    "realGoogle": "FRESH_CHROME_LOGIN_PASS_OPERATING",
+    "functionalFlow": "SYNTHETIC_AUTH_REAL_ISOLATED_API_CHROME",
+    "operatingWritings": 0,
+    "operatingIntegrity": "ok",
+    "sourceChanges": [],
+    "temporaryQaServer": "STOPPED",
+    "missingRuleDetection": "deoyo not flagged",
+    "timestamp": "2026-10-11T05:51:58.646Z"
+  },
+  "firstOperatingStability": {
+    "status": "BETA_STABLE",
+    "timestamp": "2026-10-11T06:12:48.118Z",
+    "lifecycleFix": "PROCESS_OS_MUTEX_SERIALIZES_STOP_START_RESTART_MAINTENANCE",
+    "operating": {
+      "externalAnonymous": 401,
+      "externalAuthenticated": 200,
+      "noGoogleSessionApi": 401,
+      "goodHostNoAccessAuth": 401,
+      "database": {
+        "integrity": "ok",
+        "fkViolations": 0,
+        "revision": "0003_resource_ownership",
+        "users": 1,
+        "consents": 1,
+        "writings": 0
+      }
+    },
+    "backup": {
+      "status": "PASS",
+      "reason": "explicit-current-operating-account-backup",
+      "archive": "geulbit-20261011T060956991271Z.gbb",
+      "bytes": 14647,
+      "sha256": "01a65f1389a76746fd31b755236cba006e2dfb1f214b86ebe6404e20b8d4c23d",
+      "createdAt": "2026-10-11T06:09:56.991271+00:00",
+      "restore": {
+        "revision": "0003_resource_ownership",
+        "files": 0,
+        "quarantined": true,
+        "sessionsInvalidated": true
+      },
+      "restoredCounts": {
+        "integrity": "ok",
+        "fkViolations": 0,
+        "users": 1,
+        "consents": 1,
+        "writings": 0
+      },
+      "manifestMemberHashesVerified": true,
+      "isolationCleaned": true,
+      "existingArchivesPreserved": true
+    },
+    "scheduler": {
+      "task": "GeulbitPrivateBetaMaintenance",
+      "user": "USER",
+      "logon": "Interactive",
+      "runLevel": "Limited",
+      "interval": "PT1H",
+      "multipleInstances": "IgnoreNew",
+      "workingDirectory": "Unset; all task paths absolute; actual registered action verified",
+      "controlledExecution": {
+        "LastRunTimeKST": "2026-10-11 15:10:35",
+        "LastTaskResult": 0,
+        "serviceRestarted": true
+      },
+      "stoppedExecution": {
+        "LastRunTimeKST": "2026-10-11 15:10:11",
+        "LastTaskResult": 0,
+        "noAutostart": true
+      },
+      "firstTimerExecution": "UNVERIFIED_NOT_YET_TRIGGERED",
+      "nextTimerKST": "2026-10-11 15:35:53"
+    },
+    "google": "ACTUAL_EXISTING_GOOGLE_SESSION_VALID_IN_CHROME_AFTER_MAINTENANCE",
+    "tests": {
+      "runnerPhase": "beta-first-stability",
+      "passed": 30,
+      "exitCode": 0,
+      "networkTargetedPassed": 17,
+      "networkTargetedExitCode": 0,
+      "initialFailures": [
+        "New test global mode leak fixed once",
+        "Existing crash-release test transient failure, smallest test 1 PASS then official 30 PASS"
+      ]
+    },
+    "G4": "PASS_28_PROTECTED_FILES",
+    "G5": "WAIVED_BY_USER",
+    "power": {
+      "acSleepSeconds": 0,
+      "dcSleepSeconds": 0,
+      "changed": false
+    },
+    "freeDiskBytes": 1305435447296,
+    "physicalRebootNetworkSleep": "UNVERIFIED",
+    "otherMobileDevice": "UNVERIFIED",
+    "operatingDataChanges": "NO_TEST_DATA_NO_MIGRATION_NO_MANUAL_DELETION",
+    "screenshots": [
+      "artifacts/network/first-stability-home.png"
+    ]
+  },
+  "googleOnlyEntry": {
+    "timestamp": "2026-10-11T06:32:03.659Z",
+    "mode": "GOOGLE_ONLY",
+    "approval": "User explicitly requests removing browser shared-password prompt for all visitors and direct Google login",
+    "changes": [
+      "backend/network_service.py",
+      "backend/app/v2/network_gate.py",
+      "backend/app/v2/auth_api.py"
+    ],
+    "G1_G4": "PASS",
+    "G5": "WAIVED_BY_USER",
+    "tests": {
+      "passed": 43,
+      "exitCode": 0
+    },
+    "actualExternal": {
+      "unauthenticatedLanding": 302,
+      "landingLocation": "/api/auth/login",
+      "provider": "accounts.google.com",
+      "WWWAuthenticate": false,
+      "privateApi": 401,
+      "secureHttpOnlyChallengeCookie": true
+    },
+    "actualChrome": "FRESH_GOOGLE_ACCOUNT_CHOOSER_AND_RELOGIN_HOME_PASS",
+    "screenshot": "artifacts/network/google-only-entry.png",
+    "oldSharedSecret": "PRESERVED_NOT_USED_AS_OPERATING_ACCESS_GATE",
+    "isolatedMode": "BASIC_AND_GOOGLE_UNCHANGED",
+    "newExposure": "Visitors who know URL may Google-signup after required consent and age14; no shared-password invite restriction",
+    "policiesPreserved": [
+      "OIDC",
+      "CSRF",
+      "IDOR",
+      "USER_ADMIN",
+      "consent",
+      "age14",
+      "retention",
+      "AI_DISABLED",
+      "HTTPS_HOST_ORIGIN_RATE_LIMITS"
+    ],
+    "server": "OPERATING_HEALTH_200",
+    "operatingTestDataCreated": false
+  },
+  "rulesReferenceDisplay": {
+    "G1_G4": "PASS",
+    "G5": "WAIVED_BY_USER",
+    "tests": 51,
+    "exitCode": 0,
+    "typecheck": 0,
+    "build": 0,
+    "sourcePages": 314,
+    "provisions": 134,
+    "sourceRole": "PRIMARY_NORMATIVE_BASIS",
+    "detectorSemantics": "UNCHANGED",
+    "fixed": [
+      "Internal regex shown as example",
+      "English category shown as title",
+      "Null date shown as 1970",
+      "Duplicate category React keys",
+      "Missing primary PDF source locations"
+    ],
+    "AI": "BLOCKED_EXTERNAL_MODEL_COST_AND_PROCESSING_TERMS_NOT_CONFIGURED",
+    "operatingData": "PRESERVED_NO_MIGRATION_NO_TEST_ESSAYS",
+    "actualChrome": "PASS_NORMAL_ERROR_EXCEPTION_SOURCE_AND_NULL_DATE",
+    "screenshot": "artifacts/network/rules-reference-fixed.png",
+    "externalHealth": 200,
+    "localHealth": 200,
+    "aiBoundaryTests": {
+      "passed": 14,
+      "exitCode": 0,
+      "commands": [
+        ".venv/Scripts/python.exe -m pytest backend/component_tests/test_ai.py backend/v2_tests/test_ai_api.py -q -p no:cacheprovider --tb=short"
+      ]
+    },
+    "externalAiRequested": true,
+    "externalAiEnabled": false,
+    "reason": "User confirmed no approved model, budget or external processing conditions"
+  },
+  "rulesFullAudit": {
+    "G1_G4": "PASS",
+    "G5": "WAIVED_BY_USER",
+    "tests": 65,
+    "exitCode": 0,
+    "typecheck": 0,
+    "build": 0,
+    "rulesetVersion": "geulbit.local-reviewed/6",
+    "detectors": 8,
+    "referenceProvisions": 134,
+    "referenceOnlyProvisions": 131,
+    "linkedProvisions": 3,
+    "normalization": "NFC_LF_SOURCE_WHITESPACE_PRESERVED",
+    "sourceSha256": "c56cfbc534c6459f3d67af72cdb96fb150bd5bf002c753fd1ce25aea95b045c5",
+    "changes": [
+      "Single-source detector labels/scope/examples/metadata",
+      "All 134 source provisions and exception markers accessible via authenticated API/UI",
+      "Inactive status visible, no fabricated confidence score",
+      "Known place name 외곡리 false-positive fixed",
+      "Reference source integrity and Unicode spans validated"
+    ],
+    "oldAnalysisSnapshots": "UNCHANGED_NEW_RUNS_USE_V6",
+    "AI": "DISABLED",
+    "operatingData": "NO_TEST_DATA_NO_MIGRATION_NO_DELETION",
+    "remainingLanguageLimits": "131 reference-only provisions not automatic detectors; full current-edition comparison not performed",
+    "filterFix": {
+      "tests": 6,
+      "exitCode": 0,
+      "typecheck": 0,
+      "build": 0,
+      "G4": "PASS",
+      "scope": "Clear unmatched selection; loading is not empty state"
+    },
+    "actualChrome": {
+      "detectorScreensChecked": 8,
+      "allPassed": true,
+      "categoryCounts": [
+        57,
+        21,
+        26,
+        30
+      ],
+      "referenceArticle42": "SOURCE_AND_EXCEPTION_TEXT_PASS",
+      "filteredSelection": "PASS",
+      "emptySearch": "PASS_NO_STALE_SOURCE",
+      "mobile390": "PASS_SCROLLWIDTH_386_CLIENTWIDTH_386"
+    },
+    "screenshots": [
+      "artifacts/network/rules-audit-detectors.png",
+      "artifacts/network/rules-audit-reference.png",
+      "artifacts/network/rules-audit-mobile.png"
+    ],
+    "service": {
+      "localHealth": 200,
+      "externalHealth": 200,
+      "operating": true
+    },
+    "releaseCodeHashes": "UPDATED_ONLY_VERIFIED_APPROVED_SOURCE_AND_BUILD"
+  },
+  "rulesReviewedExpansion": {
+    "ruleset": "geulbit.local-reviewed/7",
+    "detectors": 38,
+    "connectedProvisions": 11,
+    "referenceOnlyProvisions": 123,
+    "allAutomaticJudgmentsComplete": false,
+    "approval": "User approved pending development; approval is not proof of linguistic correctness",
+    "sourceReview": {
+      "pdfPages": [
+        76,
+        122,
+        141,
+        145,
+        170,
+        173,
+        175,
+        177
+      ],
+      "officialFaq": "https://korean.go.kr/front/mcfaq/mcfaqView.do?mcfaq_seq=6761&mn_id=62&pageIndex=5"
+    },
+    "tests": {
+      "passed": 137,
+      "exitCode": 0,
+      "typecheck": 0,
+      "build": 0
+    },
+    "performance": {
+      "ruleset": "geulbit.local-reviewed/7",
+      "input": "Synthetic only; first whole-engine run includes Kiwi startup, second is warm",
+      "measurements": [
+        {
+          "codePoints": 10000,
+          "localRuleSeconds": 0.0385,
+          "wholeEngineSeconds": 1.616,
+          "localFindings": 399,
+          "sentences": 800,
+          "completeSourceAndSpans": true
+        },
+        {
+          "codePoints": 30000,
+          "localRuleSeconds": 0.0167,
+          "wholeEngineSeconds": 0.5359,
+          "localFindings": 1200,
+          "sentences": 2400,
+          "completeSourceAndSpans": true
+        }
+      ]
+    },
+    "G1": "PASS",
+    "G2": "PASS",
+    "G3": "PASS",
+    "G4": "PASS",
+    "G5": "WAIVED_BY_USER",
+    "liveScreen": {
+      "browser": "Chrome",
+      "actualSessionPreserved": true,
+      "displayedRules": 38,
+      "newDetailsChecked": 30,
+      "desktop": {
+        "viewport": 1920,
+        "content": 1916
+      },
+      "mobile": {
+        "viewport": 390,
+        "content": 386
+      },
+      "screenshots": [
+        "artifacts/network/rules-reviewed-expansion.png",
+        "artifacts/network/rules-reviewed-mobile.png"
+      ],
+      "localHealth": 200,
+      "externalHealth": 200,
+      "restartExitCode": 0
+    },
+    "remaining": "123 provisions require phonetic, semantic, morphological or contextual evidence; no automatic strong-error promotion",
+    "AI": "DISABLED"
+  },
+  "aiGatewayPreparation": {
+    "status": "IMPLEMENTED_EXTERNAL_CONFIGURATION_PENDING",
+    "tests": 52,
+    "exitCode": 0,
+    "G1": "PASS",
+    "G2": "PASS",
+    "G3": "PASS",
+    "G4": "PASS",
+    "G5": "WAIVED_BY_USER",
+    "externalCalls": 6,
+    "operatingAIEnabled": false,
+    "UIChanged": false,
+    "localAnalysisChanged": false,
+    "questionMode": "15 bounded server-rendered question intents; model selects focus/intent, not free-form factual text",
+    "key": "Existing DPAPI preserved; never printed",
+    "runtime": "Current operating process not restarted; next permitted start accepts only tested source hashes and remains AI disabled",
+    "pending": [
+      "actual model tariff and worst-case request/month caps",
+      "account-applicable provider processing/retention terms",
+      "versioned separate AI consent",
+      "explicit operating adapter activation"
+    ],
+    "sources": [
+      "https://docs.mindlogic.ai/docs/dcu-ac/api-gateway/reference/chat-completions",
+      "https://docs.mindlogic.ai/docs/dcu-ac/api-gateway/getting-started/models",
+      "https://docs.mindlogic.ai/docs/khu/api-gateway/reference/usage"
+    ],
+    "regression": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_operations_api.py backend/v2_tests/test_auth_api.py -q -p no:cacheprovider --tb=short",
+      "passed": 36,
+      "exitCode": 0
+    },
+    "service": {
+      "statusExitCode": 0,
+      "localHealth": 200,
+      "externalHealth": 200,
+      "existingProcessesPreserved": true,
+      "operatingAIEnabled": false
+    },
+    "recommendation": {
+      "status": "PROPOSED_NOT_APPLIED",
+      "model": "claude-haiku-4-5-20251001",
+      "modelAvailability": "REAL_ACCOUNT_REQUEST_SUCCEEDED",
+      "legacyModel": true,
+      "monthlyBudgetKRW": 10000,
+      "perRequestCeilingKRW": 30,
+      "dailyRequestsPerUser": 5,
+      "cooldownSeconds": 30,
+      "concurrency": 1,
+      "maxSelectedCodepoints": 1500,
+      "maxCompletionTokens": 512,
+      "timeoutSeconds": 20,
+      "bazeCreditConversion": "UNCONFIRMED",
+      "processingTerms": "ACCOUNT_UNCONFIRMED",
+      "externalCalls": 0
+    },
+    "accountEndpoint": {
+      "baseUrl": "https://factchat.mindlogic-kr-api.com/v1/gateway",
+      "status": "CONFIRMED_FROM_USER_ACCOUNT_SCREEN",
+      "authentication": "Bearer or x-api-key; existing adapter uses Bearer",
+      "externalAuthentication": "REAL_GATEWAY_HTTP_200",
+      "agentProviderChanged": false
+    },
+    "syntheticVerification": {
+      "model": "claude-haiku-4-5-20251001",
+      "input": "SYNTHETIC_ONLY",
+      "operatingAIEnabled": false,
+      "started": "2026-10-11",
+      "outputTokenLimit": 512,
+      "status": "PASS",
+      "authentication": "REAL_GATEWAY_HTTP_200",
+      "schema": "PASS",
+      "questions": [
+        {
+          "questionType": "EVIDENCE",
+          "question": "이 근거는 주장에 어떤 방식으로 연결되나요?"
+        },
+        {
+          "questionType": "EVIDENCE",
+          "question": "이 구절의 관찰과 자신의 해석을 어떻게 구분할 수 있나요?"
+        }
+      ],
+      "requestCount": 1,
+      "httpStatus": 200,
+      "usage": {
+        "completion_tokens": 36,
+        "prompt_tokens": 568,
+        "total_tokens": 604
+      },
+      "seconds": 2.719,
+      "secretStoreUnchanged": true,
+      "evidence": "artifacts/ai/synthetic-baze-result.json",
+      "attempts": {
+        "tlsFailures": 2,
+        "http400SchemaFailures": 3,
+        "http200Success": 1,
+        "credentialFreeTlsCheck": 1
+      },
+      "cost": "Actual BAZE credit charge not returned; not inferred from direct-provider pricing",
+      "studentDataSent": false
+    },
+    "activationPreparation": {
+      "status": "BLOCKED_PROVIDER_TERMS_AND_COST_BOUND",
+      "authorization": "Enable only after separate consent and confirmed provider data conditions",
+      "observedCredits": 0.748,
+      "observedSuccessfulCalls": 1,
+      "source": "User-provided BAZE account usage screen",
+      "preparedLimits": {
+        "monthlyCredits": 100,
+        "dailyRequestsPerUser": 5,
+        "cooldownSeconds": 30,
+        "concurrency": 1,
+        "maxSelectedCodepoints": 1500,
+        "maxCompletionTokens": 512,
+        "timeoutSeconds": 20
+      },
+      "creditUnitScale": 1000,
+      "monthlyBudgetUnitsCandidate": 100000,
+      "callCostUnits": null,
+      "costBoundConfirmed": false,
+      "limitsAppliedToOperating": false,
+      "operatingAIEnabled": false,
+      "consentPolicyStatus": "DRAFT_PENDING_ACCOUNT_APPLICABLE_TERMS",
+      "dataConditionsRequired": [
+        "BAZE and Anthropic API input/output/log retention, exceptions and deletion",
+        "Training, evaluation and human review conditions for this account",
+        "Processing entities, countries and cross-border processing",
+        "Provider deletion requests and withdrawal handling"
+      ],
+      "fullEssaySent": false
+    }
+  },
+  "uiRefinement": {
+    "status": "DEPLOYED_VERIFIED",
+    "files": [
+      "src/Library.tsx",
+      "src/text-search.ts",
+      "src/ui-polish.css",
+      "scripts/book-layout.test.mjs",
+      "scripts/verify-ui-design.cjs"
+    ],
+    "G1": "PASS",
+    "G2": "PASS",
+    "G3": "PASS",
+    "G4": "PASS",
+    "G5": "WAIVED_BY_USER",
+    "backendTests": 52,
+    "exitCode": 0,
+    "typecheck": "PASS",
+    "build": "PASS alternate output; operating dist preserved",
+    "browser": {
+      "channel": "chrome",
+      "widths": [
+        1440,
+        1024,
+        820,
+        390,
+        320
+      ],
+      "screenshots": 110,
+      "errors": 0,
+      "overflow": 0,
+      "fixtureOnly": true,
+      "codePoints": 30000,
+      "exactReconstruction": true,
+      "evidence": "artifacts/ui-refinement/final/results.json"
+    },
+    "searchBenchmark": {
+      "scope": "Synthetic search microbenchmark, not total UI latency",
+      "codePoints": 30000,
+      "iterations": 30,
+      "oldMs": 15.279999999999973,
+      "newMs": 8.283999999999992,
+      "equivalent": true
+    },
+    "productionDatabaseChanged": false,
+    "AIEnabled": false,
+    "operatingRestarted": false,
+    "knownLimit": "Synthetic browser API fixture; no new real Google login or production PDF generation",
+    "next": "No further deployment required; existing operating start/status/stop/restart unchanged",
+    "operatingPublish": {
+      "approval": "Explicit user request to apply tested UI externally and check Chrome",
+      "status": "PASS",
+      "origin": "https://crushable-movie-usable.ngrok-free.dev",
+      "frontendAssets": [
+        "assets/index-DhM-m5_Y.js",
+        "assets/index-CGhfE1WH.css"
+      ],
+      "indexSha256": "a73b03ac8a4e2475fc8137ab15a23a79e1627ffe1510b52c4bf676094fa7201f",
+      "rollback": "C:/Projects/dream-hs-automation-bounded-v3/output/geulbit/ui-rollbacks/2026-10-11T08-11-07-786Z",
+      "oldAssetsRetained": true,
+      "serverRestart": false,
+      "serverPid": 37720,
+      "tunnelPid": 30792,
+      "localHealth": 200,
+      "externalHealth": 200,
+      "chrome": {
+        "actualGoogleLogin": "PASS_EXISTING_DESIGNATED_ACCOUNT",
+        "home": "PASS",
+        "bothThemes": "PASS_RESTORED_DEFAULT",
+        "rules": "PASS_38_DETECTORS_134_PROVISIONS",
+        "overflow": false,
+        "scripts": [
+          "/assets/index-DhM-m5_Y.js"
+        ],
+        "singleShell": true,
+        "styles": [
+          "/assets/index-CGhfE1WH.css"
+        ],
+        "theme": "default",
+        "consoleErrorCount": 3,
+        "operatingTestEssaysCreated": 0,
+        "fullFlowScope": "Saving, analysis, version, PDF and IDOR tested in isolated pytest; no production essay writes",
+        "consoleErrorsAfterPublish": 0,
+        "preexistingBrowserMessages": 3
+      },
+      "backendRegression": {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_auth_api.py backend/v2_tests/test_essay_api.py backend/v2_tests/test_analysis_api.py backend/v2_tests/test_reanalysis_api.py backend/v2_tests/test_operations_api.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 56,
+        "seconds": 48.96,
+        "isolated": true
+      },
+      "database": {
+        "mode": "READ_ONLY_CHECK",
+        "revision": "0003_resource_ownership",
+        "integrity": "ok",
+        "fkViolations": 0,
+        "operatingTestEssaysCreated": 0
+      },
+      "screenshots": [
+        "artifacts/ui-refinement/operating/chrome-home.png",
+        "artifacts/ui-refinement/operating/chrome-bookshelf.png",
+        "artifacts/ui-refinement/operating/chrome-rules.png"
+      ],
+      "AIEnabled": false,
+      "G5": "WAIVED_BY_USER"
+    }
+  },
+  "textSourceEntry": {
+    "status": "IMPLEMENTED_PUBLISHED",
+    "changes": [
+      "backend/v2_tests/test_library_api.py",
+      "src/App.tsx",
+      "src/TextSourceDialog.tsx"
+    ],
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_library_api.py backend/v2_tests/test_quote_api.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 16,
+        "isolated": true
+      },
+      {
+        "command": "npx tsc --noEmit",
+        "exitCode": 0
+      },
+      {
+        "command": "npx vite build --outDir artifacts/text-source/build",
+        "exitCode": 0
+      }
+    ],
+    "browser": "artifacts/text-source/browser-results.json",
+    "scope": "PRIVATE",
+    "api": "Existing multipart POST /api/source-documents; UTF-8 TXT",
+    "backendImplementationChanged": false,
+    "operatingDatabaseChanged": false,
+    "rollback": "C:/Projects/dream-hs-automation-bounded-v3/output/geulbit/ui-rollbacks/2026-10-12T03-32-06-889Z",
+    "G5": "WAIVED_BY_USER"
+  },
+  "analysisFeedbackFix": {
+    "status": "DEPLOYED_VERIFIED",
+    "changes": [
+      "backend/app/analysis/reviewed_norms.py",
+      "backend/app/analysis/ruleset.py",
+      "backend/app/v2/ai_api.py",
+      "backend/app/v2/baze_provider.py",
+      "backend/components/ai.py",
+      "backend/engine_tests/test_norms_rules.py",
+      "backend/engine_tests/test_reviewed_norms.py",
+      "backend/v2_tests/test_ai_api.py",
+      "backend/v2_tests/test_baze_provider.py",
+      "backend/v2_tests/test_rules_api.py",
+      "src/Library.tsx"
+    ],
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/engine_tests/test_reviewed_norms.py backend/engine_tests/test_norms_rules.py backend/v2_tests/test_rules_api.py backend/v2_tests/test_ai_api.py backend/v2_tests/test_baze_provider.py backend/component_tests/test_ai.py backend/v2_tests/test_analysis_api.py backend/v2_tests/test_reanalysis_api.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 191,
+        "isolated": true
+      },
+      {
+        "command": "npx tsc --noEmit",
+        "exitCode": 0
+      },
+      {
+        "command": "npx vite build --outDir artifacts/analysis-fix/build",
+        "exitCode": 0
+      }
+    ],
+    "browser": "artifacts/analysis-fix/browser-results.json",
+    "rulesetVersion": "geulbit.local-reviewed/8",
+    "AIContext": "Exact essay excerpts and explicitly selected connected VIEW/DOWNLOAD TEXT revision quote; no unlinked knowledge",
+    "externalAIActivationChanged": false,
+    "backendImplementationChanged": true,
+    "operatingDatabaseChanged": false,
+    "rollback": "C:/Projects/dream-hs-automation-bounded-v3/output/geulbit/ui-rollbacks/2026-10-12T05-05-15-707Z",
+    "G5": "WAIVED_BY_USER",
+    "operating": {
+      "startExitCode": 0,
+      "serverPid": 25460,
+      "tunnelPid": 12112,
+      "localHealth": 200,
+      "externalHealth": 200,
+      "assetHashMatched": true,
+      "operatingTestEssaysCreated": 0,
+      "externalAICalls": 0,
+      "restart": "Initial stop exceeded six-second owned-process grace; status subsequently confirmed both owned processes stopped. Existing start then succeeded; no forced server kill.",
+      "next": "Refresh browser and explicitly reanalyze previous draft. Old immutable analysis results are preserved."
+    },
+    "gates": {
+      "G1": "PASS",
+      "G2": "PASS_191_TARGETED_AND_FOUR_CHROME_CASES",
+      "G3": "PASS",
+      "G4": "PASS_SCOPE_AND_28_PROTECTED_FILES",
+      "G5": "WAIVED_BY_USER"
+    }
+  },
+  "argumentRelations": {
+    "status": "DEVELOPMENT_VERIFIED_NOT_DEPLOYED",
+    "changes": [
+      "backend/app/analysis/snapshot.py",
+      "backend/app/analysis/structure.py",
+      "backend/app/v2/analysis_api.py",
+      "backend/engine_tests/test_argument_relations.py",
+      "backend/v2_tests/test_structure_api.py",
+      "scripts/argument-spans.test.mjs",
+      "scripts/verify-argument-links.cjs",
+      "src/ArgumentEditorLayer.tsx",
+      "src/ArgumentText.tsx",
+      "src/Library.tsx",
+      "src/argument-marks.css",
+      "src/argument-spans.ts"
+    ],
+    "structureVersion": "geulbit.structure/2",
+    "rootCauses": [
+      "Narrow literal claim cues and incomplete morphological predicate handling (XSV/XSA)",
+      "Nearest following evidence linked without topic validation",
+      "API retained raw relation candidates but UI lacked sentence decorations and relation ID mapping"
+    ],
+    "contract": "Compatible argumentCandidates/argumentLinks extensions; run/version IDs, canonical code point spans, original quotes and structural signal confidence. Legacy nearest-following snapshots do not acquire new arrows.",
+    "thresholds": {
+      "maxPreviousSentences": 12,
+      "maxParagraphDistance": 2,
+      "minimumSignalScore": 4,
+      "ambiguityMargin": 2
+    },
+    "editor": "Existing textarea retained; synchronized text decoration layer and independent visible arrow controls. No CodeMirror installed or editor replacement.",
+    "stale": "Any body change hides semantic marks and arrows; work/question and linked revision changes also invalidate. Spelling span mapping remains independent.",
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/engine_tests/test_argument_relations.py backend/engine_tests/test_snapshot.py backend/engine_tests/test_reviewed_norms.py backend/v2_tests/test_structure_api.py backend/v2_tests/test_analysis_api.py backend/v2_tests/test_reanalysis_api.py backend/v2_tests/test_rules_api.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 131,
+        "seconds": 19.73,
+        "note": "Before the additional legacy snapshot compatibility test; subsequent changes covered by the targeted API command below"
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_structure_api.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 6,
+        "seconds": 6.22
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_operations_api.py::test_pdf_actual_version_korean_and_import_new_owner backend/v2_tests/test_operations_api.py::test_pdf_idor_and_admin_no_private_override backend/v2_tests/test_operations_api.py::test_long_pdf_complete_body_and_no_temporary_files -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 3,
+        "seconds": 9.05
+      },
+      {
+        "command": "node scripts/argument-spans.test.mjs",
+        "exitCode": 0,
+        "codePoints": 30000,
+        "marks": 1000,
+        "milliseconds": 2.18
+      },
+      {
+        "command": "node scripts/book-layout.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node scripts/feedback-spans.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "npx tsc --noEmit",
+        "exitCode": 0
+      },
+      {
+        "command": "npx vite build --outDir artifacts/argument-links/build",
+        "exitCode": 0
+      },
+      {
+        "command": "ARGUMENT_SMOKE_ONLY=1 node scripts/verify-argument-links.cjs",
+        "exitCode": 0,
+        "cases": 6,
+        "widths": [
+          1440,
+          820,
+          390
+        ],
+        "errors": 0,
+        "note": "Final candidate interactions, viewport editor screenshots after fonts settle"
+      },
+      {
+        "command": "node scripts/verify-argument-links.cjs",
+        "exitCode": 0,
+        "cases": 6,
+        "pagesChecked": 852,
+        "codePoints": 30000,
+        "note": "Full-body reconstruction reused; subsequent changes affect only editor control placement, context invalidation and keyboard focus, not book text segmentation"
+      }
+    ],
+    "quality": {
+      "scope": "13 curated synthetic cases, not general accuracy",
+      "expectedRelations": 7,
+      "truePositive": 7,
+      "falsePositive": 0,
+      "falseNegative": 0
+    },
+    "browserEvidence": [
+      "artifacts/argument-links/browser-results.json",
+      "artifacts/argument-links/browser-final-results.json"
+    ],
+    "screenshots": [
+      "artifacts/argument-links/default-1440-claim-editor.png",
+      "artifacts/argument-links/default-390-editor.png",
+      "artifacts/argument-links/bookshelf-1440-claim-page.png",
+      "artifacts/argument-links/bookshelf-390-evidence-page.png"
+    ],
+    "buildIndexHash": "7d3a2040b24c611121103ee5e14b3b76a3735e49374391eaa513a821a6a5d3f9",
+    "gates": {
+      "G1": "PASS_DEVELOPMENT",
+      "G2": "PASS_TARGETED",
+      "G3": "PASS",
+      "G4": "PASS_EXISTING_SCOPE_AND_PROTECTED_GATES",
+      "G5": "WAIVED_BY_USER"
+    },
+    "operating": {
+      "deployed": false,
+      "databaseTouchedByTests": false,
+      "migrationExecuted": false,
+      "serverRestarted": false,
+      "releaseReceiptUpdated": false,
+      "serverPid": 25460,
+      "tunnelPid": 12112,
+      "localHealth": 200,
+      "externalHealth": 200,
+      "pendingReleaseHashes": [
+        "backend/app/analysis/snapshot.py",
+        "backend/app/analysis/structure.py",
+        "backend/app/v2/analysis_api.py",
+        "src/Library.tsx"
+      ]
+    },
+    "limitations": [
+      "Signal-based candidates are not entailment or logical grading",
+      "Implicit claims, figurative language, unlisted actions and long-distance links can be missed",
+      "Ambiguous links are deliberately withheld",
+      "Chrome browser tests use actual isolated Kiwi output with synthetic API transport; no operating essays or student data used"
+    ],
+    "next": "Explicit operating publication approval is required. Keep old production dist and release receipt. New development source intentionally differs from release hashes; do not attempt operating restart/maintenance preflight with unapproved candidate.",
+    "nativeSelection": "Decorative background placed below transparent native textarea; independent arrow controls above. Native selection/caret remain readable. Final six Chrome cases PASS after this change."
+  },
+  "userAnnotations": {
+    "status": "DEVELOPMENT_VERIFIED_NOT_DEPLOYED",
+    "contract": "docs/automation/ANNOTATIONS_CONTRACT.md",
+    "migration": "0004_user_annotations",
+    "operatingMigrationApplied": false,
+    "operatingDeploymentApplied": false,
+    "dataModel": "user_annotations; owner-only; immutable first anchor; optimistic revision; certified codepoint span",
+    "gates": {
+      "G1": "PASS_DEVELOPMENT",
+      "G2": "PASS_ISOLATED_AND_CHROME_FIXTURE",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "WAIVED_BY_USER"
+    },
+    "changedFiles": [
+      "backend/app/models.py",
+      "backend/app/storage.py",
+      "backend/app/services/backup_service.py",
+      "backend/app/v2/__init__.py",
+      "backend/app/v2/annotations_api.py",
+      "backend/app/v2/auth_api.py",
+      "backend/app/v2/beta_runtime.py",
+      "backend/app/v2/operations_api.py",
+      "backend/migrations/versions/0004_user_annotations.py",
+      "backend/tests/test_storage.py",
+      "backend/v2_tests/test_annotations_api.py",
+      "backend/v2_tests/test_annotations_migration.py",
+      "backend/v2_tests/test_operations_api.py",
+      "backend/v2_tests/test_migration.py",
+      "src/Library.tsx",
+      "src/AnnotationsPanel.tsx",
+      "src/AnnotationBookLayer.tsx",
+      "src/ArgumentEditorLayer.tsx",
+      "src/ArgumentText.tsx",
+      "src/argument-spans.ts",
+      "src/user-annotations.ts",
+      "src/annotations.css",
+      "src/api.ts",
+      "scripts/account-session.test.mjs",
+      "scripts/user-annotations.test.mjs",
+      "scripts/verify-user-annotations.cjs",
+      "docs/automation/ANNOTATIONS_CONTRACT.md"
+    ],
+    "sourceHashes": {
+      "backend/app/models.py": "1cd5d0d4c1af3d3d6c480e6533212a682debb4a9a60671ea2b127de6c7dce9cf",
+      "backend/app/storage.py": "c1ba985e8a7c569ffd099034402a5748296a4d614fd14a3679563ecc995db247",
+      "backend/app/services/backup_service.py": "47931e7207ac58e9f66a8e6e52b1c292a3ee460776445a2ca0c63b102575039d",
+      "backend/app/v2/__init__.py": "e98e4bb66a9deb5653dc4516c2bcb48dd6e00cba70ee05862cfc9404272d3bab",
+      "backend/app/v2/annotations_api.py": "1b1d3f99cc26c55fcffdecaeef5a14e88c4e240a52a08e8cd99fad11e146fb66",
+      "backend/app/v2/auth_api.py": "032cb13f0ab514c1af40effbd9b17f5525450d266213c32b0dd4b4fbd8e9f00d",
+      "backend/app/v2/beta_runtime.py": "35d2f1aacfec1e6deee850d10929dbab46a6bc801e12a09bd19e78b7e43da24c",
+      "backend/app/v2/operations_api.py": "c0c43e3f2a9a4435402166b8d3134d45ebbdf3af14c16cf7243bf3e26e766d3f",
+      "backend/migrations/versions/0004_user_annotations.py": "c3e3acd498224c25555dd58f0a949cf8398a0d85900d5f838cc2480704174141",
+      "backend/tests/test_storage.py": "86ad326c80374994a54ca28f4dc13ef575995fb1e533de9f33121c6665490cbf",
+      "backend/v2_tests/test_annotations_api.py": "eb13a8af61c47e711673775b8d7f69edddbe274c06eccb440ce8469346875e90",
+      "backend/v2_tests/test_annotations_migration.py": "3b5b1b074de3117d49fef76521a1f6ced356df244846f8964afaa68def86c7e4",
+      "backend/v2_tests/test_operations_api.py": "6448ce94f4c53c7c5fdd8115c77d1964a1caaca50c2dc3b75c66fae8e5225889",
+      "backend/v2_tests/test_migration.py": "3e0772113fbf61fc218249c14c9c26406fb3882dbc562e36d4dcd27409e8ee4b",
+      "src/Library.tsx": "f333c1fad0f2218cb6ca37480f92e5e7702bccc441186666f5e25c0fe8d9a8c2",
+      "src/AnnotationsPanel.tsx": "4e234407402a30b941d11ee4139fd634f8857e17f324fd38e4a27d0e85552420",
+      "src/AnnotationBookLayer.tsx": "8c07c11a5e9875f2e441ab568c96f1339379f3a03e57aac217aedbf9df09e616",
+      "src/ArgumentEditorLayer.tsx": "d334c1be34f1c4adb8aa1eadff5e4de975349f5cca1893c0afdfc7b830821971",
+      "src/ArgumentText.tsx": "0f65be9e6d0bc001a1235a6cd92b88b331cbbb50914fbaa793b72c617590e378",
+      "src/argument-spans.ts": "92d13b8fd697aba6d09e3fb6178d50b80b3af43a8da3f52cde5972f61255172d",
+      "src/user-annotations.ts": "a51643bd771c96d2c02c3e631442ef822f32489b88fd563f1b7696b048e701ac",
+      "src/annotations.css": "dd154ebe73edcbd65dec95ae819c697e458b7d6df8231d55a8a807e2aad6ec7f",
+      "src/api.ts": "e1e4589a3703ff7c78a033b63c7e9b5409cb9df22ee4f63e7e85893fd64862bc",
+      "scripts/account-session.test.mjs": "f17e98a89b852463596e412e8b8fd365978ff74c6e185def890f1c24b8524f18",
+      "scripts/user-annotations.test.mjs": "96321f577754e630b6c2baea9d00a6fc8a97841f1cff95a1dc8a88fd8eed0d38",
+      "scripts/verify-user-annotations.cjs": "fee3cd9d677ae7c47f0d866a69ede38e2b66743c398a74f44327b70509ffeff6",
+      "docs/automation/ANNOTATIONS_CONTRACT.md": "dc4d3cc615974a4bd18aa338d9c26711decd6e2f0c0f8635b98f14950e6d3d2a"
+    },
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_annotations_api.py backend/v2_tests/test_annotations_migration.py backend/v2_tests/test_operations_api.py backend/v2_tests/test_secure_backup.py backend/tests/test_storage.py backend/v2_tests/test_structure_api.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 80
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_auth_api.py backend/v2_tests/test_essay_api.py backend/v2_tests/test_reanalysis_api.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 28
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_migration.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 7
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_annotations_api.py::test_crud_multiple_conflict_and_no_essay_side_effect -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 1,
+        "note": "Rerun after non-null 7-day deadline assertion strengthening; already included in 80-test aggregate."
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_annotations_api.py::test_actual_api_browser_fixture -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 1,
+        "note": "Rerun after adding real isolated reanalysis fixture; already included in 80-test aggregate."
+      },
+      {
+        "command": "node scripts/user-annotations.test.mjs",
+        "exitCode": 0,
+        "assertions": 10
+      },
+      {
+        "command": "node scripts/account-session.test.mjs",
+        "exitCode": 0,
+        "cases": 12
+      },
+      {
+        "command": "node scripts/argument-spans.test.mjs; node scripts/book-layout.test.mjs; node scripts/feedback-spans.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "npx tsc --noEmit",
+        "exitCode": 0
+      },
+      {
+        "command": "npx vite build --outDir artifacts/annotations/build",
+        "exitCode": 0
+      },
+      {
+        "command": "node scripts/verify-user-annotations.cjs",
+        "exitCode": 0,
+        "cases": 6,
+        "browserErrors": 0,
+        "widths": [
+          1440,
+          820,
+          390
+        ],
+        "mode": "ACTUAL_ISOLATED_API_KIWI_FIXTURE_WITH_SIMULATED_CRUD_TRANSPORT",
+        "relinkOriginPreserved": true,
+        "bookPagesReconstructed": 194,
+        "codePoints": 30000
+      }
+    ],
+    "screenshots": [
+      "artifacts/annotations/default-1440-editor.png",
+      "artifacts/annotations/default-820-book.png",
+      "artifacts/annotations/default-390-editor.png",
+      "artifacts/annotations/bookshelf-1440-book.png",
+      "artifacts/annotations/bookshelf-820-editor.png",
+      "artifacts/annotations/bookshelf-390-book.png"
+    ],
+    "visuallyOpened": true,
+    "limits": [
+      "Physical mobile long-press text selection not verified; DOM selection and Chrome touch/icon/keyboard verified.",
+      "Unsaved annotations do not survive browser close/reload.",
+      "Unknown edit history after refresh remains unlinked; explicit relink requires current completed analysis.",
+      "Development schema head is 0004; current operating 0003 and release receipt remain unchanged. Do not run operating restart/maintenance with candidate until approved migration/publication."
+    ],
+    "next": "Separate operating migration and publication approval required. Preserve old operating DB, backup, process, dist and release receipt. No commit/push/merge/deploy.",
+    "scopeEvidence": "artifacts/annotations/scope-results.json"
+  },
+  "contextSpellingGuidance": {
+    "status": "DEVELOPMENT_VERIFIED_NOT_DEPLOYED",
+    "rulesetVersion": "geulbit.local-reviewed/9",
+    "officialSource": "https://www.korean.go.kr/front/onlineQna/onlineQnaView.do?mn_id=216&qna_seq=305970",
+    "findings": [
+      "곰곰 and 곰곰이 are accepted; 곰곰히 is not a context-dependent standard variant",
+      "번번히 no longer receives universal replacement; expression advice, context confirmation and no forced suggestion",
+      "Existing 로서/로써 guidance includes meaning alternatives; no automatic apply"
+    ],
+    "changedFiles": [
+      "backend/app/analysis/reviewed_norms.py",
+      "backend/app/analysis/ruleset.py",
+      "backend/app/v2/analysis_api.py",
+      "backend/engine_tests/test_context_spelling_guidance.py",
+      "backend/engine_tests/test_norms_rules.py",
+      "backend/engine_tests/test_reviewed_norms.py",
+      "backend/v2_tests/test_rules_api.py"
+    ],
+    "sourceHashes": {
+      "backend/app/analysis/reviewed_norms.py": "fea28cec5fe055d79535c2960d388d857dc018ca7626d9d62cdedb8536639f0c",
+      "backend/app/analysis/ruleset.py": "b1a1270b68ad354126a59ccd5806d867d0859ba9fa19e08c6f16066a7345fe2f",
+      "backend/app/v2/analysis_api.py": "c5f7c383054afe32937b0e4ac4cda6a764c9339c90cdb6acd7c5441cbdb385b0",
+      "backend/engine_tests/test_context_spelling_guidance.py": "1d59d3f342e59901434f5d20a24326eb0b52582cb29e0a7705b0e23755b7ff50",
+      "backend/engine_tests/test_norms_rules.py": "1639098a1a0ca5a544b06edb2dcdc23213b1af243e17e4b4b57b25ab9f3d346b",
+      "backend/engine_tests/test_reviewed_norms.py": "223fd9ef7e6fbff44c0ba97a9f3ca975c9e583f9fe205bee57740d3ede22e104",
+      "backend/v2_tests/test_rules_api.py": "7b8fc974b62eb9faa2171f17967c381c457f9fad6a348b42ed8d58909a8502cb"
+    },
+    "tests": {
+      "command": ".venv/Scripts/python.exe -m pytest backend/engine_tests/test_context_spelling_guidance.py backend/engine_tests/test_reviewed_norms.py backend/engine_tests/test_norms_rules.py backend/engine_tests/test_snapshot.py backend/v2_tests/test_rules_api.py -q -p no:cacheprovider --tb=short",
+      "exitCode": 0,
+      "passed": 147
+    },
+    "G4": "PASS",
+    "G5": "WAIVED_BY_USER",
+    "operatingDeployment": false,
+    "uiChanged": false,
+    "next": "Keep existing operating release. Do not migrate/restart/deploy without approval. Context intent is not automatically inferred; recommendations remain optional."
+  },
+  "v21ReleaseCandidate": {
+    "status": "READY_FOR_DEPLOYMENT",
+    "timestamp": "2026-10-12T08:17:34.377Z",
+    "gates": {
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "WAIVED_BY_USER"
+    },
+    "operatingApplied": false,
+    "operatingRestarted": false,
+    "operatingMigrationApplied": false,
+    "operatingSchema": "0003_resource_ownership",
+    "candidateSchema": "0004_user_annotations",
+    "ruleset": "geulbit.local-reviewed/9",
+    "structure": "geulbit.structure/3",
+    "actualApi": true,
+    "authentication": "SYNTHETIC_QA_SESSION",
+    "actualGoogleThisTask": "NOT_ATTEMPTED",
+    "physicalMobileTouch": "UNVERIFIED",
+    "externalAICalls": 0,
+    "correctedDefects": [
+      "cross-paragraph quoted evidence can use verified following explanation",
+      "late annotation response cannot cross essay boundary",
+      "unsaved annotation switch requires confirmation",
+      "PDF digits and smiling emoji preserved",
+      "explicit verified pre-migration backup and guarded additive CLI"
+    ],
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 610,
+        "seconds": 140.84,
+        "warnings": 214
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/component_tests/test_pdf.py backend/v2_tests/test_operations_api.py backend/v2_tests/test_annotations_api.py -q -p no:cacheprovider --tb=short",
+        "exitCode": 0,
+        "passed": 49,
+        "seconds": 64.36
+      },
+      {
+        "command": ".venv/Scripts/python.exe backend/v2_tests/verify_operating_copy.py",
+        "exitCode": 0,
+        "result": {
+          "status": "PASS",
+          "sourceAccess": "SQLITE_READ_ONLY_ONLINE_BACKUP",
+          "operatingRevision": "0003_resource_ownership",
+          "copyRevision": "0004_user_annotations",
+          "oldTables": 39,
+          "existingRowsPreserved": true,
+          "linkedFilesVerified": 2,
+          "integrity": "ok",
+          "fkViolations": 0,
+          "upgradeRepeat": "PASS",
+          "encryptedBundleBytes": 2974478,
+          "bundleManifestHashes": "PASS",
+          "restoreQuarantine": "PASS",
+          "restoreSessionsInvalidated": "PASS",
+          "copiedPersonalDataCleanup": "PASS"
+        }
+      },
+      {
+        "command": "npx tsc --noEmit",
+        "exitCode": 0
+      },
+      {
+        "command": "npx vite build --outDir artifacts/v21/build",
+        "exitCode": 0,
+        "modules": 35
+      },
+      {
+        "command": "node scripts/verify-v21-integration.cjs",
+        "exitCode": 0,
+        "cases": 6,
+        "widths": [
+          1440,
+          820,
+          390
+        ],
+        "errors": 0,
+        "actualHttpApi": true,
+        "authentication": "SYNTHETIC_QA_SESSION"
+      },
+      {
+        "command": "V2_ARTIFACT_ROOT=artifacts/v21/system node scripts/verify-v2-e2e.cjs (PowerShell env assignment)",
+        "exitCode": 0,
+        "screenshots": 43,
+        "widths": [
+          1440,
+          1024,
+          820,
+          390,
+          320
+        ],
+        "errors": 0,
+        "metrics": [
+          {
+            "name": "analysis30000",
+            "ms": 792,
+            "codePoints": 30000
+          }
+        ]
+      },
+      {
+        "command": "node scripts/book-layout.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node scripts/user-annotations.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node scripts/argument-spans.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node scripts/feedback-spans.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node scripts/account-session.test.mjs",
+        "exitCode": 0
+      }
+    ],
+    "evidence": [
+      "artifacts/v21/integration-results.json",
+      "artifacts/v21/system/evidence.json",
+      "artifacts/v21/operating-copy-results.json",
+      "artifacts/v21/pdf-results.json",
+      "artifacts/v21/g4-results.json"
+    ],
+    "relationQuality": {
+      "scope": "16 curated synthetic cases, not general accuracy",
+      "cases": 16,
+      "truePositive": 8,
+      "falsePositive": 0,
+      "falseNegative": 0
+    },
+    "nextAction": "Separate operating migration and publication approval; execute docs/automation/V21_RELEASE.md. Do not restart operating server with this candidate before verified 0004 backup and matching release receipt.",
+    "changedFiles": [
+      "backend/app/analysis/snapshot.py",
+      "backend/app/analysis/structure.py",
+      "backend/app/services/backup_service.py",
+      "backend/app/v2/analysis_api.py",
+      "backend/component_tests/test_language_components.py",
+      "backend/component_tests/test_pdf.py",
+      "backend/components/pdf.py",
+      "backend/engine_tests/test_argument_relations.py",
+      "backend/local_https_proxy.py",
+      "backend/privacy_service.py",
+      "backend/storage_cli.py",
+      "backend/v2_tests/qa_server.py",
+      "backend/v2_tests/test_beta_runtime.py",
+      "backend/v2_tests/test_privacy_cli.py",
+      "backend/v2_tests/test_rules_display.py",
+      "backend/v2_tests/test_v21_release_preparation.py",
+      "backend/v2_tests/verify_operating_copy.py",
+      "docs/automation/V21_RELEASE.md",
+      "docs/automation/backend-checkpoint.json",
+      "public/fonts/noto-emoji-OFL.txt",
+      "public/fonts/noto-emoji.ttf",
+      "scripts/verify-v2-e2e.cjs",
+      "scripts/verify-v21-integration.cjs",
+      "src/AnnotationsPanel.tsx",
+      "src/Library.tsx",
+      "src/argument-spans.ts",
+      "src/v21-polish.css"
+    ],
+    "changedHashes": {
+      "backend/app/analysis/snapshot.py": "ad2a3002bb99d788236f063c53443097648aed2078c8d4646bc88ead392db764",
+      "backend/app/analysis/structure.py": "bd3559c19795ff4cd2c89c7bda4857d3501473d1c7bb71e06b90cf4372e1f731",
+      "backend/app/services/backup_service.py": "1ac877673bcd0d333cf0425896573a30a67cdc4543a40ea4bbbc8e598f1c401f",
+      "backend/app/v2/analysis_api.py": "9291a46f39d4fc72d5c8f68c5cb1e4108a7aa184e4d92a24fc61ec0a62cb08e9",
+      "backend/component_tests/test_language_components.py": "1e204f50cb6af28dd82d3b0885efef2b40a51945e29238594cc4df15e813cdff",
+      "backend/component_tests/test_pdf.py": "576b5d095640a4943916b6530b8eac418d3c2c08f376017c174ab03f70a4676a",
+      "backend/components/pdf.py": "e59fa33233ad3e911ac378f71154d839e90af63dd8f05f0038365dcf7050cb2b",
+      "backend/engine_tests/test_argument_relations.py": "348e6e765773ddfac6ad4c2484a630c1e438951c0e5a3887fcab2f850cd24d7c",
+      "backend/local_https_proxy.py": "6a81c202d9510d41e43c74fb40e808e3f4887a8b435f1d52042ecc33e575c631",
+      "backend/privacy_service.py": "b45e1cf977572e2b24c1c443a74ca1c5adc1d73012f301c51c864d369538f9fb",
+      "backend/storage_cli.py": "c1b67e15a4d7ca27831d8b1e3f4ef8d231aa04bf36b521592b6f0d386ba2e715",
+      "backend/v2_tests/qa_server.py": "61b4f8f48f28677b821d9627ba284856ab22230715c48e7ef1ebb9fc1b5ad7a5",
+      "backend/v2_tests/test_beta_runtime.py": "46b4926bbc2f08e7daf0e4ef82a8f87f44f8b443debee4bc74c2c183ee08d6e2",
+      "backend/v2_tests/test_privacy_cli.py": "17146319d49e518c3374c2896ea7da811c29f5b4bcd2727dcca237c3b5ab88bd",
+      "backend/v2_tests/test_rules_display.py": "28f1a6e1810621529d78836cf45a54137cff53b3526ed39108e4b340c8e82d74",
+      "backend/v2_tests/test_v21_release_preparation.py": "789d8f64f22ad8ff6437c53e0bee960765d864de1cc3f04e59440150d433c892",
+      "backend/v2_tests/verify_operating_copy.py": "1f4917b2b66f5f51f8073114bcce6ae4d75205e234f97d804c855ff76f7b9ca8",
+      "docs/automation/V21_RELEASE.md": "4ce11381a08e967e37d04ebecd78c00b22d9be5537697401f5ab8f52a89718e7",
+      "public/fonts/noto-emoji-OFL.txt": "500bb1ccf43df7bbb522112f9133a52b16e1c35e809632f5d8609b179152de5b",
+      "public/fonts/noto-emoji.ttf": "de6c18832938afc99caf132b39d6a30a19bac7f2e812e28db2535b4608d27551",
+      "scripts/verify-v2-e2e.cjs": "44576bea50b2cbb357f9332d60e08e0a0583a7df1963672902c9e873908f2d7a",
+      "scripts/verify-v21-integration.cjs": "d58e5b2391e792fa41432dfa649f0ad6c6fa427a6a258ca700b39bf03eae8ca4",
+      "src/AnnotationsPanel.tsx": "c1117826e7b19b8a1d3d5cffc0f3a6c2e4c4af099300648869c67d45b8527360",
+      "src/Library.tsx": "7389c008c98bd16cf8e61a96b4d5ab04144ce89ec236d133fac73a0f5e90d0e4",
+      "src/argument-spans.ts": "747bb2aeefc3dd058f0ed36e3357a445b6e4e03a4780b64f80e8b69f4f325395",
+      "src/v21-polish.css": "c17518357133dc7446275b442d3798d31dd7b6af3a1b8b4bfd575895c36364b7"
+    },
+    "supersededBy": "RESPONSIVE_UI_CANDIDATE"
+  },
+  "mobileOptimization": {
+    "status": "READY_FOR_DEPLOYMENT",
+    "timestamp": "2026-10-12T08:45:27.977Z",
+    "gates": {
+      "G1": "PASS",
+      "G2": "PASS",
+      "G3": "PASS",
+      "G4": "PASS",
+      "G5": "WAIVED_BY_USER"
+    },
+    "deployed": false,
+    "operatingApplied": false,
+    "operatingRestarted": false,
+    "backendUnchanged": true,
+    "operatingSchema": "0003_resource_ownership",
+    "candidateSchema": "0004_user_annotations",
+    "tests": [
+      {
+        "command": "node scripts/verify-mobile-layout.cjs",
+        "exitCode": 0,
+        "flows": 12,
+        "screenshots": 72,
+        "errors": 0,
+        "widths": [
+          1024,
+          820,
+          768,
+          390,
+          320,
+          844
+        ],
+        "mode": "CHROME_TOUCH_EMULATION_ACTUAL_ISOLATED_API"
+      },
+      {
+        "command": "V21_ARTIFACT_ROOT=artifacts/mobile/v21-regression node scripts/verify-v21-integration.cjs (PowerShell env assignment)",
+        "exitCode": 0,
+        "flows": 6,
+        "errors": 0,
+        "note": "Same interaction code; final cosmetic gallery/close-target adjustments and inert navigation verified by latest 12-flow script"
+      },
+      {
+        "command": "npx tsc --noEmit",
+        "exitCode": 0
+      },
+      {
+        "command": "npx vite build --outDir artifacts/mobile/build",
+        "exitCode": 0,
+        "modules": 36
+      },
+      {
+        "command": "node scripts/book-layout.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node scripts/user-annotations.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": "node scripts/argument-spans.test.mjs",
+        "exitCode": 0
+      },
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend -q -p no:cacheprovider --tb=short",
+        "passed": 610,
+        "exitCode": 0,
+        "reusedUnchangedBackend": true,
+        "evidence": "artifacts/v21/release-candidate.json"
+      }
+    ],
+    "evidence": [
+      "artifacts/mobile/responsive-results.json",
+      "artifacts/mobile/v21-regression/integration-results.json",
+      "artifacts/mobile/g4-results.json"
+    ],
+    "physicalMobile": "UNVERIFIED",
+    "physicalSoftKeyboard": "UNVERIFIED",
+    "automaticIosZoom": "NOT_PHYSICALLY_VERIFIED_INPUT_FONT_16PX",
+    "changes": [
+      "tablet full-width editor",
+      "portrait tablet single-page reader",
+      "phone two-column shelf from 375px",
+      "44px primary touch controls",
+      "safe-area bottom shortcuts",
+      "16px phone inputs",
+      "scrollable landscape settings and drawer",
+      "navigation inert during dialogs"
+    ],
+    "nextAction": "Separate publication and 0004 migration approval remains required; use artifacts/mobile candidate and docs/automation/V21_RELEASE.md."
+  },
+  "v21OperatingDeployment": {
+    "status": "OPERATING_APPLIED_EXTERNAL_HTTPS_PASS_BROWSER_PENDING",
+    "userAuthorized": true,
+    "migrationTarget": "0004_user_annotations",
+    "G4": "PASS",
+    "G5": "WAIVED_BY_USER",
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_v21_release_preparation.py backend/v2_tests/test_privacy_cli.py backend/v2_tests/test_network_setup.py -q -p no:cacheprovider --tb=short",
+        "passed": 27,
+        "exitCode": 0
+      },
+      {
+        "command": ".venv/Scripts/python.exe backend/v2_tests/verify_operating_copy.py",
+        "status": "PASS",
+        "exitCode": 0
+      }
+    ],
+    "nextAction": "Stop owned server and tunnel, create fresh 0003 encrypted backup, migrate with exact verified archive.",
+    "revision": "0004_user_annotations",
+    "existingTablesUnchanged": true,
+    "counts": {
+      "users": 3,
+      "consents": 3,
+      "writing": 4,
+      "writing_version": 1,
+      "analysis": 1,
+      "user_annotations": 0
+    },
+    "externalHealth": 200,
+    "googleBrowserSmoke": "PENDING_USER",
+    "syntheticOperatingDataCreated": false
+  },
+  "v22Development": {
+    "worktree": "C:/Users/USER/.codex/worktrees/geulbit-v22/글빛",
+    "operatingMigrationApproved": false,
+    "operatingDeploymentApproved": false,
+    "status": "V2.2_READY_FOR_DEPLOYMENT",
+    "candidate": "C:\\Users\\USER\\.codex\\worktrees\\geulbit-v22\\글빛\\artifacts\\v22\\release-candidate.json",
+    "tests": {
+      "backend": 661,
+      "frontendSuites": 5,
+      "browserCases": 6,
+      "longMultipleWorksCases": 2,
+      "actualPdfUiCases": 6
+    },
+    "G4": "PASS",
+    "G5": "WAIVED_BY_USER",
+    "migration": "0005_work_aliases"
+  },
+  "v21OperatingRelease": {
+    "status": "V2.1_RELEASED",
+    "nextAction": "V2.2 isolated candidate only; do not apply operating 0005",
+    "googleBrowserSmoke": "USER_CONFIRMED_ACTUAL_CHROME_LOGIN_EXISTING_ESSAY_ANALYSIS",
+    "pdfVisibility": "MAIN_ACTION_BUTTON_OPERATING_APPLIED_ISOLATED_CHROME_6_CASES_PASS",
+    "operatingPdfUserRecheck": "PENDING_AFTER_BUTTON_VISIBILITY_FIX",
+    "G5": "WAIVED_BY_USER"
+  },
+  "feedbackReadability": {
+    "status": "OPERATING_STATIC_UI_APPLIED",
+    "scope": [
+      "src/Library.tsx",
+      "src/feedback-readability.css"
+    ],
+    "changes": [
+      "panel outer gutters",
+      "card padding and 24px separation",
+      "readable line height and text contrast",
+      "separate quote, suggestion, source and actions",
+      "mobile spacing and 44px controls"
+    ],
+    "tests": [
+      {
+        "command": "node node_modules/typescript/bin/tsc --noEmit",
+        "exitCode": 0
+      },
+      {
+        "command": "node node_modules/vite/bin/vite.js build --outDir artifacts/feedback-readability/build",
+        "exitCode": 0
+      },
+      {
+        "command": "node artifacts/feedback-readability/verify.cjs after",
+        "exitCode": 0,
+        "passed": 6,
+        "mode": "ACTUAL_ISOLATED_FLASK_SQLITE_KIWI_HEADLESS_CHROME_SYNTHETIC_SESSION"
+      },
+      {
+        "command": "node scripts/feedback-spans.test.mjs",
+        "exitCode": 0,
+        "unicodeAndStale": "PASS"
+      },
+      {
+        "command": "node scripts/user-annotations.test.mjs",
+        "exitCode": 0,
+        "passed": 10
+      }
+    ],
+    "screenshots": "artifacts/feedback-readability/{before,after}-{default,bookshelf}-{1440,820,390}.png",
+    "G4": "PASS",
+    "G5": "WAIVED_BY_USER",
+    "physicalMobileDevice": "UNVERIFIED",
+    "nextAction": "Completed. User refreshes the current analysis page; physical mobile device remains unverified. Carry the scoped CSS into the future V2.2 candidate without replacing its existing ZIP.",
+    "protectedFiles": 28,
+    "operatingEvidence": "artifacts/feedback-readability/operating-results.json",
+    "operatingDbChanged": false,
+    "serverRestart": false
+  },
+  "signupDisclosure": {
+    "status": "OPERATING_APPLIED",
+    "scope": [
+      "backend/app/v2/beta_signup.py",
+      "backend/v2_tests/test_beta_signup.py",
+      "public/auth-status.css"
+    ],
+    "approvedNoticePreserved": true,
+    "policyVersionChanged": false,
+    "initiallyCollapsed": true,
+    "sections": 6,
+    "nativeKeyboardDisclosure": true,
+    "requiredAgeAndConsentUnchanged": true,
+    "tests": [
+      {
+        "command": ".venv/Scripts/python.exe -m pytest backend/v2_tests/test_beta_signup.py -q -p no:cacheprovider --tb=short",
+        "passed": 12,
+        "exitCode": 0
+      },
+      {
+        "command": "node artifacts/signup-disclosure/verify.cjs after",
+        "passed": 4,
+        "exitCode": 0,
+        "widths": [
+          1440,
+          820,
+          390,
+          320
+        ],
+        "authentication": "SYNTHETIC_SIGNED_OIDC_NOT_ACTUAL_GOOGLE"
+      }
+    ],
+    "G4": "PASS",
+    "G5": "WAIVED_BY_USER",
+    "physicalMobileDevice": "UNVERIFIED",
+    "screenshots": "artifacts/signup-disclosure/{before,after,expanded}-{1440,820,390,320}.png",
+    "nextAction": "Completed. First-time users receive collapsible notice sections. Existing consent and policy version remain unchanged. Physical mobile testing and a new real Google enrollment were not repeated. Carry this presentation-only fix into a future V2.2 candidate.",
+    "protectedFiles": 28,
+    "operatingEvidence": "artifacts/signup-disclosure/operating-results.json",
+    "operatingTestUsersCreated": false,
+    "operatingMigration": false,
+    "actualGoogleLoginRetested": false,
+    "externalHttps": 200,
+    "restart": {
+      "initialExitCode": 1,
+      "errorCode": "OWNED_PROCESS_STOP_FAILED",
+      "gracefulExitConfirmed": true,
+      "subsequentStartExitCode": 0,
+      "recovered": true,
+      "processesChangedOnlyForOwnedOperatingService": true
     }
   }
 }

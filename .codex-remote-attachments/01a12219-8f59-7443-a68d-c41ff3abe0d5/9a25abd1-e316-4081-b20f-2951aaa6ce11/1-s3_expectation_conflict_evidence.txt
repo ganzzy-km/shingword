@@ -1,0 +1,125 @@
+글빛 S3 기대값 충돌 검토 발췌
+
+검토 범위: 첨부 ZIP·JSON·Python 파일 정적 대조. Windows 엔진/pytest 재실행은 하지 않음.
+ZIP CRC 오류: None
+Manifest SHA-256 일치: 19/19
+별도 Checkpoint와 ZIP Checkpoint 바이트 일치: True
+
+실패 본문:
+이 작품은 문자 처리에 지친 인물이 타인의 삶을 지키는 과정으로 읽힌다.
+
+저장된 출력 비교:
+{
+  "source": "main_original",
+  "id": "sentence-1",
+  "start": 0,
+  "end": 40,
+  "roles": [
+    "EVIDENCE_CANDIDATE"
+  ],
+  "claimSignals": [],
+  "evidenceTypes": [
+    "CHARACTER_ACTION",
+    "WORK_EVENT_REFERENCE"
+  ],
+  "actionLemmas": [
+    "지키"
+  ],
+  "scores": {
+    "CLAIM_CANDIDATE": 0,
+    "EVIDENCE_CANDIDATE": 2,
+    "OTHER": 0
+  }
+}
+{
+  "source": "preserved_failed_candidate",
+  "id": "sentence-1",
+  "start": 0,
+  "end": 40,
+  "roles": [
+    "CLAIM_CANDIDATE",
+    "EVIDENCE_CANDIDATE"
+  ],
+  "claimSignals": [
+    "EXPLICIT_INTERPRETIVE_READING"
+  ],
+  "evidenceTypes": [
+    "CHARACTER_ACTION",
+    "WORK_EVENT_REFERENCE"
+  ],
+  "actionLemmas": [
+    "지키"
+  ],
+  "scores": {
+    "CLAIM_CANDIDATE": 1,
+    "EVIDENCE_CANDIDATE": 2,
+    "OTHER": 0
+  }
+}
+{
+  "source": "new_candidate",
+  "id": "sentence-1",
+  "start": 0,
+  "end": 40,
+  "roles": [
+    "CLAIM_CANDIDATE",
+    "EVIDENCE_CANDIDATE"
+  ],
+  "claimSignals": [
+    "EXPLICIT_INTERPRETIVE_READING"
+  ],
+  "evidenceTypes": [
+    "CHARACTER_ACTION",
+    "WORK_EVENT_REFERENCE"
+  ],
+  "actionLemmas": [
+    "지키"
+  ],
+  "scores": {
+    "CLAIM_CANDIDATE": 1,
+    "EVIDENCE_CANDIDATE": 2,
+    "OTHER": 0
+  }
+}
+
+실패 assertion:
+c['roles']==['CLAIM_CANDIDATE'] and SIGNAL in c['claimSignals']
+
+실제 신규 테스트:
+161: @pytest.mark.parametrize('body',[
+162:     '이 작품은 발음 연습에 매달리던 인물이 타인의 경험을 받아들이는 과정으로 읽힌다.',
+163:     '이 작품은 문자 처리에 지친 인물이 타인의 삶을 지키는 과정으로 읽힌다.',
+164: ])
+165: def test_complement_scope_background_reading_words_do_not_block_interpretation(body):
+166:     c=run(body)['roleCandidates'][0]
+167:     assert c['roles']==['CLAIM_CANDIDATE'] and SIGNAL in c['claimSignals']
+168:     assert (c['start'],c['end'])==(0,len(body))
+
+기존 복수 역할 구성:
+459:         action=any(t['pos'].startswith('VV') and t['form'] in ACTION_LEMMAS
+460:                    and not (i+1<len(tokens) and tokens[i+1]['pos']=='ETN') for i,t in enumerate(tokens))
+461:         speech=any(x in value for x in ('말했다','외쳤다','대사','말한다'))
+462:         if frame and speech:evidence.append('CHARACTER_SPEECH')
+463:         if frame and action:evidence.append('CHARACTER_ACTION')
+464:         if frame and has_predicate and any(x in value for x in ('장면','풍경','배경')):evidence.append('SCENE_DESCRIPTION')
+465:         if frame and (action or quotes or page_reference):evidence.append('WORK_EVENT_REFERENCE')
+466:         page_context=frame or bool(nouns & {'책','소설','시','희곡','원문','판본','인물','화자'})
+467:         qualifies_evidence=bool(quotes or (page_reference and page_context and has_predicate and nouns) or (frame and action and nouns))
+468:         roles=(['CLAIM_CANDIDATE'] if qualifies_claim else [])+(['EVIDENCE_CANDIDATE'] if qualifies_evidence else [])
+469:         item = {"id":f"sentence-{sentence['number']}","sentenceNumber": sentence["number"], "paragraph": sentence["paragraph"],
+470:                 "start": start, "end": end, "claimSignals": claim, "evidenceTypes": evidence,
+471:                 'actionLemmas':sorted({t['form'] for t in tokens if t['pos'].startswith('VV') and t['form'] in ACTION_LEMMAS}),
+
+아직 실행하지 않은 항목:
+[
+  "full44 targeted suite",
+  "protected93",
+  "four focused modes and actual question comparison",
+  "final57 replay",
+  "formal S3 verification",
+  "build",
+  "E2E",
+  "R2"
+]
+
+판단: 기록된 한 건은 신규 CLAIM-only 기대값과 기존 EVIDENCE 보존 요구의 충돌이다. 후보 전체 Acceptance PASS를 의미하지 않는다.
