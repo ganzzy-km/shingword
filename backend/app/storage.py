@@ -12,7 +12,7 @@ from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 
-SCHEMA_HEAD = "0001_initial"
+SCHEMA_HEAD = "0005_writing_tools"
 
 
 class StorageBlocked(RuntimeError):

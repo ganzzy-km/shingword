@@ -2,8 +2,8 @@
   "version": 1,
   "configured": false,
   "repo": "C:/Users/USER/Documents/ChatGPT/글빛",
-  "expectedHead": null,
-  "expectedBranch": null,
+  "expectedHead": "68d771840014cdef9e9acc84be1f2f613cc269a0",
+  "expectedBranch": "master",
   "protected": {},
   "allowedTestExecutables": [
     ".venv/Scripts/python.exe"
@@ -95,11 +95,11 @@
             "test_disconnect_latches_until_explicit_new_startup"
           ]
         },
-        "G1": "PASS_LOCAL_STORAGE_CANDIDATE",
-        "G2": "LOCAL_TESTS_PASS_RUNNER_BINDING_UNVERIFIED",
-        "G3": "LOCAL_INVARIANTS_VERIFIED",
-        "G4": "SCOPE_RECORDED_BASELINE_UNVERIFIED",
-        "G5": "DEFERRED_USER_REQUEST"
+        "G1": "PASS_DEVELOPMENT_RECEIPT",
+        "G2": "PASS_DEVELOPMENT_RECEIPT",
+        "G3": "PASS_DEVELOPMENT_RECEIPT",
+        "G4": "PASS_DEVELOPMENT_RECEIPT",
+        "G5": "DEFERRED_FINAL_REVIEW"
       },
       "productDependencies": null,
       "independentReview": {
@@ -142,11 +142,11 @@
           "boundary": null,
           "dataConsistency": null
         },
-        "G1": "NOT_CONFIGURED",
-        "G2": "NOT_RUN",
-        "G3": "NOT_CONFIGURED",
-        "G4": "NOT_CONFIGURED",
-        "G5": "NOT_RUN"
+        "G1": "PASS_DEVELOPMENT_RECEIPT",
+        "G2": "PASS_DEVELOPMENT_RECEIPT",
+        "G3": "PASS_DEVELOPMENT_RECEIPT",
+        "G4": "PASS_DEVELOPMENT_RECEIPT",
+        "G5": "DEFERRED_FINAL_REVIEW"
       },
       "productDependencies": null,
       "independentReview": {
@@ -167,15 +167,39 @@
       "id": "p03",
       "mode": "implement",
       "dependsOn": [
-        "p02"
+        "schema-v2"
       ],
-      "prompt": null,
-      "activePlan": null,
-      "allowedPaths": [],
-      "maxChangedFiles": null,
-      "timeoutSeconds": null,
-      "tests": [],
-      "requiredOutputs": [],
+      "prompt": "output/geulbit/plan-p03.md",
+      "activePlan": "output/geulbit/plan-p03.md",
+      "allowedPaths": [
+        "backend/app/__init__.py",
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_auth_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 8
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_auth_api.py"
+      ],
       "acceptance": {
         "source": null,
         "requirements": null,
@@ -185,11 +209,11 @@
           "boundary": null,
           "dataConsistency": null
         },
-        "G1": "NOT_CONFIGURED",
+        "G1": "NOT_RUN",
         "G2": "NOT_RUN",
-        "G3": "NOT_CONFIGURED",
-        "G4": "NOT_CONFIGURED",
-        "G5": "NOT_RUN"
+        "G3": "NOT_RUN",
+        "G4": "NOT_RUN",
+        "G5": "DEFERRED_FINAL_REVIEW"
       },
       "productDependencies": null,
       "independentReview": {
@@ -203,7 +227,12 @@
           "ai-privacy"
         ],
         "phaseRiskClassification": null,
-        "status": "NOT_RUN"
+        "status": "DEFERRED_FINAL_REVIEW"
+      },
+      "preparedContract": {
+        "status": "USER_APPROVED_EXACT_ASSIGNMENT",
+        "boundary": "Google OIDC 인증·세션·승인·권한",
+        "source": "latest user instruction 2026-10-10"
       }
     },
     {
@@ -212,13 +241,36 @@
       "dependsOn": [
         "p03"
       ],
-      "prompt": null,
-      "activePlan": null,
-      "allowedPaths": [],
-      "maxChangedFiles": null,
-      "timeoutSeconds": null,
-      "tests": [],
-      "requiredOutputs": [],
+      "prompt": "output/geulbit/plan-p04.md",
+      "activePlan": "output/geulbit/plan-p04.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_essay_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 8
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_essay_api.py"
+      ],
       "acceptance": {
         "source": null,
         "requirements": null,
@@ -228,11 +280,11 @@
           "boundary": null,
           "dataConsistency": null
         },
-        "G1": "NOT_CONFIGURED",
+        "G1": "NOT_RUN",
         "G2": "NOT_RUN",
-        "G3": "NOT_CONFIGURED",
-        "G4": "NOT_CONFIGURED",
-        "G5": "NOT_RUN"
+        "G3": "NOT_RUN",
+        "G4": "NOT_RUN",
+        "G5": "DEFERRED_FINAL_REVIEW"
       },
       "productDependencies": null,
       "independentReview": {
@@ -246,7 +298,12 @@
           "ai-privacy"
         ],
         "phaseRiskClassification": null,
-        "status": "NOT_RUN"
+        "status": "DEFERRED_FINAL_REVIEW"
+      },
+      "preparedContract": {
+        "status": "USER_APPROVED_EXACT_ASSIGNMENT",
+        "boundary": "에세이 초안·자동저장·불변 버전",
+        "source": "latest user instruction 2026-10-10"
       }
     },
     {
@@ -255,13 +312,38 @@
       "dependsOn": [
         "p04"
       ],
-      "prompt": null,
-      "activePlan": null,
-      "allowedPaths": [],
-      "maxChangedFiles": null,
-      "timeoutSeconds": null,
-      "tests": [],
-      "requiredOutputs": [],
+      "prompt": "output/geulbit/plan-p05.md",
+      "activePlan": "output/geulbit/plan-p05.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "src/App.tsx",
+        "src/api.ts",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_analysis_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 6
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_analysis_api.py"
+      ],
       "acceptance": {
         "source": null,
         "requirements": null,
@@ -271,11 +353,11 @@
           "boundary": null,
           "dataConsistency": null
         },
-        "G1": "NOT_CONFIGURED",
+        "G1": "NOT_RUN",
         "G2": "NOT_RUN",
-        "G3": "NOT_CONFIGURED",
-        "G4": "NOT_CONFIGURED",
-        "G5": "NOT_RUN"
+        "G3": "NOT_RUN",
+        "G4": "NOT_RUN",
+        "G5": "DEFERRED_FINAL_REVIEW"
       },
       "productDependencies": null,
       "independentReview": {
@@ -289,7 +371,12 @@
           "ai-privacy"
         ],
         "phaseRiskClassification": null,
-        "status": "NOT_RUN"
+        "status": "DEFERRED_FINAL_REVIEW"
+      },
+      "preparedContract": {
+        "status": "USER_APPROVED_EXACT_ASSIGNMENT",
+        "boundary": "분석 API·analysis_run·UI 연결",
+        "source": "latest user instruction 2026-10-10"
       }
     },
     {
@@ -298,13 +385,36 @@
       "dependsOn": [
         "p05"
       ],
-      "prompt": null,
-      "activePlan": null,
-      "allowedPaths": [],
-      "maxChangedFiles": null,
-      "timeoutSeconds": null,
-      "tests": [],
-      "requiredOutputs": [],
+      "prompt": "output/geulbit/plan-p06.md",
+      "activePlan": "output/geulbit/plan-p06.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_rules_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 3
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_rules_api.py"
+      ],
       "acceptance": {
         "source": null,
         "requirements": null,
@@ -314,11 +424,11 @@
           "boundary": null,
           "dataConsistency": null
         },
-        "G1": "NOT_CONFIGURED",
+        "G1": "NOT_RUN",
         "G2": "NOT_RUN",
-        "G3": "NOT_CONFIGURED",
-        "G4": "NOT_CONFIGURED",
-        "G5": "NOT_RUN"
+        "G3": "NOT_RUN",
+        "G4": "NOT_RUN",
+        "G5": "DEFERRED_FINAL_REVIEW"
       },
       "productDependencies": null,
       "independentReview": {
@@ -332,7 +442,12 @@
           "ai-privacy"
         ],
         "phaseRiskClassification": null,
-        "status": "NOT_RUN"
+        "status": "DEFERRED_FINAL_REVIEW"
+      },
+      "preparedContract": {
+        "status": "USER_APPROVED_EXACT_ASSIGNMENT",
+        "boundary": "한국어 규범 확장·통합",
+        "source": "latest user instruction 2026-10-10"
       }
     },
     {
@@ -341,13 +456,36 @@
       "dependsOn": [
         "p06"
       ],
-      "prompt": null,
-      "activePlan": null,
-      "allowedPaths": [],
-      "maxChangedFiles": null,
-      "timeoutSeconds": null,
-      "tests": [],
-      "requiredOutputs": [],
+      "prompt": "output/geulbit/plan-p07.md",
+      "activePlan": "output/geulbit/plan-p07.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_structure_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 3
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_structure_api.py"
+      ],
       "acceptance": {
         "source": null,
         "requirements": null,
@@ -357,11 +495,11 @@
           "boundary": null,
           "dataConsistency": null
         },
-        "G1": "NOT_CONFIGURED",
+        "G1": "NOT_RUN",
         "G2": "NOT_RUN",
-        "G3": "NOT_CONFIGURED",
-        "G4": "NOT_CONFIGURED",
-        "G5": "NOT_RUN"
+        "G3": "NOT_RUN",
+        "G4": "NOT_RUN",
+        "G5": "DEFERRED_FINAL_REVIEW"
       },
       "productDependencies": null,
       "independentReview": {
@@ -375,7 +513,12 @@
           "ai-privacy"
         ],
         "phaseRiskClassification": null,
-        "status": "NOT_RUN"
+        "status": "DEFERRED_FINAL_REVIEW"
+      },
+      "preparedContract": {
+        "status": "USER_APPROVED_EXACT_ASSIGNMENT",
+        "boundary": "주장·근거·구조 통합",
+        "source": "latest user instruction 2026-10-10"
       }
     },
     {
@@ -384,13 +527,36 @@
       "dependsOn": [
         "p07"
       ],
-      "prompt": null,
-      "activePlan": null,
-      "allowedPaths": [],
-      "maxChangedFiles": null,
-      "timeoutSeconds": null,
-      "tests": [],
-      "requiredOutputs": [],
+      "prompt": "output/geulbit/plan-p08.md",
+      "activePlan": "output/geulbit/plan-p08.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_library_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 8
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_library_api.py"
+      ],
       "acceptance": {
         "source": null,
         "requirements": null,
@@ -400,11 +566,11 @@
           "boundary": null,
           "dataConsistency": null
         },
-        "G1": "NOT_CONFIGURED",
+        "G1": "NOT_RUN",
         "G2": "NOT_RUN",
-        "G3": "NOT_CONFIGURED",
-        "G4": "NOT_CONFIGURED",
-        "G5": "NOT_RUN"
+        "G3": "NOT_RUN",
+        "G4": "NOT_RUN",
+        "G5": "DEFERRED_FINAL_REVIEW"
       },
       "productDependencies": null,
       "independentReview": {
@@ -418,7 +584,12 @@
           "ai-privacy"
         ],
         "phaseRiskClassification": null,
-        "status": "NOT_RUN"
+        "status": "DEFERRED_FINAL_REVIEW"
+      },
+      "preparedContract": {
+        "status": "USER_APPROVED_EXACT_ASSIGNMENT",
+        "boundary": "작품·자료실·문서 revision·권한",
+        "source": "latest user instruction 2026-10-10"
       }
     },
     {
@@ -427,13 +598,36 @@
       "dependsOn": [
         "p08"
       ],
-      "prompt": null,
-      "activePlan": null,
-      "allowedPaths": [],
-      "maxChangedFiles": null,
-      "timeoutSeconds": null,
-      "tests": [],
-      "requiredOutputs": [],
+      "prompt": "output/geulbit/plan-p09.md",
+      "activePlan": "output/geulbit/plan-p09.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_quote_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 4
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_quote_api.py"
+      ],
       "acceptance": {
         "source": null,
         "requirements": null,
@@ -443,11 +637,11 @@
           "boundary": null,
           "dataConsistency": null
         },
-        "G1": "NOT_CONFIGURED",
+        "G1": "NOT_RUN",
         "G2": "NOT_RUN",
-        "G3": "NOT_CONFIGURED",
-        "G4": "NOT_CONFIGURED",
-        "G5": "NOT_RUN"
+        "G3": "NOT_RUN",
+        "G4": "NOT_RUN",
+        "G5": "DEFERRED_FINAL_REVIEW"
       },
       "productDependencies": null,
       "independentReview": {
@@ -461,7 +655,12 @@
           "ai-privacy"
         ],
         "phaseRiskClassification": null,
-        "status": "NOT_RUN"
+        "status": "DEFERRED_FINAL_REVIEW"
+      },
+      "preparedContract": {
+        "status": "USER_APPROVED_EXACT_ASSIGNMENT",
+        "boundary": "인용문 대조·검색",
+        "source": "latest user instruction 2026-10-10"
       }
     },
     {
@@ -470,13 +669,38 @@
       "dependsOn": [
         "p09"
       ],
-      "prompt": null,
-      "activePlan": null,
-      "allowedPaths": [],
-      "maxChangedFiles": null,
-      "timeoutSeconds": null,
-      "tests": [],
-      "requiredOutputs": [],
+      "prompt": "output/geulbit/plan-p10.md",
+      "activePlan": "output/geulbit/plan-p10.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "src/App.tsx",
+        "src/api.ts",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_reanalysis_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 4
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_reanalysis_api.py"
+      ],
       "acceptance": {
         "source": null,
         "requirements": null,
@@ -486,11 +710,11 @@
           "boundary": null,
           "dataConsistency": null
         },
-        "G1": "NOT_CONFIGURED",
+        "G1": "NOT_RUN",
         "G2": "NOT_RUN",
-        "G3": "NOT_CONFIGURED",
-        "G4": "NOT_CONFIGURED",
-        "G5": "NOT_RUN"
+        "G3": "NOT_RUN",
+        "G4": "NOT_RUN",
+        "G5": "DEFERRED_FINAL_REVIEW"
       },
       "productDependencies": null,
       "independentReview": {
@@ -504,7 +728,12 @@
           "ai-privacy"
         ],
         "phaseRiskClassification": null,
-        "status": "NOT_RUN"
+        "status": "DEFERRED_FINAL_REVIEW"
+      },
+      "preparedContract": {
+        "status": "USER_APPROVED_EXACT_ASSIGNMENT",
+        "boundary": "재분석·피드백 위치 매핑",
+        "source": "latest user instruction 2026-10-10"
       }
     },
     {
@@ -513,13 +742,36 @@
       "dependsOn": [
         "p10"
       ],
-      "prompt": null,
-      "activePlan": null,
-      "allowedPaths": [],
-      "maxChangedFiles": null,
-      "timeoutSeconds": null,
-      "tests": [],
-      "requiredOutputs": [],
+      "prompt": "output/geulbit/plan-p11.md",
+      "activePlan": "output/geulbit/plan-p11.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 5
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_ai_api.py"
+      ],
       "acceptance": {
         "source": null,
         "requirements": null,
@@ -529,11 +781,11 @@
           "boundary": null,
           "dataConsistency": null
         },
-        "G1": "NOT_CONFIGURED",
+        "G1": "NOT_RUN",
         "G2": "NOT_RUN",
-        "G3": "NOT_CONFIGURED",
-        "G4": "NOT_CONFIGURED",
-        "G5": "NOT_RUN"
+        "G3": "NOT_RUN",
+        "G4": "NOT_RUN",
+        "G5": "DEFERRED_FINAL_REVIEW"
       },
       "productDependencies": null,
       "independentReview": {
@@ -547,9 +799,14 @@
           "ai-privacy"
         ],
         "phaseRiskClassification": null,
-        "status": "NOT_RUN"
+        "status": "DEFERRED_FINAL_REVIEW"
       },
-      "unresolvedBoundary": "P11 actual external AI connection requires confirmed policy; no real transfer during verification"
+      "unresolvedBoundary": "P11 actual external AI connection requires confirmed policy; no real transfer during verification",
+      "preparedContract": {
+        "status": "USER_APPROVED_EXACT_ASSIGNMENT",
+        "boundary": "선택적 AI 질문",
+        "source": "latest user instruction 2026-10-10"
+      }
     },
     {
       "id": "p12",
@@ -557,13 +814,42 @@
       "dependsOn": [
         "p11"
       ],
-      "prompt": null,
-      "activePlan": null,
-      "allowedPaths": [],
-      "maxChangedFiles": null,
-      "timeoutSeconds": null,
-      "tests": [],
-      "requiredOutputs": [],
+      "prompt": "output/geulbit/plan-p12.md",
+      "activePlan": "output/geulbit/plan-p12.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/app/__init__.py",
+        "backend/v2_tests/",
+        "src/App.tsx",
+        "src/api.ts",
+        "backend/app/storage.py",
+        "backend/storage_cli.py",
+        "backend/tests/test_storage.py",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_operations_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 8
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_operations_api.py"
+      ],
       "acceptance": {
         "source": null,
         "requirements": null,
@@ -573,11 +859,11 @@
           "boundary": null,
           "dataConsistency": null
         },
-        "G1": "NOT_CONFIGURED",
+        "G1": "NOT_RUN",
         "G2": "NOT_RUN",
-        "G3": "NOT_CONFIGURED",
-        "G4": "NOT_CONFIGURED",
-        "G5": "NOT_RUN"
+        "G3": "NOT_RUN",
+        "G4": "NOT_RUN",
+        "G5": "DEFERRED_FINAL_REVIEW"
       },
       "productDependencies": null,
       "independentReview": {
@@ -591,14 +877,19 @@
           "ai-privacy"
         ],
         "phaseRiskClassification": null,
-        "status": "NOT_RUN"
+        "status": "DEFERRED_FINAL_REVIEW"
       },
-      "unresolvedBoundary": "P12 unresolved deletion/retention policy cannot be auto-decided"
+      "unresolvedBoundary": "P12 unresolved deletion/retention policy cannot be auto-decided",
+      "preparedContract": {
+        "status": "USER_APPROVED_EXACT_ASSIGNMENT",
+        "boundary": "관리자·PDF·삭제·운영·최종 통합",
+        "source": "latest user instruction 2026-10-10"
+      }
     }
   ],
   "preparationCheckpoint": {
     "status": "BLOCKED",
-    "configurationStatus": "NOT_CONFIGURED_BASELINE_AND_RUNNER_BINDINGS_REQUIRED",
+    "configurationStatus": "INITIAL_HEAD_CREATED_BOUNDED_LOCAL_PROFILE",
     "completed": [],
     "currentPhase": "p01",
     "corrections": {
@@ -619,7 +910,7 @@
     "contractNotes": "ACCEPTANCE.md",
     "ready": false,
     "tools": null,
-    "baselineSnapshot": null,
+    "baselineSnapshot": "output/geulbit/baseline.json",
     "outputDir": null,
     "queueApprovalReceipt": null,
     "phaseSources": null,
@@ -643,7 +934,13 @@
       "CLAUDE_REVIEW_BINDING_UNVERIFIED",
       "TEST_FAILURE_RECOVERY_BINDING_UNVERIFIED",
       "SUCCESS_LOG_RETENTION_BINDING_UNVERIFIED"
-    ]
+    ],
+    "executionQueue": "docs/automation/backend-queue.local.json",
+    "currentStatus": "EXACT_PHASE_ASSIGNMENT_USER_APPROVED_EXECUTION_IN_LOCAL_QUEUE",
+    "resumeState": "C:/Projects/dream-hs-automation-bounded-v3/output/geulbit/runtime/state.json",
+    "fullPhaseCompletion": "p01/p02 development G1-G4 only; independent component receipts are not p03-p12 completion; G5 deferred",
+    "mappingPlan": "docs/automation/DB_MAPPING_PLAN.md",
+    "operationalMigrationAuthorized": false
   },
   "policy": {
     "maxAutomaticCorrectionsPerPhase": 2,
@@ -789,5 +1086,9 @@
       }
     ],
     "requiredAdditionalCases": "Approved Phase contracts, failure/consistency cases and final independent review must be bound before execution"
-  }
+  },
+  "gatePolicy": "G1_G4_DEVELOPMENT_G5_FINAL",
+  "supersededBy": "docs/automation/backend-queue.local.json",
+  "activationStatus": "HISTORICAL_TEMPLATE_NOT_OPERATIONAL_APPROVAL",
+  "approvedPhaseSource": "Latest user-approved P03-P12 placement; local queue and checkpoint are execution SSOT"
 }

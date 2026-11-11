@@ -1,0 +1,115 @@
+# 글빛 V2.2 S4 — N08 단계 한정 기대조건 개정 및 구현·기술 검증 재개
+
+## 목적과 우선순위
+
+기존 S4 명세 geulbit_s4_accuracy_release_preparation_codex_prompt.txt를 재사용한다.
+이번 명세는 그 문서의 2파일 Scope와 ‘S3 44개 기대조건 전체 불변’ 요구 중 아래 N08 한 함수만 명시적으로 개정한다. 다른 요구와 안전성 Gate는 유지한다.
+
+현재 S4는 구현 전 BLOCKED_VALIDATION이다. Queue 미등록, 제품 변경 0건, 후보 보완 0회, 정식 제출 0회다. 새 복구 Phase·Runner 기능·재시도 초기화는 필요 없다.
+AGENTS.md, 최신 Active Plan과 최신 Handoff의 expectation-contract-conflict.json, target-contracts.json, minimum-contract-amendment-proposal.json만 먼저 확인한다. 완료된 S2/S3 진단과 과거 복구 이력을 다시 조사하지 않는다.
+
+출발점의 해시:
+- structure.py: 9464b0e520ed4e87d540c04ba67d1267b49f3f73e6c656f4fa0c599ecad2dfdd
+- test_interpretive_claim_candidates.py: e75882beea60aee7da5e5334164b87568faa877c4ef4363936d7777f87a3e9d2
+이 해시는 S3 출발점 검증용이다. 승인된 S4 변경 후에는 별도 새 해시를 기록한다.
+
+## 1. S4 Scope를 한 번 정정·등록한다
+
+phaseId: v22-s4-role-coverage-release-prep
+허용 파일:
+1. backend/app/analysis/structure.py
+2. backend/engine_tests/test_remaining_role_candidates.py — 신규 생성
+3. backend/engine_tests/test_interpretive_claim_candidates.py — 아래 함수의 assertion만 개정
+maxChangedFiles: 3
+
+3번 파일에서 허용하는 함수:
+test_n08_other_role_gap_is_not_changed_or_approved
+
+본문, helper, 다른 테스트·parameter·assertion·node ID는 변경하지 않는다. 함수명도 유지하고 적용 계약은 새 receipt에서 설명한다.
+
+기존 Runner의 정상 신규 작업 등록 절차로 별도 S4 Queue/approval을 만든다. 과거 S3 Queue·Checkpoint·freeze·PASS receipt와 이번 S4 차단 기록은 보존한다. 새 계약·기대조건·후보·검사 스크립트·결과·빌드 산출물은 기존 S4 출력 루트의 새 contract-v2 하위 범위에 기록한다. 소스 Scope와 산출물 Scope를 구분한다.
+
+S3의 과거 소스·테스트 사본과 해시는 불변으로 보존한다. 현재 S4 후보의 해당 파일 2개가 승인 범위에서 변경되는 것을 과거 S3 증거 변조로 간주하지 않는다. 보호28·고정39와 Golden·Baseline은 그대로 유지한다. Runner 엔진·보호 검증·인적 데이터 Gate는 변경하지 않는다.
+
+## 2. 충돌한 N08 기대조건 한 건을 사전에 개정한다
+
+기존 함수는 N08 앞 두 문장에 roles==[] 및 relations==[]를 요구한다. 이는 S3에서 N08 역할을 건드리지 않는다는 당시 범위 검사였다. S4에서 같은 문장의 역할을 복구하는 요구와 동시에 충족할 수 없다.
+
+동일 본문에 대해 새 기대조건을 다음처럼 고정한다.
+
+- sentence-1, span [0,54): CLAIM_CANDIDATE를 포함한다.
+- sentence-2, span [55,120): EVIDENCE_CANDIDATE를 포함한다.
+- 기존 역할·문장 ID·코드포인트 span을 보존한다. CLAIM/EVIDENCE를 배타적이라고 가정하지 않는다.
+- 두 문장 모두 S3 전용 EXPLICIT_INTERPRETIVE_READING cue는 없어야 한다. 새 역할은 S4의 별도 관찰 단서로 설명해야 한다.
+- 해당 E2→C1의 SUFFICIENT_SIGNALS 승인과 확정 화살표·확정적 질문은 허용하지 않는다.
+- roles==[]와 relations==[]를 영구 요구하지 않는다. 후보 생성과 REVIEW/REJECTED 출력은 잘못된 승인과 구분한다.
+- 단순히 실패 assertion을 삭제하지 말고 필요한 역할·금지된 cue·잘못된 승인 방지를 실제로 검사한다.
+
+원작품 미선택 시 관계가 출력되지 않을 수 있다. 이를 출처 정책이 실행돼 거부했다는 증거로 보고하지 않는다.
+신규 S4 테스트 파일에는 기존 제목 fixture와 prepare_relation_sources/source_relation_policy를 재사용한 별도 검사를 둔다. 실제로 두 EXPLICIT workId가 식별되는 대상 쌍에 대해 REJECT/EXPLICIT_DIFFERENT_WORK_IDS와 비교 예외 없음이 확인돼야 한다. 전체 경로가 미도달하면 NOT_REACHED를 기록하고 정책 단위검사 PASS와 분리한다. 관계 검색 규칙을 이 검사를 통과시키려고 바꾸지 않는다.
+
+질문·표시 검증은 기존 실제 호출 경로와 projection을 사용한다. 메모나 제목 fixture만으로 원문 인용 검증을 했다고 보고하지 않는다.
+
+새 freeze에는 변경 전후 조건, ‘S3 범위 검사에서 S4 역할 복구+안전성 검사로 변경’이라는 이유, 원본 파일 해시와 영향 node ID를 기록한다. 과거 freeze를 덮어쓰지 않는다.
+
+이 변경은 S4 구현 전에 승인하는 기능 요구 변경이다. S3 원본에서 새 긍정 조건이 실패하는 것은 예상 RED이며 그 자체로 사전 계약 실패가 아니다. 계약 검토 후 구현하고 S4 후보에서 GREEN을 확인한다. 예상 RED를 S4 성공으로 보고하지 않는다.
+
+기존 S3 나머지 43개 조건과 보호93개는 변경하지 않는다. 다른 직접 충돌은 세 대상·관련 cue를 참조하는 assertion만 한 번 검색하여 함께 식별한다. 추가 기대값 변경은 승인되지 않았으므로 발견 시 한 보고에 묶고 임의 수정하지 않는다.
+
+## 3. 기존 S4의 여섯 역할을 같은 후보에서 복구한다
+
+실제 본문·span·원본 역할은 target-contracts.json을 재사용한다.
+
+- N03 sentence-3: CLAIM — ‘비극을 보여준다’
+- N03 sentence-2: EVIDENCE — ‘아내는 이미 숨져 있다’
+- N08 sentence-1: CLAIM — ‘나온다고 볼 수 있다’
+- N08 sentence-2: EVIDENCE — ‘업어 건너게 하는’ 장면
+- D03 sentence-1: EVIDENCE — ‘매장을 금지한다’
+- D03 sentence-2: EVIDENCE — ‘명령을 어기고 … 의무를 행한다’
+
+기존 S4 §2·§3의 구조적 단서·문학 문맥·대조 규칙을 적용한다. 문장 단위 관찰 단서를 보완하되 모든 VV/XSV, ‘볼 수 있다’, ‘보여준다’ 또는 특정 명사만으로 역할을 승격하지 않는다.
+
+단순 지각·화면 정보, 독서·문자 처리, 일반 규범·작문 지시, 가정·전언·추상적 행동과의 대조를 구현 전에 고정한다. 기존 역할이 복수이면 이를 보존하며 CLAIM-only를 일괄 요구하지 않는다.
+
+새 cue와 evidence 메타데이터를 추적한다. 작품명·essayId·전체 문장·호출자·versionId·본문 길이·테스트 실행 여부로 분기해 기존 테스트를 우회하지 않는다.
+
+R1 승인·사건 수·모호성·경쟁 규칙, 점수·임계값·margin, 출처·질문·스냅샷 정책과 R2는 변경하지 않는다. 공용 행동 단서 변경이 기존 R1에 미치는 영향도 검사한다. P06/D01 REVIEW, D03 복수 지시의 보수 처리, N08 오승인 방지, 정상 비교·에서는·비교적 보호를 유지한다.
+
+후보 보완은 기존 S4 한도인 최대 2사이클 안에서 수행한다. 실패·횟수를 기록하고 새 recovery 체인을 만들지 않는다.
+
+## 4. 검증 후 같은 후보로 배포 준비를 진행한다
+
+작은 실패 테스트부터 실행하고 최종 후보에서만 범위를 확대한다.
+
+1. 신규 역할·대조 검사와 개정 N08 검사를 실행한다. 여섯 역할은 두 분석 모드 모두에서 확인한다.
+2. S4 계약 적용 S3 44개(43개 불변+1개 개정), 보호93개를 같은 S4 후보에서 실행한다. ‘기존 44개 기대값 전부 불변’이라고 보고하지 않는다. 기존 S3 엔진으로 돌린 결과를 S4 PASS로 대체하지 않는다.
+3. 기존57조건을 1회 재생한다. 승인16쌍 보존, 설명되지 않은 역할·관계·질문 회귀0, 기존 동결 지표의 회귀 없음이 필요하다.
+4. 합성24 전체를 기존 도구로 최종 재평가한다. 두 모드·각2회, 총96회로 결정성을 확인한다. R2 호출 여부는 기존 S4 명세대로 처리하고 운영 R2는 DISABLED다. 신규24의 독립 정확도는 N/A다.
+5. Scope·보호28·고정39·독립 Read-only Review를 후보 해시에 연결한다. 안전성 실패를 새 라벨이나 임계값 완화로 숨기지 않는다.
+
+기능 Gate가 모두 통과하면 중간 사용자 확인 없이 기존 S4 §5의 기술 검증을 수행한다. 인적 자료 부족은 이 별도 기술 검증의 선행 차단 사유가 아니다.
+
+- 동일 후보에서 typecheck, 설정된 lint, production build를 최종 1회 실행.
+- 새 임시 DB·격리 서버에서 HTTP 분석→저장→재조회, 권한·CSRF·구버전 스냅샷 검증.
+- 기존 브라우저 검사로 화살표 위치·방향, REVIEW 표시, 질문, Unicode 및 지원되는 모바일 viewport/터치 검사. 실기기 미검증은 구분.
+- 기존 MATCH_ONLY fixture의 누출 방지 확인.
+- 같은 환경·입력으로 S3 대비 30,000자 p50/p95 측정. 기존 S4 프로토콜과 1.5배 한계를 적용. 실제 원문 없이 메타데이터 fixture만 사용했다면 원문 대조 성능은 미측정.
+
+기술 검사 실패 시 소스 Scope 밖 파일은 수정하지 않는다. 후보·실패 증거를 보존한다. 실제 실행하지 않은 검사는 READY/PASS로 처리하지 않는다.
+
+## 5. 완료·금지·보고
+
+완료 조건은 기존 S4와 같다. 역할6개 복구, 대조 검사, 기존16쌍·질문 안전성, 24편 진단과 최종 후보의 필수 기술 검증을 구분하여 기록한다.
+검증된 후보의 정식 개발 worktree 반영은 새 S4 3파일 Scope와 기존 최종화 조건을 통과한 경우에만 허용한다. 운영 반영은 하지 않는다.
+
+추가 Runner 개발, 새 의미 모델, R2 활성화, Golden/Baseline·인적 라벨 변경, 실패 이력 삭제, 무관한 리팩터링, 운영 서버·DB 접근, commit/push/merge/deploy는 금지한다.
+
+STATUS / CHANGED / RULES / TESTED / RISKS만 보고한다.
+STATUS에는 다음을 구분한다.
+- IMPLEMENTATION: PASS 또는 구체적 BLOCKED 사유
+- TECHNICAL_PREP: READY / BLOCKED_VALIDATION / NOT_RUN
+- ACCURACY_CERTIFICATION: BLOCKED_DATA
+- DEPLOYMENT_AUTHORIZED: false
+
+교정한 단일 legacy 조건, 43개 보존·1개 개정, 역할 복구6개, 승인16쌍, 24편 실제 실행수, 기술 검사 결과와 미측정 항목을 적는다. 독립 정확도나 운영 승인으로 과장하지 않는다.
+승인된 단계는 자동으로 이어가고 완료 조건 달성 후 즉시 종료한다.

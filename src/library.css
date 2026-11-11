@@ -144,3 +144,35 @@
 }
 @media(prefers-reduced-motion:reduce){.gb .book-cover{transition:none}}
 @media print{.gb>.menu-scrim{display:none!important}}
+
+/* Account UI uses the existing two-theme shell; no essay data in local storage. */
+.gb .account-trigger{display:flex;align-items:center;gap:8px;min-height:44px;max-width:210px;padding:4px 8px!important;border-radius:6px}
+.gb .account-trigger-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.gb .account-avatar{width:32px;height:32px;flex-shrink:0;border-radius:50%;object-fit:cover;background:#eaf0e9;color:var(--ink);display:grid;place-items:center}
+.gb .account-dialog{color:var(--ink);background:var(--canvas);width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 40px);overflow:auto;border:1px solid var(--line);padding:32px;margin:auto}
+.gb .account-dialog::backdrop{background:#142b2466}
+.gb .account-dialog h2{margin-top:0;font-size:24px}
+.gb .account-dialog dt{font-size:13px;color:#68716b;margin-top:18px}
+.gb .account-dialog dd{margin:4px 0 0;font-size:16px;overflow-wrap:anywhere}
+.gb .account-photo{width:64px;height:64px}
+.gb .account-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.gb .account-dialog .icon-btn{position:absolute;top:8px;right:8px;min-width:44px;min-height:44px}
+.gb.auth-screen{display:grid;place-items:center;padding:24px;min-height:100dvh}
+.gb .auth-card{width:min(480px,100%);border:1px solid var(--line);border-radius:12px;padding:32px;background:#fff;line-height:1.8}
+.gb .auth-code{font-size:13px;color:#68716b;overflow-wrap:anywhere}
+.gb .account-actions a{text-decoration:none}
+.gb .user-block>div{min-width:0;overflow-wrap:anywhere}
+@media(max-width:650px){.gb .account-trigger-label{display:none}.gb .account-trigger{padding:4px!important;min-width:44px}.gb .gb-topbar>span{min-width:0}.gb .gb-topbar>span button{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.gb .account-dialog{padding:28px 22px}.gb .auth-card{padding:24px}}
+
+.gb .account-dialog .gb-outline{border:1px solid var(--line);background:#fff;padding:12px 18px!important}
+
+/* Secondary tools stay available without crowding the writing flow. */
+.gb .writing-more{position:static}.gb .writing-more>summary,.gb .feedback-options>summary{cursor:pointer;list-style:none;min-height:44px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--green);padding:8px 12px;border:1px solid var(--line);border-radius:7px;background:var(--paper,#fff)}
+.gb .writing-more>summary::after,.gb .feedback-options>summary::after{content:"＋";margin-left:auto}.gb details[open]>summary::after{content:"−"}.gb summary::-webkit-details-marker{display:none}.gb summary:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+.gb .writing-more-content{position:absolute;right:0;top:calc(100% + 8px);width:270px;max-width:calc(100vw - 32px);padding:16px;display:grid;gap:12px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px #0002;z-index:20;text-align:left}.gb .writing-more-content label{line-height:1.7}.gb .writing-more-content select{width:100%;padding:9px;border:1px solid var(--line);border-radius:6px}.gb .feedback-options{margin:8px 0}.gb .feedback-intro{font-size:13px;line-height:1.8;color:var(--muted);margin:12px 0}.gb .feedback-show-all{width:100%;margin:12px 0}.gb .writing-actions{align-items:center;position:relative}
+@media(max-width:650px){.gb .writing-more-content{right:0;left:auto}.gb .writing-actions .gb-primary{order:-1}}
+
+.gb .nav-resources{margin-top:16px;border-top:1px solid var(--line);padding-top:10px}.gb .nav-resources>summary{cursor:pointer;min-height:44px;padding:12px 10px;font-size:13px;color:var(--muted)}.gb .nav-resources button{width:100%}
+
+.gb .paragraph-jump { display: block; padding: 8px; font-size: 12px; flex: 0 0 160px; }
+.gb .paragraph-jump select { display: block; width: 100%; max-width: 220px; margin-top: 6px; padding: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper, #fff); color: inherit; }

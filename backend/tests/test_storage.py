@@ -28,7 +28,8 @@ def test_explicit_initialization_uses_existing_alembic_and_sqlite_constraints(tm
     assert StorageGuard(root, IDENTITY, healthy).check(startup=True) == paths
     with sqlite3.connect(paths["DATABASE_PATH"]) as connection:
         assert connection.execute("PRAGMA journal_mode").fetchone() == ("wal",)
-        assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == ("0001_initial",)
+        from app.storage import SCHEMA_HEAD
+        assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (SCHEMA_HEAD,)
     app = create_app({"TESTING": True, **paths, "SQLALCHEMY_DATABASE_URI": "sqlite:///" + paths["DATABASE_PATH"].as_posix(), "SECRET_STORE": MemorySecretStore()})
     with app.app_context():
         with db.engine.connect() as connection:

@@ -1,0 +1,118 @@
+# 글빛 V2.2 S4 — API 표시 테스트 계약 정정 및 기술 검증 재개
+
+## 목표와 기준
+
+현재 S4 기능 후보는 통과했으나 정식 제출은 0회다. 기술 검사 59 PASS/2 FAIL의 두 실패는 S3에서도 동일하다. 이번에는 엔진을 더 고치지 않고 API 표시 테스트의 낡은 전제를 정정한 뒤 남은 기술 검증과 최초 정식 제출을 진행한다.
+
+기존 AGENTS.md, S4 실행 계약, 최신 subject-key-v4 Handoff의 candidate-binding.json, link-failure-comparison.json, technical-summary.json, reproduce.md만 우선 참조한다. 기술 준비의 범위·성능 조건은 기존 S4 명세 5절을 재사용한다. 완료된 S2/S3 진단과 Runner를 다시 설계하지 않는다.
+
+고정 엔진 SHA-256:
+0ffebe4ad0121f488185d2fcba82fdcf17bc16f3a82ca03a03d6f712b9f84696
+
+기존 S4 역할 테스트 SHA:
+159dc540aa69e312e69aa69b6776adba2f9fe2e06e7fad0af5ed126651e093b5
+
+기존 S3 테스트의 승인된 S4 개정본 SHA:
+04b18ece57fe9fb721a8268c5c3572d4db753149ab645d5590bca854690a1132
+
+알고리즘 후보 보완 4회와 과거 실패는 보존한다. 이번은 API 테스트 계약 개정 1회이며 추가 엔진 수정이나 횟수 초기화 승인이 아니다.
+
+## 1. 정확한 변경 승인
+
+phaseId: v22-s4-role-coverage-release-prep
+후속 계약: API_DISPLAY_TEST_AMENDMENT/5
+
+이번 추가 수정 허용 파일은 1개다.
+- backend/v2_tests/test_structure_api.py
+
+아래 두 함수와 그 양성·음성 입력 및 파일 내부의 필요한 최소 helper만 변경한다.
+- test_role_links_exact_version_ownership_and_immutable_after_edit
+- test_actual_kiwi_browser_fixture_30000_codepoints
+
+다른 테스트의 의미적 기대값은 바꾸지 않는다. 제품 엔진·API·UI·스냅샷·R2·Runner는 읽기 전용이다.
+
+정식 S4 누적 allowlist는 기존 3개에 위 파일을 더한 정확히 4개로 개정한다.
+- backend/app/analysis/structure.py
+- backend/engine_tests/test_remaining_role_candidates.py
+- backend/engine_tests/test_interpretive_claim_candidates.py
+- backend/v2_tests/test_structure_api.py
+incrementalMaxFiles: 1
+cumulativeMaxFiles: 4
+앞의 3개 파일은 이번 추가 작업 중 위 해시로 고정한다.
+
+원본 worktree와 subject-key-v4 실패 후보를 보존한 별도 격리 리비전에서 작업한다. Queue 승인·기대조건 정정·결과·Checkpoint는 기존 S4 출력 루트의 새로운 api-display-contract-v5 하위에 기록한다. 과거 Queue/freeze/receipt/Checkpoint는 덮어쓰지 않는다.
+
+Scope와 등록은 기존 S4 계약 개정 절차만 사용한다. 이 명세는 위 한 테스트 파일의 명시적 정정을 승인한다. 해당 파일이 기존 보호목록에 포함돼 있다면 원본 해시와 과거 보호목록을 보존하고 해당 경로의 변경만 별도 승인 amendment로 검증한다. 나머지 보호 28개·고정 자료 39개는 변경하지 않는다. 예외가 있으면 전부 불변이라고 보고하지 않는다. 기존 Runner가 이 명시적 개정을 지원하지 못하면 정확한 차단 사유를 기록하고 Runner 자체를 수정하지 않는다.
+
+## 2. 표시 계약을 먼저 확인하고 동결한다
+
+실제 두 테스트, argument_view, relation_candidates의 상태 결정 부분, 기존 승인 양성 fixture와 브라우저 fixture 소비 지점만 symbol 검색으로 확인한다. Handoff에는 테스트 파일 전문이 없으므로 로컬 정의를 확인한다.
+
+이미 재현된 사실:
+- 원래 단문은 31 코드포인트, relation-1-2, R0 score 4, REQUIRES_REVIEW, argumentLinks=[]다.
+- 원래 장문은 30,000 코드포인트, relation-1-3, R0 score 6, REQUIRES_REVIEW, argumentLinks=[]다.
+- S3와 S4의 해당 Trace는 동일하다. 두 기존 assertion은 화살표 1개를 기대한다.
+- R0의 기존 기준을 변경하지 않는다. R1은 독립 승인 경로이므로 모든 관계에 score>=7을 강제하는 새 규칙을 만들지 않는다.
+
+단순히 화살표 기대 개수를 1에서 0으로 바꾸고 끝내지 않는다. 아래 음성·양성 행렬을 구현 전에 고정한다.
+
+| 입력 | 관계 기대 | 표시 기대 |
+| 원래 단문 그대로 | 대상 관계 존재, R0 score4, REVIEW | 대상 확정 화살표0 |
+| 원래 30k 그대로 | 대상 관계 존재, R0 score6, REVIEW | 대상 확정 화살표0 |
+| 승인된 단문 양성 fixture | 명시적 충분 앵커와 SUFFICIENT_SIGNALS | 정확한 대상 화살표1 |
+| 승인된 30k 양성 fixture | 명시적 충분 앵커와 SUFFICIENT_SIGNALS | 정확한 대상 화살표1 |
+
+음성 검사는 관계가 없어서 통과하면 안 된다. 실제 대상 C/E와 관계 상태·점수·원문 위치를 함께 검사한다.
+
+양성은 기존 보호 테스트에서 검증된 명확한 R0 연결 사례를 우선 재사용한다. 새 fixture 조합이 필요하면 왜 승인 단서가 충분한지 먼저 기록한다. 현재 점수만 보고 본문을 반복 조정하거나 결과에서 기대값을 생성하지 않는다. 엔진 결과·assessment·점수·argumentLinks를 mock/주입하지 않고 실제 분석→API 투영 경로를 실행한다.
+
+기존 두 입력은 음성 사례로 온전히 보존한다. 양성 30k도 기존 총 길이·Unicode 보조평면 문자·긴 위치 간격 등 원래 검사 목적을 유지한다. 기존 span 기대값은 동결한 새 입력에서 계산한다. 엔진의 잘못된 출력에서 예상 span을 가져오지 않는다.
+
+## 3. 원래 테스트 목적을 약화하지 않는다
+
+두 함수를 parameter화하거나 동일 파일에 대응 사례를 추가한다. 기존 다른 사례와 node 의미는 보존하고 실제 collection 수를 기록한다.
+
+소유권, 정확한 essay version 연결, 편집 후 과거 결과 불변, 저장·재조회, Unicode 원문 위치와 30k 완료 조건은 그대로 검증한다. 양성 사례에서는 실제 화살표가 있어야 하므로 기존 링크 후속 assertion을 빈 목록 루프로 무력화하지 않는다.
+
+브라우저용 실제 Kiwi fixture 생성부와 소비 스크립트를 확인한다. 기존 소비자가 읽는 경로·JSON 구조를 유지하고 승인 양성 fixture를 전달한다. REVIEW parameter가 나중에 실행돼 양성 fixture를 덮어쓰지 않게 한다. 음성 결과도 별도 실행 산출물에 저장한다. 브라우저 검증을 위해 제품/소비 스크립트를 수정하지 않는다.
+
+변경 전 두 실패와 원본 본문·테스트를 보존한다. 새 freeze에는 두 조건의 정정 사유, 양성 입력과 기대조건, 이전·새 테스트 해시, 고정 엔진 SHA를 기록한다. 사후 계약 정정임을 명시하며 독립 인적 정답으로 표시하지 않는다.
+
+## 4. 작은 검사부터 재개한다
+
+1. 위 네 입력 조건을 먼저 실행한다. 같은 개정 검사를 S3 기준의 별도 격리 복사본에도 적용하여 기준 동작과의 일치를 확인한다. 원본 S3 파일·receipt는 변경하지 않는다.
+2. 통과하면 기존 기술 suite 61개가 담당하던 전체 범위를 실행한다. parameter 추가로 늘어난 수를 기록하고 0 FAIL/0 skip/0 xfail을 요구한다. count를 맞추려고 검사를 제거하지 않는다.
+3. 테스트 의미와 실제 결과를 독립 Read-only Review로 확인한다. REVIEW 노출과 승인 관계 누락을 양쪽 모두 잡는지 점검한다.
+
+기존 기능 223개, 57조건·승인16쌍, 합성24편·96회, typecheck/build는 관련 제품 코드·의존성·입력·설정·빌드 hash가 동일할 때 기존 receipt를 재사용한다. 엔진 SHA만으로 전체 환경 동일성을 주장하지 않는다. 새 실행과 증거 재사용을 구분한다. 이 한 테스트 파일 변경만으로 이미 통과한 전체 분석을 반복하지 않는다. 다만 정식 Runner 제출 계약상 필수 재실행은 최종 후보에서 1회 수행하며 생략하지 않는다.
+
+실패 시 엔진·다른 기대값을 추가 수정하지 않는다. 새 검사 자체의 구현 오류와 실제 제품 실패를 구분해 근거를 남긴다. 이번 정정 승인을 연속적인 기대값 완화 권한으로 사용하지 않는다.
+
+## 5. 남은 기술 준비를 같은 후보에서 수행한다
+
+기술 suite와 독립 검토가 통과하면 중간 사용자 재승인 없이 기존 S4 기술 검증을 재개한다.
+
+- 보존된 production build의 실제 hash와 소스·의존성·설정 일치 확인. 같으면 재빌드하지 않는다.
+- 이번에 만든 격리 서버·임시 DB에서 실제 HTTP 분석→저장→재조회, 소유권·CSRF·이전 스냅샷 검사.
+- 실제 브라우저에서 승인 양성 화살표의 위치·방향·대상, REVIEW 음성의 확정 화살표 없음, 질문 표시와 Unicode 확인.
+- 기존 모바일 viewport/터치 자동검사 수행. 실기기 검증과 구분.
+- 기존 MATCH_ONLY 권한 fixture로 JSON·출력 경로의 노출 방지 검사. 제목 메타데이터를 실제 원문 인용 검증으로 보고하지 않음.
+- 기존 프로토콜로 동일 30,000자 입력·환경의 S3와 S4 p50/p95 비교. 기존 S4 명세의 0/1/복수 출처 조건, cold 비용 분리, p95<=기준×1.5를 유지. 프로토콜이 없을 때만 기존 승인한 warm-up3회/측정30회를 사용.
+
+HTTP/DOM 미실행을 Flask test_client 검사나 fixture 생성 성공으로 대체하지 않는다. 실제 원문 없는 조건과 모바일 실기기 미검증은 명시한다. 필수 환경이 없어 검증하지 못하면 그 항목을 BLOCKED_VALIDATION으로 남긴다. 새 배포 플랫폼·브라우저 자동화·성능 시스템은 개발하지 않는다.
+
+운영 서버·DB·사용자 데이터에 접근하지 않는다. 격리 서버는 사용 후 기존 절차로 종료한다. 오래된 Handoff의 artifact 경로를 현재 경로로 추측하지 말고 실제 해시로 확인한다.
+
+## 6. 최초 정식 제출과 종료
+
+테스트 정정은 TEST_CONTRACT_AMENDED이며 이것만으로 S4 PASS가 아니다.
+기능 근거, 개정 기술 suite, 필수 HTTP/DOM/안전성/성능, Scope·해시·독립 검토가 모두 통과하면 누적 4개 파일의 정확한 후보를 기존 S4 최초 정식 제출 절차에 연결한다. 새 Queue 개정은 이전 이력과 해시를 참조하며 원본을 덮어쓰지 않는다.
+
+정식 검증 전에는 개발 worktree에 후보를 채택하지 않는다. 정식 Gate까지 통과한 경우에만 IMPLEMENTATION: PASS_IMPLEMENTATION을 기록한다. 기술 준비 완료와 미완료는 별도 표시한다. candidateRepairCycles=4와 이번 testContractAmendment=1, 정식 제출 횟수를 분리하며 실패 횟수를 초기화하지 않는다.
+
+엔진·관계 승인 기준·Golden·Baseline·R2 변경, 운영 배포, commit/push/merge, 무관한 리팩터링은 금지한다. 메인 Phase4A BLOCKED_DATA, Phase4B NOT_STARTED, R2 DISABLED를 유지한다. 독립 데이터 부족은 이번 기술 검증을 막는 조건으로 사용하지 않는다.
+
+STATUS / CHANGED / RULES / TESTED / RISKS만 보고한다.
+STATUS에는 IMPLEMENTATION, TECHNICAL_PREP, ACCURACY_CERTIFICATION, DEPLOYMENT_AUTHORIZED를 구분한다.
+TESTED에는 음성2·양성2의 실제 상태/표시, 기술 suite, 재사용한 기존 근거, 실제 HTTP/DOM, 모바일 검증 방식, p50/p95와 표본 수, 정식 제출 여부를 기록한다.
+ACCURACY_CERTIFICATION은 BLOCKED_DATA, DEPLOYMENT_AUTHORIZED는 false다. 전체 완료 또는 명시적 차단 시 즉시 종료한다.

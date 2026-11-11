@@ -32,7 +32,7 @@ def app(tmp_path):
     yield app
     with app.app_context():
         db.session.remove()
-        db.drop_all()
+        db.engine.dispose()  # pytest owns this isolated directory; no FK bypass or table deletion
 
 
 @pytest.fixture()

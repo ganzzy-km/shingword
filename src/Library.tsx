@@ -1,5 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import { api, errorMessage } from "./api"
+import { api, errorMessage, type AccountSession } from "./api"
+import AccountMenu from "./AccountMenu"
+import { useEscapeLayer } from "./escape-navigation"
+import { PRODUCT_LABEL } from "./product-version"
 import {
   mapSpan,
   paginateText,
@@ -8,7 +11,23 @@ import {
   type Span,
 } from "./book-layout"
 import "./library.css"
+import "./ui-polish.css"
 import BookCover from "./BookCover"
+import { validatedSpans } from "./feedback-spans"
+import { findMultipleTextSpans } from "./text-search"
+import WritingTools from "./WritingTools"
+import {toolsDefaults, type ToolsPreferences, type ToolsVersion} from "./writing-tools"
+import { argumentMarks, type ArgumentCandidate, type ArgumentLink } from "./argument-spans"
+import ArgumentText from "./ArgumentText"
+import ArgumentEditorLayer from "./ArgumentEditorLayer"
+import "./argument-marks.css"
+import AnnotationsPanel, { useAnnotations } from "./AnnotationsPanel"
+import { bookSelection } from "./user-annotations"
+import AnnotationBookLayer from "./AnnotationBookLayer"
+import "./v21-polish.css"
+import "./mobile-layout.css"
+import "./feedback-readability.css"
+import "./accessibility.css"
 
 type Writing = {
   id: string
@@ -29,19 +48,22 @@ type Finding = {
   type: string
   current: string
   reason: string
+  suggestion?: string | null
   rule?: string
   sourceUrl?: string
   status: string
   startOffset: number | null
   endOffset: number | null
 }
-type Analysis = { id: string; writingId?: string; findings: Finding[]; disclaimer: string }
+type Analysis = { id: string; writingId?: string; sourceVersion?: { id: string; content: string; sha256: string }; findings: Finding[]; disclaimer: string; argumentCandidates?: ArgumentCandidate[]; argumentLinks?: ArgumentLink[]; contextSnapshot?: {essayContext?: {work: string; inquiryQuestion: string}} }
 type Preferences = {
   theme: "default" | "bookshelf"
   pageAnimation: boolean
   bookTexture: boolean
   reduceMotion?: boolean
   autosaveInterval?: number
+  fontSize?: string
+  highContrast?: boolean
 }
 type Nav = "dashboard" | "new-analysis" | "analysis-results" | "history" | "criteria" | "works" | "rules" | "settings"
 const initial: Preferences = {
@@ -62,6 +84,12 @@ const blank: Writing = {
 }
 const bookColor = (id: string) => Array.from(id).reduce((sum, c) => sum + c.charCodeAt(0), 0) % 4
 const findingLabel = (type: string) => ({ spelling: "맞춤법", argument: "논증 연결", quotation: "인용문", quote: "인용문", peel: "문단 구성", rubric: "평가 기준" }[type] || type)
+const aiContextText = (value: unknown) => {
+  if (!value || typeof value !== "object") return "선택 문맥을 확인할 수 없습니다."
+  const context = value as {excerpts?: {quote: string}[]; references?: {quote: string}[]}
+  return ["내 글의 선택 구절", ...(context.excerpts ?? []).map(e => `「${e.quote}」`),
+    ...((context.references?.length ?? 0) > 0 ? ["\n연결된 작품의 선택 구절", ...context.references!.map(e => `「${e.quote}」`)] : [])].join("\n")
+}
 const date = (value: string) =>
   value
     ? new Date(value).toLocaleDateString("ko-KR", {
@@ -136,7 +164,10 @@ function Icon({ name, size = 20 }: { name: string; size?: number }) {
 export default function Library({
   active,
   userName,
+  account,
+  onLogout,
   onNav,
+  onBack,
   onOpenAnalysis,
   section = "dashboard",
   activeAnalysisId = null,
@@ -144,7 +175,10 @@ export default function Library({
 }: {
   active: boolean
   userName: string
+  account: AccountSession
+  onLogout: () => Promise<boolean>
   onNav: (screen: Nav) => void
+  onBack: () => boolean | Promise<boolean>
   onOpenAnalysis: (id: string) => void
   section?: Nav
   activeAnalysisId?: string | null
@@ -156,6 +190,14 @@ export default function Library({
   const [compactMenu, setCompactMenu] = useState(() => window.matchMedia("(max-width: 1100px)").matches)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [feedbackCollapsed, setFeedbackCollapsed] = useState(false)
+  const [toolsPrefs,setToolsPrefs]=useState<ToolsPreferences>(toolsDefaults)
+  const [toolsPane,setToolsPane]=useState('body')
+  const [manualHighlight,setManualHighlight]=useState<Span|null>(null)
+  const [feedbackStatus,setFeedbackStatus]=useState('all')
+  const [feedbackSort,setFeedbackSort]=useState('position')
+  const [emphasizeSelected,setEmphasizeSelected]=useState(false)
+  const toolsDirty=useRef(false)
+
   const menuRef = useRef<HTMLElement>(null)
   const menuToggle = useRef<HTMLButtonElement>(null)
   useEffect(() => {
@@ -184,7 +226,6 @@ export default function Library({
     document.body.style.overflow = "hidden"
     node.querySelector<HTMLButtonElement>("button")?.focus()
     const keydown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") { event.preventDefault(); setDrawerOpen(false) }
       if (event.key !== "Tab") return
       const buttons = Array.from(node.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"))
       const first = buttons[0], last = buttons[buttons.length - 1]
@@ -224,6 +265,16 @@ export default function Library({
   const [scope, setScope] = useState("전체 글")
   const [filter, setFilter] = useState("전체 유형")
   const [group, setGroup] = useState(true)
+  const [showAllFeedback, setShowAllFeedback] = useState(false)
+  const [showAnalysisDetails, setShowAnalysisDetails] = useState(false)
+  const [selectedArgument, setSelectedArgument] = useState<string | null>(null)
+  const [focusedArgument, setFocusedArgument] = useState<string | null>(null)
+  const [argumentContextChanged, setArgumentContextChanged] = useState(false)
+  const argumentFlash = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => {if(argumentFlash.current)clearTimeout(argumentFlash.current)}, [])
+  useEffect(() => {setSelectedArgument(null);setFocusedArgument(null)}, [analysis?.id, writing.content])
+  useEffect(() => setArgumentContextChanged(false), [analysis?.id])
+  useEffect(() => setShowAllFeedback(false), [analysis?.id, scope, filter])
   const [search, setSearch] = useState("")
   const [matchIndex, setMatchIndex] = useState(0)
   const [anchor, setAnchor] = useState(0)
@@ -234,13 +285,46 @@ export default function Library({
   const [opening, setOpening] = useState<string | null>(null)
   const [pdf, setPdf] = useState<File | null>(null)
   const [pdfError, setPdfError] = useState("")
+  const [pdfPreview, setPdfPreview] = useState<{previewId: string; text: string; title: string} | null>(null)
+  const [pdfBusy, setPdfBusy] = useState(false)
+  const [pdfIncludeAi, setPdfIncludeAi] = useState(false)
+  const [sourceLinking,setSourceLinking]=useState(false)
+  const [documents, setDocuments] = useState<{id: string; title: string; latestRevisionId: string}[]>([])
+  const [aiPreview, setAiPreview] = useState<{runId: string; spans: {start: number; end: number; quote: string}[]; references?: {revisionId: string; quote: string}[]; previewHash: string; context: unknown; externalEnabled: boolean; policyVersion?: string} | null>(null)
+  const [aiReferences, setAiReferences] = useState<{revisionId: string; title: string}[]>([])
+  const [aiReferenceId, setAiReferenceId] = useState("")
+  const [aiReferenceQuote, setAiReferenceQuote] = useState("")
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiResult, setAiResult] = useState<{id: string; questions: {question: string}[]; status: string} | null>(null)
+  const [aiConsent, setAiConsent] = useState(false)
+  const [aiNote, setAiNote] = useState("")
+  const [aiQuestionType, setAiQuestionType] = useState("ASSUMPTION")
+  useEffect(() => {setAiPreview(null);setAiResult(null);setAiConsent(false);setAiNote("");setAiReferences([]);setAiReferenceId("");setAiReferenceQuote("");setShowAnalysisDetails(false)}, [analysis?.id])
+  useEffect(() => { if (active) api.get<typeof documents>("/source-documents").then(setDocuments).catch(() => undefined) }, [active])
   const editor = useRef<HTMLTextAreaElement>(null)
+  const feedbackPanel = useRef<HTMLElement>(null)
+  const [annotationSelection,setAnnotationSelection]=useState<Span|null>(null)
+  const [selectedAnnotation,setSelectedAnnotation]=useState<string|null>(null)
+  const [annotationFormOpen,setAnnotationFormOpen]=useState(false)
+  const annotationDirty=useRef(false)
+  const annotations=useAnnotations(writing.id,writing.content,analysis?.sourceVersion)
+  useEffect(()=>{setAnnotationSelection(null);setSelectedAnnotation(null);setAnnotationFormOpen(false)},[writing.id])
+  const openAnnotation=(id:string)=>{if(annotationDirty.current && !window.confirm("저장하지 않은 주석을 닫고 다른 주석을 열까요?"))return;annotationDirty.current=false;setSelectedAnnotation(id);setAnnotationSelection(null);setAnnotationFormOpen(true);setFeedbackCollapsed(false);const span=annotations.positions[id];if(span)jump(span)}
   const book = useRef<HTMLDivElement>(null)
+  useEffect(()=>{
+    if(view!=="reader")return
+    const changed=()=>{if(book.current){const span=bookSelection(book.current);if(span)setAnnotationSelection(span)}}
+    document.addEventListener("selectionchange",changed)
+    return()=>document.removeEventListener("selectionchange",changed)
+  },[view,analysis?.sourceVersion,writing.content])
   const measure = useRef<HTMLDivElement>(null)
   const modalRef = useRef<HTMLElement>(null)
+  useEscapeLayer("modal", !!modal, () => { if (!settingsBusy && !pdfBusy) setModal(null) }, modalRef)
+  useEscapeLayer("panel", drawerOpen && !modal, () => setDrawerOpen(false), menuRef, 10)
   const saving = useRef(false)
   const listRequest = useRef(0)
   const inputEdit = useRef<Span | undefined>(undefined)
+  const pendingEdits = useRef<{ before: string; after: string; edit?: Span }[] | null>(null)
   const savedValue = useRef("")
   const current = useRef(writing)
   current.current = writing
@@ -278,21 +362,22 @@ export default function Library({
     void reload()
   }, [listPage, query, sort])
   useEffect(() => {
-    if (!active) return
-    api
-      .get<Preferences>("/settings")
-      .then((value) => setPrefs({ ...initial, ...value }))
-      .catch((e) => setError(errorMessage(e)))
-    if (view === "home") void reload()
+    let current = true, serial = 0
+    const refreshSettings = () => {
+      const request = ++serial
+      void api.get<Preferences>("/settings")
+        .then(value => { if (current && request === serial) setPrefs({ ...initial, ...value }) })
+        .catch(e => { if (current && request === serial) setError(errorMessage(e)) })
+    }
+    refreshSettings()
+    window.addEventListener("geulbit-settings-updated", refreshSettings)
+    if (active && view === "home") void reload()
+    return () => { current = false;window.removeEventListener("geulbit-settings-updated", refreshSettings) }
   }, [active])
   useEffect(() => {
     if (!modal) return
     const previous = document.activeElement as HTMLElement | null
     const trap = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setModal(null)
-        return
-      }
       if (event.key !== "Tab") return
       const nodes = modalRef.current?.querySelectorAll<HTMLElement>(
         "button:not(:disabled),input:not(:disabled),select:not(:disabled),a[href]",
@@ -336,23 +421,15 @@ export default function Library({
     saving.current = true
     setSaved("저장 중…")
     const value = current.current
-    const serialized = JSON.stringify([
-      value.title,
-      value.work,
-      value.inquiryQuestion,
-      value.content,
-    ])
     try {
       let result = value
       if (value.id) {
-        result = await api.post<Writing>(`/writings/${value.id}/autosave`, {
-          content: value.content,
-          revisionNumber: value.revisionNumber,
-        })
         result = await api.patch<Writing>(`/writings/${value.id}`, {
           title: value.title || "제목 없는 글",
           work: value.work,
           inquiryQuestion: value.inquiryQuestion,
+          content: value.content,
+          revisionNumber: value.revisionNumber,
         })
       } else
         result = await api.post<Writing>("/writings", {
@@ -366,6 +443,8 @@ export default function Library({
           ...now,
           id: result.id,
           revisionNumber: result.revisionNumber,
+          content: now.content === value.content ? result.content : now.content,
+          title: now.title === value.title ? result.title : now.title,
           analysisRuns: result.analysisRuns,
           updatedAt: result.updatedAt,
         }))
@@ -373,9 +452,11 @@ export default function Library({
           ...current.current,
           id: result.id,
           revisionNumber: result.revisionNumber,
+          content: current.current.content === value.content ? result.content : current.current.content,
+          title: current.current.title === value.title ? result.title : current.current.title,
         }
-        savedValue.current = serialized
-        setSaved("저장 완료")
+        savedValue.current = JSON.stringify([result.title, result.work, result.inquiryQuestion, result.content])
+        setSaved(JSON.stringify([current.current.title, current.current.work, current.current.inquiryQuestion, current.current.content]) === savedValue.current ? "저장 완료" : "새 변경은 저장 대기 중")
         setError("")
       }
       return result.id
@@ -416,7 +497,13 @@ export default function Library({
   ])
 
   const changeContent = (content: string) => {
+    setAnnotationSelection(null)
     const edit = inputEdit.current
+    annotations.move(writing.content,content,edit)
+    if (pendingEdits.current) {
+      if (pendingEdits.current.length < 128) pendingEdits.current.push({ before: writing.content, after: content, edit })
+      else pendingEdits.current = null
+    }
     setSpans((old) =>
       Object.fromEntries(
         Object.entries(old).map(([id, span]) => [
@@ -461,7 +548,15 @@ export default function Library({
     setSnapshot(null)
     setSpans({})
     try {
-      setAnalysis(await api.get<Analysis>(`/analyses/${id}`))
+      const result = await api.get<Analysis>(`/analyses/${id}`)
+      const source = result.sourceVersion?.content
+      setAnalysis(result)
+      setSnapshot(source ?? null)
+      setSpans(Object.fromEntries(result.findings.map((f) => [f.id,
+        source === current.current.content && f.startOffset !== null && f.endOffset !== null &&
+        Array.from(source ?? "").slice(f.startOffset, f.endOffset).join("") === f.current
+          ? { start: f.startOffset, end: f.endOffset } : null,
+      ])))
     } catch (e) {
       setError(errorMessage(e))
     }
@@ -514,8 +609,10 @@ export default function Library({
     setView("editor")
   }
   const home = async () => {
+    if(toolsDirty.current){setError('저장하지 않은 개인 메모가 있습니다. 카드 저장 또는 입력 버리기를 먼저 선택하세요.');return false}
     if (busy || saving.current) return false
     if (
+      (writing.id || writing.title || writing.work || writing.inquiryQuestion || writing.content) &&
       JSON.stringify([
         writing.title,
         writing.work,
@@ -535,8 +632,9 @@ export default function Library({
   const navigateHistory = async () => {
     if (view === "home" || await home()) onNav("history")
   }
+  useEscapeLayer("navigation", active && view !== "home", async () => { if (await home()) await onBack() }, undefined, 10)
   useEffect(() => {
-    if (section === "new-analysis") create()
+    if (section === "new-analysis" && view === "home") create()
     if (section === "history") void reload()
     if (section !== "analysis-results" || !activeAnalysisId || analysis?.id === activeAnalysisId) return
     let cancelled = false
@@ -561,21 +659,26 @@ export default function Library({
     return () => { cancelled = true }
   }, [section, activeAnalysisId])
   const analyze = async () => {
+    if (busy || saving.current) return
     if (!writing.content.trim() || !writing.inquiryQuestion.trim()) {
       setError("본문과 탐구 질문을 입력해 주세요.")
       return
     }
     setBusy(true)
+    setJob({id: "", progress: 0, step: "현재 글 저장 및 분석 준비 중"})
     try {
       const id = await save()
       if (!id) return
       const original = current.current.content
+      pendingEdits.current = []
       const submitted = await api.post<{ jobId: string; analysisId: string }>(
         "/analyses",
-        { writingId: id, analysisTypes: ["전체 분석"] },
+        { writingId: id, content: current.current.content, revisionNumber: current.current.revisionNumber, analysisTypes: ["전체 분석"] },
       )
+      const deadline = performance.now() + 180000
       for (;;) {
         if (!alive.current) return
+        if (performance.now() > deadline) throw new Error("분석 응답 대기 시간이 초과되었습니다. 기존 결과와 초안을 보존했습니다.")
         const state = await api.get<{
           progress: number
           currentStep: string
@@ -592,19 +695,23 @@ export default function Library({
             `/analyses/${submitted.analysisId}`,
           )
           setAnalysis(result)
-          setSnapshot(original)
+          const source = result.sourceVersion?.content ?? original
+          setSnapshot(source)
           setSpans(
             Object.fromEntries(
-              result.findings.map((f) => [
-                f.id,
-                f.startOffset !== null &&
-                f.endOffset !== null &&
-                Array.from(original)
-                  .slice(f.startOffset, f.endOffset)
-                  .join("") === f.current
-                  ? { start: f.startOffset, end: f.endOffset }
-                  : null,
-              ]),
+              result.findings.map((f) => {
+                let span: Span | null = f.startOffset !== null && f.endOffset !== null &&
+                  Array.from(source).slice(f.startOffset, f.endOffset).join("") === f.current
+                    ? { start: f.startOffset, end: f.endOffset } : null
+                let mappedSource = source
+                for (const change of pendingEdits.current ?? []) {
+                  if (change.before !== mappedSource) { span = null; break }
+                  span = span ? mapSpan(change.before, change.after, span, change.edit) : null
+                  mappedSource = change.after
+                }
+                if (mappedSource !== current.current.content) span = null
+                return [f.id, span]
+              }),
             ),
           )
           const value = await api.get<Writing>(`/writings/${id}`)
@@ -623,6 +730,7 @@ export default function Library({
     } catch (e) {
       setError(errorMessage(e))
     } finally {
+      pendingEdits.current = null
       setBusy(false)
       setJob(null)
     }
@@ -643,24 +751,24 @@ export default function Library({
       setSettingsBusy(false)
     }
   }
+  const ensureToolsVersion=async():Promise<ToolsVersion>=>{
+    for(let i=0;saving.current&&i<40;i++)await new Promise(resolve=>setTimeout(resolve,50))
+    if(saving.current)throw new Error('글 저장이 진행 중입니다. 입력은 보존됩니다. 완료 후 다시 시도해 주세요.')
+    const id=await save()
+    if(!id)throw new Error('글을 저장하지 못했습니다. 입력을 보존하고 다시 시도해 주세요.')
+    const draft=await api.get<Writing>(`/writings/${id}`)
+    return await api.post<ToolsVersion>(`/writings/${id}/versions`,{revisionNumber:draft.revisionNumber,name:'사용자 지정 구간'})
+  }
+  useEffect(()=>setManualHighlight(null),[writing.content,writing.id])
+  const contentPoints = useMemo(() => Array.from(writing.content), [writing.content])
   const paras = useMemo(() => paragraphs(writing.content), [writing.content])
   const activePara = Math.max(
     0,
     paras.findIndex((p) => anchor >= p.start && anchor <= p.end),
   )
-  const matches = useMemo(() => {
-    if (!search) return []
-    const points = Array.from(writing.content),
-      needle = Array.from(search),
-      result: Span[] = []
-    for (let i = 0; i <= points.length - needle.length; i++)
-      if (
-        points[i] === needle[0] &&
-        points.slice(i, i + needle.length).join("") === search
-      )
-        result.push({ start: i, end: i + needle.length })
-    return result
-  }, [writing.content, search])
+  const paragraphStart = paras.length > 12 ? Math.max(0, Math.min(activePara - 4, paras.length - 9)) : 0
+  const navigationParagraphs = paras.length > 12 ? paras.slice(paragraphStart, paragraphStart + 9) : paras
+  const matches = useMemo(() => findMultipleTextSpans(contentPoints, search), [contentPoints, search])
   const jump = (span: Span) => {
     setAnchor(span.start)
     if (view === "editor")
@@ -694,10 +802,12 @@ export default function Library({
   }, [view])
   useLayoutEffect(() => {
     if (view !== "reader" || !book.current || !measure.current) return
+    let disposed = false, previousLayout = ""
     const recalc = () => {
       const container = book.current!,
         node = measure.current!
-      const count = container.clientWidth >= 700 ? 2 : 1
+      // Portrait tablets keep one readable page; landscape retains the spread.
+      const count = container.clientWidth >= 700 && window.innerWidth > 820 ? 2 : 1
       setSpread(count)
       node.style.width = `${Math.min(540, container.clientWidth / count - (count === 2 ? 80 : 48))}px`
       const top = container.getBoundingClientRect().top + window.scrollY
@@ -705,6 +815,9 @@ export default function Library({
         240,
         Math.min(680, window.innerHeight - Math.min(300, top) - 115),
       )
+      const layout = `${node.style.width}:${height}`
+      if (layout === previousLayout) return
+      previousLayout = layout
       setPages(
         paginateText(writing.content, (text) => {
           node.textContent = text
@@ -713,24 +826,28 @@ export default function Library({
       )
       container.style.setProperty("--page-height", `${height}px`)
     }
-    const observer = new ResizeObserver(recalc)
+    const schedule = () => {
+      if (!disposed) recalc()
+    }
+    const observer = new ResizeObserver(schedule)
     observer.observe(book.current)
-    window.addEventListener("resize", recalc)
+    window.addEventListener("resize", schedule)
     recalc()
     void document.fonts.ready.then(() => {
-      if (book.current && measure.current) recalc()
+      if (!disposed && book.current && measure.current) { previousLayout = ""; schedule() }
     })
     return () => {
+      disposed = true
       observer.disconnect()
-      window.removeEventListener("resize", recalc)
+      window.removeEventListener("resize", schedule)
     }
-  }, [view, writing.content])
+  }, [view, writing.content, toolsPrefs.fontSize, toolsPrefs.lineHeight, toolsPrefs.bodyWidth])
   const currentPage = Math.max(
     0,
     pages.findIndex(
       (p) =>
         anchor >= p.start &&
-        (anchor < p.end || p.end === Array.from(writing.content).length),
+        (anchor < p.end || p.end === contentPoints.length),
     ),
   )
   const first = Math.floor(currentPage / spread) * spread
@@ -746,54 +863,67 @@ export default function Library({
   const filtered = (analysis?.findings || []).filter(
     (f) =>
       (filter === "전체 유형" || f.type === filter) &&
+      (feedbackStatus === "all" || f.status === feedbackStatus) &&
       (scope !== "현재 문단" ||
         (spans[f.id] &&
           spans[f.id]!.start >= (paras[activePara]?.start || 0) &&
           spans[f.id]!.start <= (paras[activePara]?.end || 0))),
   )
+  filtered.sort((a,b)=>feedbackSort==="type" ? a.type.localeCompare(b.type)||a.title.localeCompare(b.title) : feedbackSort==="status" ? a.status.localeCompare(b.status)||(a.startOffset??0)-(b.startOffset??0) : (a.startOffset??Infinity)-(b.startOffset??Infinity))
+  const previewFindings = filtered.slice(0, 3)
+  const selectedFinding = filtered.find(f => f.id === selected)
+  const visibleFindings = showAllFeedback ? filtered : selectedFinding && !previewFindings.includes(selectedFinding)
+    ? [...previewFindings, selectedFinding] : previewFindings
   const groups = group
     ? Object.values(
-        filtered.reduce<Record<string, Finding[]>>((out, f) => {
+        visibleFindings.reduce<Record<string, Finding[]>>((out, f) => {
           ;(out[f.rule || f.title] ||= []).push(f)
           return out
         }, {}),
       )
-    : filtered.map((f) => [f])
-  const validSpan = (f: Finding) => {
-    const span = spans[f.id]
-    return span &&
-      Array.from(writing.content).slice(span.start, span.end).join("") ===
-        f.current
-      ? span
-      : null
+    : visibleFindings.map((f) => [f])
+  const validSpans = useMemo(
+    () => validatedSpans(contentPoints, analysis?.findings ?? [], spans),
+    [analysis, spans, contentPoints],
+  )
+  const validSpan = (f: Finding) => validSpans[f.id] ?? null
+  const structure = useMemo(() => {
+    const context=analysis?.contextSnapshot?.essayContext
+    const changed=argumentContextChanged || (context && (context.work!==writing.work || context.inquiryQuestion!==writing.inquiryQuestion))
+    return argumentMarks(contentPoints, changed ? null : snapshot, analysis?.id, analysis?.sourceVersion?.id, analysis?.argumentCandidates, analysis?.argumentLinks)
+  }, [contentPoints, snapshot, analysis, argumentContextChanged, writing.work, writing.inquiryQuestion])
+  const selectArgument = (id: string) => {
+    setManualHighlight(null)
+    setSelectedArgument(id)
+    const node = structure.candidates.find(c => c.id === id)
+    const finding = analysis?.findings.find(f => node && f.startOffset !== null && f.endOffset !== null && f.startOffset < node.span.end && f.endOffset > node.span.start)
+    setSelected(finding?.id ?? null)
+  }
+  const jumpArgument = (link: ArgumentLink) => {
+    if (!structure.links.some(l => l.id === link.id)) return
+    setReturnAnchor(anchor);selectArgument(link.claimId);setFocusedArgument(link.claimId)
+    if(argumentFlash.current)clearTimeout(argumentFlash.current)
+    argumentFlash.current=setTimeout(()=>setFocusedArgument(null),1800)
+    jump(link.claimSpan)
+    if(view === "reader")requestAnimationFrame(()=>{
+      const target=Array.from(book.current?.querySelectorAll<HTMLElement>("[data-argument-id]") ?? []).find(node=>node.dataset.argumentId===link.claimId)
+      target?.focus({preventScroll:true})
+    })
   }
   const renderText = (span: Span) => {
-    const points = Array.from(writing.content)
     const f = analysis?.findings.find((f) => f.id === selected),
-      highlight = f ? validSpan(f) : matches[matchIndex]
-    if (
-      !highlight ||
-      highlight.end <= span.start ||
-      highlight.start >= span.end
-    )
-      return points.slice(span.start, span.end).join("")
-    const left = Math.max(span.start, highlight.start),
-      right = Math.min(span.end, highlight.end)
-    return (
-      <>
-        {points.slice(span.start, left).join("")}
-        <mark>{points.slice(left, right).join("")}</mark>
-        {points.slice(right, span.end).join("")}
-      </>
-    )
+      highlight = manualHighlight ?? (f ? validSpan(f) : matches[matchIndex])
+    return <ArgumentText points={contentPoints} range={span} candidates={structure.candidates} links={structure.links} highlight={highlight} focusedId={emphasizeSelected ? selectedArgument ?? focusedArgument : focusedArgument} onSelect={selectArgument} onJump={jumpArgument} annotations={annotations.marks} selectedAnnotation={selectedAnnotation} onAnnotation={openAnnotation} />
   }
 
   return (
     <div
-      className={`gb ${prefs.theme} ${menuCollapsed ? "menu-collapsed" : ""} ${drawerOpen ? "drawer-open" : ""} ${!motion ? "no-motion" : ""} ${
+      style={{"--writing-font-size":`${toolsPrefs.fontSize}px`,"--writing-line-height":toolsPrefs.lineHeight,"--writing-body-width":`${toolsPrefs.bodyWidth}px`} as React.CSSProperties}
+      className={`gb ${prefs.fontSize === "크게" ? "interface-text-large" : prefs.fontSize === "작게" ? "interface-text-small" : ""} ${prefs.highContrast ? "high-contrast" : ""} ${toolsPrefs.focus && view!=="home" && !children ? "is-focus" : ""} ${emphasizeSelected && (selected || selectedArgument || manualHighlight) ? "focus-selection" : ""} ${prefs.theme} ${menuCollapsed ? "menu-collapsed" : ""} ${drawerOpen ? "drawer-open" : ""} ${!motion ? "no-motion" : ""} ${
         !prefs.bookTexture ? "no-texture" : ""
       }`}
     >
+      <a className="gb-skip-link" href="#geulbit-content">본문으로 바로 가기</a>
       {drawerOpen && <button className="menu-scrim" aria-label="메뉴 바깥에서 닫기" tabIndex={-1} onClick={() => setDrawerOpen(false)} />}
       <aside id="geulbit-menu" ref={menuRef} className="gb-sidebar" role={drawerOpen ? "dialog" : undefined} aria-modal={drawerOpen || undefined} aria-label="글빛 메뉴" inert={Boolean(modal) || (compactMenu ? !drawerOpen : menuCollapsed)}>
         <button className="menu-close" aria-label="메뉴 닫기" onClick={toggleMenu}><Icon name="close" /></button>
@@ -830,7 +960,8 @@ export default function Library({
             <Icon name="file" />
             분석 기록
           </button>
-          <div className="nav-line" />
+          <details className="nav-resources" open={["criteria", "works", "rules"].includes(section) ? true : undefined}>
+            <summary>자료와 도움말</summary>
           <button className={section === "criteria" ? "active" : ""} onClick={() => onNav("criteria")}>
             <Icon name="file" />
             평가 기준
@@ -843,6 +974,7 @@ export default function Library({
             <Icon name="check" />
             분석 규칙
           </button>
+          </details>
         </nav>
         <div className="sidebar-bottom">
           <button onClick={() => setModal("settings")}>
@@ -853,12 +985,12 @@ export default function Library({
             <span>{userName ? userName.slice(0, 1) : "글"}</span>
             <div>
               {userName || "나의 작업 공간"}
-              <small>로컬 작업 공간</small>
+              <small>{account.role} · 승인 완료</small>
             </div>
           </div>
         </div>
       </aside>
-      <main className="gb-main" inert={Boolean(modal) || drawerOpen}>
+      <main id="geulbit-content" tabIndex={-1} className="gb-main" inert={Boolean(modal) || drawerOpen}>
         <header className="gb-topbar">
           <button ref={menuToggle} className="menu-toggle" aria-label={(!compactMenu && !menuCollapsed) ? "메뉴 접기" : "메뉴 펼치기"} aria-expanded={compactMenu ? drawerOpen : !menuCollapsed} aria-controls="geulbit-menu" onClick={toggleMenu}>☰</button>
           <span>
@@ -872,8 +1004,12 @@ export default function Library({
           </span>
           <div>
             <span className="local-label">
-              <i />이 컴퓨터에 저장
+              <i aria-hidden="true" />개인 글 작업 공간
             </span>
+            <AccountMenu account={account} onAdmin={() => onNav("settings")} onLogout={async () => {
+              if (view !== "home" && !await home()) return false
+              return onLogout()
+            }} />
             <button
               className="icon-btn"
               aria-label="화면 설정"
@@ -891,11 +1027,19 @@ export default function Library({
             </button>
           </div>
         )}
-        {children ? <section className="gb-auxiliary">{children}</section> : view === "home" ? (
+        <div className="writing-workspace" data-pane={toolsPane}>
+        <WritingTools key={account.id} active={active} account={account} view={children?'home':view} writingId={writing.id} writingRevision={writing.revisionNumber} bodySaved={savedValue.current!=="" && JSON.parse(savedValue.current)[3]===writing.content} body={writing.content} cursor={anchor} selection={annotationSelection} hasAnalysis={!children&&!!analysis} analyzing={!!job} ensureVersion={ensureToolsVersion} onJump={span=>{setManualHighlight(span);setSelected(null);jump(span)}} onNew={()=>{if(view==='home')create();else setView('editor');if(children)onNav('new-analysis')}} onAnalyze={async()=>{await analyze()}} onPreferences={setToolsPrefs} onPane={setToolsPane} onFocus={focus=>{if(focus)setView('editor')}} onDirtyChange={dirty=>{toolsDirty.current=dirty}} onContextChanged={()=>setArgumentContextChanged(true)} onSearch={value=>{setSearch(value);setSelected(null);setManualHighlight(null);setMatchIndex(0)}} onFeedback={()=>{setFeedbackCollapsed(false);requestAnimationFrame(()=>feedbackPanel.current?.scrollIntoView({block:'start'}))}}/>
+        {children ? <section className="gb-auxiliary">
+          <header className="auxiliary-heading">
+            <div className="eyebrow">{section === "settings" ? "내 작업 환경" : "자료와 도움말"}</div>
+            <h1>{{criteria: "평가 기준", works: "작품과 근거", rules: "분석 규칙", settings: "설정과 운영"}[section as "criteria" | "works" | "rules" | "settings"]}</h1>
+            <p>{{criteria: "글을 쓸 때 참고할 평가 기준을 모아 두세요.", works: "작품 자료와 인용 근거를 확인하고 내 글에 연결하세요.", rules: "어떤 기준으로 글을 살펴보는지, 분석의 범위와 한계를 확인하세요.", settings: "화면과 분석 환경을 조정하고 데이터 관리 안내를 확인하세요."}[section as "criteria" | "works" | "rules" | "settings"]}</p>
+          </header>
+          {children}</section> : view === "home" ? (
           <div className="library-content">
             <div className="library-heading">
               <div>
-                <div className="eyebrow">{section === "history" ? "분석 기록" : ""}</div>
+                <div className="eyebrow">{section === "history" ? "다시 살펴보는 나의 글" : "내 글"}</div>
                 <h1>
                   {section === "history" ? "분석 기록" : prefs.theme === "bookshelf" ? "내 서재" : "내 글"}
                 </h1>
@@ -905,6 +1049,11 @@ export default function Library({
                 <Icon name="plus" />새 글 작성
               </button>
             </div>
+            {section !== "history" && <ol className="writing-journey" aria-label="글빛 사용 순서">
+              <li><span aria-hidden="true">01</span><div><strong>생각을 적어요</strong><small>새 글을 쓰거나 이어서 작성</small></div></li>
+              <li><span aria-hidden="true">02</span><div><strong>글을 살펴봐요</strong><small>분석 제안을 확인하고 수정</small></div></li>
+              <li><span aria-hidden="true">03</span><div><strong>책으로 읽어요</strong><small>다시 읽고 PDF로 보관</small></div></li>
+            </ol>}
             <div className="library-tools">
               <div className="library-tabs">
                 <button className="selected" onClick={() => setQuery("")}>
@@ -970,12 +1119,12 @@ export default function Library({
                   <h2>
                     {query
                       ? "검색 결과가 없습니다"
-                      : "첫 번째 책을 기다리는 서재"}
+                      : "저장한 글이 없습니다."}
                   </h2>
                   <p>
                     {query
                       ? "다른 제목이나 작품명으로 검색해 보세요."
-                      : "새 글을 작성하면 이곳에 당신의 책이 놓입니다."}
+                      : "새 글 작성에서 본문을 입력하세요."}
                   </p>
                   <button className="gb-primary" onClick={create}>
                     <Icon name="plus" />첫 글 작성하기
@@ -1015,6 +1164,7 @@ export default function Library({
                             {record.characterCount.toLocaleString()}자 ·{" "}
                             {record.work || "에세이"}
                           </p>
+                          <span className="card-continue">{prefs.theme === "bookshelf" ? "책 펼치기" : "이어서 쓰기"}<span aria-hidden="true">↗</span></span>
                         </div>
                       </button>
                     )
@@ -1068,7 +1218,7 @@ export default function Library({
                   {view === "reader" ? "책 읽기" : "글쓰기"}
                 </div>
                 <h1>{writing.title || "제목 없는 글"}</h1>
-                <span className="save-status" role="status">
+                <span className="save-status" data-state={saved.includes("실패") ? "error" : saved === "저장 완료" ? "saved" : "pending"} role="status">
                   {saved} · 현재 초안
                 </span>
               </div>
@@ -1086,12 +1236,18 @@ export default function Library({
                 </button>
                 <button
                   className="gb-outline"
-                  title="인쇄 대화상자에서 PDF로 저장을 선택하세요"
-                  onClick={() => window.print()}
-                  disabled={busy}
+                  title={analysis ? "선택한 분석 버전의 보고서를 내려받습니다" : "분석을 완료하면 PDF를 내려받을 수 있습니다"}
+                  onClick={async () => { if (!analysis) return; try { const blob = await api.download(`/analyses/${analysis.id}/pdf?includeAi=${pdfIncludeAi}`); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href=url; link.download="geulbit-report.pdf"; link.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000); } catch (e) { setError(errorMessage(e)); } }}
+                  disabled={busy || !analysis}
                 >
                   PDF 저장
                 </button>
+                <details className="writing-more">
+                  <summary>더 보기</summary>
+                  <div className="writing-more-content">
+
+                <label style={{fontSize: 12}}><input type="checkbox" checked={pdfIncludeAi} onChange={e => setPdfIncludeAi(e.target.checked)} />질문·메모 포함</label>
+                <label style={{display: "flex", flexDirection: "column", maxWidth: 180, fontSize: 12, gap: 4}}>자료 판본 연결<select style={{maxWidth: "100%"}} aria-label="자료 판본 연결" defaultValue="" disabled={sourceLinking||busy||saving.current} onChange={async e => { const node=e.currentTarget,revisionId=node.value; if (!revisionId||sourceLinking) return; setSourceLinking(true);try { const id=await save(); if(!id)throw new Error('글 저장 완료 후 다시 선택해 주세요.');await api.post(`/writings/${id}/documents`, {revisionId});setArgumentContextChanged(true); } catch (error) { setError(errorMessage(error)); }finally{setSourceLinking(false);node.value=''} }}><option value="">선택한 판본을 분석에 사용</option>{documents.map(d => <option key={d.id} value={d.latestRevisionId}>{d.title}</option>)}</select></label>
                 <button
                   className="gb-outline"
                   onClick={() => void save()}
@@ -1099,9 +1255,11 @@ export default function Library({
                 >
                   저장
                 </button>
+                  </div>
+                </details>
                 <button
                   className="gb-primary"
-                  onClick={() => void analyze()}
+                  data-tour="analyze" onClick={() => void analyze()}
                   disabled={busy}
                 >
                   {job ? `분석 중 ${job.progress}%` : "분석하기"}
@@ -1110,9 +1268,10 @@ export default function Library({
             </div>
             {job && (
               <div className="job-status" role="status">
-                <progress value={job.progress} max={100} />
+                <strong>분석 진행 중</strong><progress aria-label="전체 분석 진행률" value={job.progress} max={100} />
                 {job.step}
                 <button
+                  disabled={!job.id}
                   onClick={() =>
                     void api
                       .post(`/analysis-jobs/${job.id}/cancel`)
@@ -1175,7 +1334,10 @@ export default function Library({
                   문단 탐색 <span>{paras.length}</span>
                 </h2>
                 <div>
-                  {paras.map((p, i) => (
+                  {paras.length > 12 && <label className="paragraph-jump">문단 바로 이동<select aria-label="문단 바로 이동" value={activePara} onChange={e => jump(paras[Number(e.target.value)])}>{paras.map((p, i) => <option key={i} value={i}>{i + 1} / {paras.length} · {p.text.slice(0, 18)}</option>)}</select></label>}
+                  {navigationParagraphs.map((p, index) => {
+                    const i = paragraphStart + index
+                    return (
                     <button
                       key={i}
                       className={i === activePara ? "selected" : ""}
@@ -1184,7 +1346,7 @@ export default function Library({
                       <span>{String(i + 1).padStart(2, "0")}</span>
                       <p>{p.text.slice(0, 34)}</p>
                     </button>
-                  ))}
+                  )})}
                 </div>
               </aside>
               <section className="document-column">
@@ -1231,28 +1393,30 @@ export default function Library({
                         />
                       </label>
                     </div>
+                    <div className="argument-editor">
                     <textarea
                       ref={editor}
+                      data-tour="input"
                       aria-label="에세이 본문"
                       value={writing.content}
                       disabled={busy}
                       onChange={(e) => changeContent(e.target.value)}
-                      onSelect={(e) =>
-                        setAnchor(
-                          Array.from(
-                            writing.content.slice(
-                              0,
-                              e.currentTarget.selectionStart,
-                            ),
-                          ).length,
-                        )
-                      }
+                      onSelect={(e) => {
+                        const point=Array.from(writing.content.slice(0,e.currentTarget.selectionStart)).length
+                        const end=Array.from(writing.content.slice(0,e.currentTarget.selectionEnd)).length
+                        if(end>point)setAnnotationSelection({start:point,end})
+                        setAnchor(point)
+                        const candidate=structure.candidates.find(c=>c.span.start<=point && point<c.span.end)
+                        if(candidate)setSelectedArgument(candidate.id)
+                      }}
                       placeholder="첫 문장을 써보세요. 문단은 빈 줄로 구분할 수 있습니다."
                       spellCheck={false}
                     />
+                    <ArgumentEditorLayer editor={editor} links={structure.links} onJump={jumpArgument} onAnnotation={openAnnotation}><ArgumentText points={contentPoints} range={{start:0,end:contentPoints.length}} candidates={structure.candidates} links={structure.links} focusedId={emphasizeSelected ? selectedArgument ?? focusedArgument : focusedArgument} highlight={manualHighlight ?? (selected ? validSpans[selected] : matches[matchIndex])} mirror onSelect={selectArgument} onJump={jumpArgument} annotations={annotations.marks} selectedAnnotation={selectedAnnotation} /></ArgumentEditorLayer>
+                    </div>
                     <div className="editor-footer">
                       <span>
-                        {Array.from(writing.content).length.toLocaleString()}자
+                        {contentPoints.length.toLocaleString()}자
                         · {paras.length}문단
                       </span>
                       <span>하나의 연속된 문서</span>
@@ -1264,6 +1428,8 @@ export default function Library({
                       className="reading-book"
                       key="reader"
                       ref={book}
+                      onMouseUp={()=>{if(book.current){const span=bookSelection(book.current);if(span)setAnnotationSelection(span)}}}
+                      onTouchEnd={()=>{window.setTimeout(()=>{if(book.current){const span=bookSelection(book.current);if(span)setAnnotationSelection(span)}},0)}}
                       tabIndex={0}
                       aria-label="책 본문. 좌우 방향키로 페이지 이동"
                       onKeyDown={(e) => {
@@ -1295,6 +1461,7 @@ export default function Library({
                                 : "아직 본문이 없습니다. 편집하기에서 글을 작성해 주세요."}
                             </div>
                             <span className="page-number">{first + i + 1}</span>
+                            <AnnotationBookLayer onOpen={openAnnotation} />
                             <div className="page-markers">
                               {(analysis?.findings || [])
                                 .filter((f) => {
@@ -1362,14 +1529,22 @@ export default function Library({
                     </div>
                   </>
                 )}
+                {annotationSelection && <div className="annotation-selection-bar" role="toolbar" aria-label="선택 구절 주석"><span>{contentPoints.slice(annotationSelection.start,annotationSelection.end).join("")}</span><button className="gb-outline annotation-add" onClick={()=>{if(annotationDirty.current && !window.confirm("저장하지 않은 주석을 닫고 새 주석을 작성할까요?"))return;annotationDirty.current=false;setSelectedAnnotation(null);setAnnotationFormOpen(true);setFeedbackCollapsed(false)}}>주석 추가</button></div>}
               </section>
-              <aside className="feedback-panel">
+              <aside data-tour="feedback" ref={feedbackPanel} className="feedback-panel" aria-label="분석 결과와 내 주석" tabIndex={-1} aria-busy={!!job}>
+                <AnnotationsPanel writingId={writing.id} body={writing.content} version={analysis?.sourceVersion} selection={annotationFormOpen ? annotationSelection : null} notes={annotations.notes} positions={annotations.positions} selectedId={selectedAnnotation} error={annotations.error} onAccept={note=>{if(!annotations.accept(note))return;setSelectedAnnotation(note.id);setAnnotationFormOpen(true);setAnnotationSelection(null)}} onRemove={annotations.remove} onJump={openAnnotation} onDirtyChange={dirty=>{annotationDirty.current=dirty}} onClose={()=>{annotationDirty.current=false;setSelectedAnnotation(null);setAnnotationSelection(null);setAnnotationFormOpen(false)}} />
+                {job && <div className="version-notice" role="status"><strong>글을 분석하고 있습니다…</strong><p>{job.step}</p><progress aria-label="분석 진행률" value={job.progress} max={100} /><p>완료되면 새 결과가 표시됩니다. 이전 결과는 보존됩니다.</p></div>}
                 <div className="feedback-heading">
                   <Icon name="check" />
                   <h2>분석 피드백</h2>
                   <span>{analysis?.findings.length || 0}</span>
                 </div>
+                {analysis && <><div className="argument-legend"><span className="argument-claim">주장 후보</span><span className="argument-evidence">근거 후보</span><span>↑ 연결된 앞부분 주장으로 이동</span></div><p className="feedback-intro">문장 역할과 연결은 구조적 후보이며 논리적 타당성을 확정하지 않습니다.</p></>}
+                {structure.stale && <p className="version-notice" role="status">본문 또는 문맥이 바뀌어 주장·근거 표시를 숨겼습니다. 재분석하면 새 관계를 표시합니다.</p>}
+                {selectedArgument && structure.candidates.some(c=>c.id===selectedArgument) && <section className="version-notice argument-relation" aria-label="주장과 근거 연결"><h3>주장·근거 후보 연결</h3>{structure.links.filter(l=>l.claimId===selectedArgument || l.evidenceId===selectedArgument).length === 0 ? <p>이 후보에 연결할 문맥 신호가 충분하지 않습니다.</p> : structure.links.filter(l=>l.claimId===selectedArgument || l.evidenceId===selectedArgument).map(l=><div key={l.id}><p><strong>주장 후보</strong> {structure.candidates.find(c=>c.id===l.claimId)?.quote}</p><p><strong>근거 후보</strong> {structure.candidates.find(c=>c.id===l.evidenceId)?.quote}</p>{l.explanationText && <p><strong>인용 뒤 연결 설명</strong> {l.explanationText}</p>}<p>공통 주제어: {l.sharedNouns.join(", ") || "같은 작품을 명시한 문맥"} · {l.confidence === "STRONG_SIGNALS" ? "여러 연결 신호" : "연결 검토 필요"}</p><button className="gb-outline" onClick={()=>jumpArgument(l)}>연결된 주장으로 이동</button></div>)}</section>}
                 {writing.analysisRuns && writing.analysisRuns.length > 0 && (
+                  <details className="feedback-options">
+                    <summary>이전 분석 보기</summary>
                   <label className="version-select">
                     분석 기록
                     <select
@@ -1385,6 +1560,7 @@ export default function Library({
                       ))}
                     </select>
                   </label>
+                  </details>
                 )}
                 {analysis ? (
                   <>
@@ -1395,7 +1571,13 @@ export default function Library({
                           ? "분석 이후 초안이 변경되었습니다. 수정된 구절은 재분석이 필요합니다."
                           : "현재 세션에서 분석한 본문입니다. 규칙 기반 결과는 최종 판단이 아닙니다."}
                     </div>
+                    <p className="feedback-intro">{showAllFeedback ? "전체 제안을 살펴보고 필요한 것만 적용하세요." : "먼저 살펴볼 제안입니다. 판단과 수정은 직접 선택하세요."}</p>
+                    <details className="feedback-options">
+                      <summary>피드백 찾기·필터</summary>
                     <div className="feedback-filters">
+                      <label>처리 상태<select aria-label="피드백 처리 상태" value={feedbackStatus} onChange={e=>setFeedbackStatus(e.target.value)}><option value="all">모든 처리 상태</option>{[...new Set(analysis.findings.map(f=>f.status))].map(value=><option key={value} value={value}>{({open:'미처리',applied:'반영',ignored:'유지',accepted:'수용',dismissed:'제외'} as Record<string,string>)[value]??value}</option>)}</select></label>
+                      <label>정렬<select aria-label="피드백 정렬" value={feedbackSort} onChange={e=>setFeedbackSort(e.target.value)}><option value="position">본문 위치순</option><option value="type">유형순</option><option value="status">처리 상태순</option></select></label>
+                      <label><input type="checkbox" checked={emphasizeSelected} onChange={e=>setEmphasizeSelected(e.target.checked)}/>선택한 피드백·관계 중심 강조</label>
                       <select
                         aria-label="피드백 범위"
                         value={scope}
@@ -1425,6 +1607,7 @@ export default function Library({
                         반복 피드백 묶기
                       </label>
                     </div>
+                    </details>
                     <div className="feedback-cards">
                       {groups.length === 0 && (
                         <p className="panel-empty">
@@ -1458,6 +1641,7 @@ export default function Library({
                                 {f.current || "전체 글 관련 피드백"}
                               </blockquote>
                               <p>{f.reason}</p>
+                              {f.suggestion && <p className="version-notice"><strong>수정 제안: </strong>{f.current} → {f.suggestion}</p>}
                               {f.rule && (
                                 <div className="rule-source">
                                   규칙 출처: {f.rule}
@@ -1478,6 +1662,7 @@ export default function Library({
                                 disabled={!validSpan(f)}
                                 onClick={() => {
                                   setReturnAnchor(anchor)
+                                  setManualHighlight(null)
                                   setSelected(f.id)
                                   jump(validSpan(f)!)
                                 }}
@@ -1486,8 +1671,15 @@ export default function Library({
                                   ? "원문으로 이동 ↗"
                                   : "위치 재확인 필요"}
                               </button>
-                              <div className="finding-actions">
-                                {["confirm", "ignore"].map((action) => (
+                              {selected === f.id && <button className="gb-outline" style={{display: "block", maxWidth: "100%", marginBottom: 8, fontSize: 12, padding: "8px 12px"}} disabled={f.startOffset == null || f.endOffset == null} onClick={async () => { try {
+                                const spans = [{start: f.startOffset!, end: f.endOffset!, quote: f.current}];
+                                const [preview, status, references] = await Promise.all([api.post<{previewHash: string; context: unknown; externalEnabled: boolean}>(`/analyses/${analysis.id}/ai/preview`, {spans, questionType: aiQuestionType}), api.get<{policyVersion?: string}>("/ai/status"), api.get<typeof aiReferences>(`/analyses/${analysis.id}/ai/references`)]);
+                                setAiReferences(references);setAiReferenceId("");setAiReferenceQuote("");
+                                setAiPreview({...preview, runId: analysis.id, spans, policyVersion: status.policyVersion}); setAiResult(null); setAiConsent(false);
+                              } catch (e) { setError(errorMessage(e)); } }}>심화 질문 문맥 확인</button>}
+                              <details className="feedback-options"><summary>이 제안에 반응하기</summary>
+                              <div className="finding-actions" style={{ flexWrap: "wrap", columnGap: 12, rowGap: 8 }}>
+                                {["confirm", "fixed", "ignore", "incorrect"].map((action) => (
                                   <button
                                     key={action}
                                     onClick={async () => {
@@ -1514,23 +1706,34 @@ export default function Library({
                                       }
                                     }}
                                   >
-                                    {action === "confirm"
-                                      ? "확인했어요"
-                                      : "보류할게요"}
+                                    {{ confirm: "확인함", fixed: "수정함", ignore: "이번에는 적용하지 않음", incorrect: "제안이 맞지 않음" }[action]}
                                   </button>
                                 ))}
                               </div>
+                              </details>
                             </article>
                           ))}
                         </div>
                       ))}
                     </div>
+                    {filtered.length > 3 && <button className="gb-outline feedback-show-all" aria-expanded={showAllFeedback} onClick={() => setShowAllFeedback(value => !value)}>{showAllFeedback ? "핵심 제안만 보기" : `전체 제안 ${filtered.length}개 보기`}</button>}
+                    {aiPreview && <details className="feedback-options"><summary>연결된 작품 구절 참고 (선택)</summary><p>이 분석에 연결한 작품 판본만 선택할 수 있습니다. 아래에 정확한 구절을 붙여 넣고 문맥을 확인하세요. 작품 전체나 연결되지 않은 자료는 보내지 않습니다.</p>
+                      <label>참고 작품<select aria-label="AI 참고 작품" disabled={aiBusy} value={aiReferenceId} onChange={e => {setAiReferenceId(e.target.value);setAiReferenceQuote("");setAiConsent(false);setAiResult(null)}}><option value="">내가 쓴 글만 참고</option>{aiReferences.map(r => <option key={r.revisionId} value={r.revisionId}>{r.title}</option>)}</select></label>
+                      {aiReferenceId && <textarea aria-label="AI 참고 작품 구절" maxLength={500} disabled={aiBusy} value={aiReferenceQuote} onChange={e => {setAiReferenceQuote(e.target.value);setAiConsent(false);setAiResult(null)}} placeholder="선택한 판본에 있는 구절을 정확히 붙여 넣어 주세요." />}
+                      <button className="gb-outline" disabled={aiBusy || (!!aiReferenceId && !aiReferenceQuote.trim())} onClick={async () => {setAiBusy(true);setAiConsent(false);setAiResult(null);try {const references=aiReferenceId ? [{revisionId: aiReferenceId, quote: aiReferenceQuote}] : [];const preview=await api.post<{previewHash:string;context:unknown;externalEnabled:boolean}>(`/analyses/${aiPreview.runId}/ai/preview`, {spans:aiPreview.spans,questionType:aiQuestionType,references});setAiPreview({...aiPreview,...preview,references})}catch(e){setError(errorMessage(e))}finally{setAiBusy(false)}}}>참고 구절 문맥 반영</button>
+                    </details>}
+                    {aiPreview && <section className="version-notice"><h3>선택 구간 심화 질문</h3><label>질문 유형<select aria-label="질문 유형" value={aiQuestionType} onChange={async e => {const type=e.target.value;try {const preview=await api.post<{previewHash:string;context:unknown;externalEnabled:boolean}>(`/analyses/${aiPreview.runId}/ai/preview`,{spans:aiPreview.spans,questionType:type,references:aiPreview.references ?? []});setAiQuestionType(type);setAiPreview({...aiPreview,...preview});setAiResult(null);setAiConsent(false)}catch(error){setError(errorMessage(error))}}}>{Object.entries({ASSUMPTION:"전제와 연결 고리",CONCEPT:"개념 구분",CAUSALITY:"인과 검토",EVIDENCE:"근거의 성격",COUNTEREXAMPLE:"범위와 반례"}).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><p>{aiPreview.externalEnabled ? "승인된 외부 제공자에 아래 선택 구간을 전송합니다." : "외부 전송은 꺼져 있습니다. 로컬 질문만 사용할 수 있습니다."}</p><pre style={{whiteSpace: "pre-wrap", overflowWrap: "anywhere"}}>{aiContextText(aiPreview.context)}</pre><label><input type="checkbox" checked={aiConsent} onChange={e => setAiConsent(e.target.checked)} />이 문맥과 별도 AI 동의 정책을 확인했습니다.</label><button className="gb-outline" disabled={aiBusy || !aiConsent || !aiPreview.policyVersion || JSON.stringify(aiPreview.references ?? []) !== JSON.stringify(aiReferenceId ? [{revisionId: aiReferenceId, quote: aiReferenceQuote}] : [])} onClick={async () => { try {
+                      setAiBusy(true); await api.post("/ai/consent", {granted: true, policyVersion: aiPreview.policyVersion});
+                      setAiResult(await api.post(`/analyses/${aiPreview.runId}/ai/questions`, {spans: aiPreview.spans, questionType: aiQuestionType, previewHash: aiPreview.previewHash, references: aiPreview.references ?? []}));
+                    } catch (e) { setError(errorMessage(e)); } finally { setAiBusy(false); } }}>질문 생성</button>{!aiPreview.policyVersion && <p>동의 정책 확정 전에는 질문을 생성할 수 없습니다.</p>}{aiResult && <><p>{aiResult.status === "PROVIDER_VALIDATED" ? "선택 구절에 대한 심화 질문입니다." : aiResult.status === "INSUFFICIENT_CONTEXT" ? "질문을 만들기에 문맥이 부족합니다." : "외부 전송 없이 로컬 질문을 제안합니다."}</p>{aiResult.questions.map((q,i) => <p key={i}>{q.question}</p>)}<textarea aria-label="생각 메모" value={aiNote} onChange={e => setAiNote(e.target.value)} /><button className="gb-outline" onClick={async () => { try { await api.patch(`/ai/interactions/${aiResult.id}/note`, {note: aiNote}); } catch(e) { setError(errorMessage(e)); } }}>생각 메모 저장</button></>}<button className="gb-outline" onClick={() => {setAiPreview(null);setAiResult(null);setAiConsent(false);setAiNote("");}}>닫기</button></section>}
                     <button
                       className="full-analysis"
-                      onClick={() => onOpenAnalysis(analysis.id)}
+                      aria-expanded={showAnalysisDetails}
+                      onClick={() => setShowAnalysisDetails(value => !value)}
                     >
-                      분석 결과 주소 열기 ↗
+                      {showAnalysisDetails ? "분석 요약 닫기" : "분석 요약 보기"}
                     </button>
+                    {showAnalysisDetails && <section className="version-notice" aria-label="분석 요약"><h3>이 분석의 범위와 결과</h3><p>전체 피드백 {analysis.findings.length}개 · 맞춤법 {analysis.findings.filter(f => f.type === "spelling").length}개 · 구조·인용 {analysis.findings.filter(f => f.type !== "spelling").length}개</p><p>{analysis.disclaimer}</p><button className="gb-outline" onClick={() => {setShowAllFeedback(true);setFilter("전체 유형");setScope("전체 글")}}>모든 피드백 보기</button></section>}
                   </>
                 ) : (
                   <div className="panel-empty">
@@ -1547,7 +1750,20 @@ export default function Library({
             </div>
           </div>
         )}
+        </div>
       </main>
+      {!children && view !== "home" && (analysis || job || annotations.notes.length > 0) && <nav className="mobile-work-nav" aria-label="글 작업 바로 이동" inert={Boolean(modal) || drawerOpen}>
+        <button onClick={() => {
+          if(view === "editor") {editor.current?.scrollIntoView({block:"center",behavior:"auto"});jump({start:anchor,end:anchor})}
+          else book.current?.scrollIntoView({block:"start",behavior:"auto"})
+        }}><Icon name="book" size={18} /><span>본문</span></button>
+        <button onClick={() => {setFeedbackCollapsed(false);requestAnimationFrame(() => {feedbackPanel.current?.scrollIntoView({block:"start",behavior:"auto"});feedbackPanel.current?.focus({preventScroll:true})})}}>
+          <Icon name="check" size={18} /><span>{job ? "분석 중…" : "분석 결과"}</span><small>{job ? `${job.progress}%` : analysis?.findings.length || 0}</small>
+        </button>
+        {(annotations.notes.length > 0 || annotationFormOpen) && <button onClick={() => {setFeedbackCollapsed(false);requestAnimationFrame(() => {const node=feedbackPanel.current?.querySelector<HTMLElement>(".annotations-panel");node?.scrollIntoView({block:"start",behavior:"auto"});node?.querySelector<HTMLButtonElement>("button")?.focus({preventScroll:true})})}}>
+          <span aria-hidden="true">▤</span><span>내 주석</span><small>{annotations.notes.length}</small>
+        </button>}
+      </nav>}
       <section className="pdf-print">
         <h1>{writing.title || "제목 없는 글"}</h1>
         <p>글빛 · 현재 초안 · {writing.work}</p>
@@ -1604,9 +1820,6 @@ export default function Library({
                   ? "휴지통 및 만료 안내"
                   : "PDF 가져오기"
             }
-            onKeyDown={(e) => {
-              if (e.key === "Escape") setModal(null)
-            }}
           >
             <button
               autoFocus
@@ -1618,9 +1831,7 @@ export default function Library({
             </button>
             {modal === "settings" ? (
               <>
-                <div className="eyebrow">MAKE YOURSELF AT HOME</div>
-                <h2>나에게 맞는 글빛</h2>
-                <p>같은 글, 같은 기능. 편안한 공간을 선택하세요.</p>
+                <h2>화면 설정</h2>
                 <div className="theme-options">
                   {(["default", "bookshelf"] as const).map((theme) => (
                     <button
@@ -1675,6 +1886,7 @@ export default function Library({
                 >
                   분석·접근성·데이터 설정 열기
                 </button>
+                <small className="settings-note" data-product-version>{PRODUCT_LABEL}</small>
               </>
             ) : modal === "trash" ? (
               <>
@@ -1725,6 +1937,7 @@ export default function Library({
                     onChange={async (e) => {
                       const file = e.target.files?.[0]
                       setPdf(null)
+                      setPdfPreview(null)
                       setPdfError("")
                       if (!file) return
                       if (
@@ -1751,12 +1964,25 @@ export default function Library({
                   </p>
                 )}
                 <div className="version-notice">
-                  기존 서버는 작품 자료의 PDF 추출을 지원하지만, 에세이 본문
-                  복원 API는 없습니다. 본문 미리보기와 새 책 생성은 연결 전까지
-                  사용할 수 없습니다. 스캔 PDF의 복원은 보장하지 않습니다.
+                  추출한 본문을 확인하고 수정한 뒤 새 책으로 저장하세요. 과거 분석은 복원하지 않습니다. 스캔 PDF는 지원하지 않습니다.
                 </div>
-                <button className="gb-primary" disabled>
-                  본문 추출 · 서버 연결 필요
+                {pdfPreview && <label>추출한 본문 확인<textarea aria-label="추출한 본문" value={pdfPreview.text} onChange={e => setPdfPreview({...pdfPreview, text: e.target.value})} style={{width: "100%", minHeight: 180}} /></label>}
+                <button className="gb-primary" disabled={!pdf || pdfBusy} onClick={async () => {
+                  setPdfBusy(true); setPdfError("");
+                  try {
+                    if (!pdfPreview) {
+                      const form = new FormData(); form.append("file", pdf!);
+                      setPdfPreview(await api.post<{previewId: string; text: string; title: string}>("/pdf-import/preview", form));
+                    } else {
+                      const result = await api.post<Writing>("/pdf-import/confirm", {...pdfPreview, content: pdfPreview.text, confirmed: true});
+                      setModal(null); setPdfPreview(null); setPdf(null); await reload();
+                      setWriting(result); setView(prefs.theme === "bookshelf" ? "reader" : "editor");
+                      savedValue.current = JSON.stringify([result.title, result.work, result.inquiryQuestion, result.content]);
+                    }
+                  } catch (e) { setPdfError(errorMessage(e)); }
+                  finally { setPdfBusy(false); }
+                }}>
+                  {pdfBusy ? "처리 중…" : pdfPreview ? "확인한 본문으로 새 책 만들기" : "본문 추출"}
                 </button>
                 <p className="settings-note">
                   과거 분석과 계정 권한은 PDF에서 복원하지 않습니다.

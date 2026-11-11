@@ -5,7 +5,7 @@ const path = require('node:path')
 const assert = require('node:assert/strict')
 const mode = process.argv[2] || 'after'
 const base = process.env.UI_PREVIEW_URL || 'http://127.0.0.1:8443'
-const dir = path.resolve('artifacts/ui-design/after')
+const dir = path.resolve(process.env.UI_ARTIFACT_ROOT || 'artifacts/ui-design/after')
 fs.mkdirSync(dir, { recursive: true })
 const paragraph = '문학은 삶을 비추는 거울이다. 🐧 인물은 몇일 동안 자신의 선택을 설명한다. 직접 인용 뒤에는 연결 설명을 확인한다. '
 const content = Array.from(Array.from({ length: 100 }, (_, i) => `${i + 1}. ${paragraph.repeat(5)}`).join('\n\n')).slice(0, 30000).join('')
@@ -15,9 +15,9 @@ const secondOffset = Array.from(content.slice(0, content.indexOf('몇일', conte
 const secondFinding = { ...finding, id: 'f2', startOffset: secondOffset, endOffset: secondOffset + 2 }
 let runningBrowser
 ;(async () => {
-  const browser = await chromium.launch({ channel: 'msedge', headless: true })
+  const browser = await chromium.launch({ channel: 'chrome', headless: true })
   runningBrowser = browser
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } })
+  const context = await browser.newContext({ ignoreHTTPSErrors: base.startsWith('https://127.0.0.1:'), viewport: { width: 1440, height: 1000 } })
   let prefs = { theme: 'default', pageAnimation: false, bookTexture: true }
   let writing = { id: 'synthetic-essay', title: 'UI 복구 검증용 긴 에세이', work: '가상 작품', content, inquiryQuestion: '선택과 책임은 어떻게 연결되는가?', status: '임시 저장', updatedAt: '2026-10-10T00:00:00Z', revisionNumber: 1, characterCount: 30000, latestAnalysisId: 'a1', analysisRuns: [{ id: 'a1', status: 'completed', createdAt: '2026-10-10T00:00:00Z' }] }
   let reject = false
@@ -30,11 +30,12 @@ let runningBrowser
     const endpoint = url.pathname.slice(4), method = req.method()
     if (reject) return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: { code: 'AUTHENTICATION_NOT_IMPLEMENTED', message: '검증용 API 차단 상태' } }) })
     if (endpoint === '/workspace') data = { userName: '', workspaceName: '가상 검증 공간' }
+    else if (endpoint === '/auth/session') data = {id: 'synthetic-user', role: 'USER', status: 'ACTIVE', csrfToken: 'test-fixture-only-csrf'}
     else if (endpoint === '/settings') { if (method === 'PATCH') prefs = { ...prefs, ...req.postDataJSON() }; data = prefs }
     else if (endpoint === '/writings' || endpoint === '/records') data = [writing]
-    else if (endpoint === '/writings/synthetic-essay') data = writing
+    else if (endpoint === '/writings/synthetic-essay') { if (method === 'PATCH') writing = {...writing,...req.postDataJSON(), revisionNumber: writing.revisionNumber + 1}; data = writing }
     else if (endpoint === '/writings/synthetic-essay/autosave') { const body = req.postDataJSON(); writing = { ...writing, ...body, revisionNumber: writing.revisionNumber + 1 }; data = writing }
-    else if (endpoint === '/analyses/a1') data = { id: 'a1', writingId: writing.id, findings: [finding, secondFinding], disclaimer: '가상 데이터로 UI만 검증합니다.' }
+    else if (endpoint === '/analyses/a1') data = { id: 'a1', writingId: writing.id, sourceVersion: {id:'v1', content:writing.content}, findings: [finding, secondFinding], disclaimer: '가상 데이터로 UI만 검증합니다.' }
     else if (endpoint === '/analyses') { data = { analysisId: 'a1', jobId: 'j1' }; status = 202 }
     else if (endpoint === '/analysis-jobs/j1') data = { status: 'completed', progress: 100, currentStep: '완료', analysisId: 'a1' }
     else if (['/rules', '/rubrics', '/sources', '/quotes', '/source-documents', '/quote-cards', '/backups'].includes(endpoint)) data = []
@@ -51,12 +52,27 @@ let runningBrowser
     if (mode === 'after') assert.equal(overflow, false, name + ' overflow')
     shots.push({ name, overflow, visibleShells: await page.locator('.gb:visible').count() })
   }
-  for (const width of [1440, 1024, 820, 390, 320]) {
+  const widths = process.env.UI_VERIFY_WIDTHS ? process.env.UI_VERIFY_WIDTHS.split(',').map(Number) : [1440, 1024, 820, 390, 320]
+  assert.ok(widths.length && widths.every(width => [1440, 1024, 820, 390, 320].includes(width)))
+  for (const width of widths) {
     prefs.theme = 'default'
     await page.setViewportSize({ width, height: 1000 })
     await page.goto(base)
     await page.getByRole('heading', { name: writing.title, exact: true }).first().waitFor()
     await shot('default-home-' + width)
+    if (mode === 'after') {
+      await page.getByRole('button', { name: '내 계정', exact: true }).click()
+      const account = page.getByRole('dialog', { name: '내 계정', exact: true })
+      await account.waitFor()
+      await account.getByText('USER', { exact: true }).waitFor()
+      await shot('account-' + width)
+      await page.keyboard.press('Escape')
+      await account.waitFor({ state: 'hidden' })
+      await page.getByRole('button', { name: 'PDF 가져오기', exact: true }).first().click()
+      await page.locator('.gb-modal:visible').waitFor()
+      await shot('pdf-import-' + width)
+      await page.getByRole('button', { name: '닫기', exact: true }).click()
+    }
     if (mode === 'before') {
       await page.goto(base + '/new-analysis')
       await page.getByText('기본 정보 입력', { exact: true }).waitFor()
@@ -98,6 +114,7 @@ let runningBrowser
       await page.getByRole('button', { name: '메뉴 펼치기', exact: true }).click()
       const draft = '2' + writing.content.slice(1)
       await page.getByRole('textbox', { name: '에세이 본문' }).fill(draft)
+      await page.locator('.nav-resources > summary').click()
       await page.getByRole('button', { name: '분석 규칙', exact: true }).click()
       await page.locator('.gb-auxiliary').waitFor()
       await page.getByRole('button', { name: '← 작성 중인 글로 돌아가기', exact: true }).click()

@@ -1,0 +1,12 @@
+.gb .annotations-panel{margin:16px 0;padding:16px;border:1px solid #d7d5eb;border-radius:14px;background:#faf9fd;overflow-wrap:anywhere}
+.gb .annotations-panel h3{margin:0 0 10px;color:#655388}.gb .annotations-panel small{font-weight:400}
+.gb .annotation-form textarea{display:block;width:100%;min-height:90px;max-height:180px;resize:vertical;margin:8px 0;padding:10px;border:1px solid #c8bed9;border-radius:8px;font:inherit;background:white}
+.gb .annotation-form blockquote{margin:8px 0;padding:8px;border-left:3px solid #a18ab8;max-height:90px;overflow:auto;font-size:13px}
+.gb .annotation-actions{display:flex;flex-wrap:wrap;gap:6px}.gb .annotations-panel ul{padding:0;list-style:none;margin:8px 0}
+.gb .annotation-list-item{display:grid;gap:4px;text-align:left;width:100%;background:none;border:0;border-bottom:1px solid #ded8e8;padding:10px 0;cursor:pointer;color:inherit}
+.gb .annotation-list-item span,.gb .annotation-list-item small{font-size:12px;color:#76678a}.gb .annotation-list-item small{max-height:40px;overflow:hidden}
+.gb .annotation-icon{position:absolute;bottom:1px;left:2px;width:24px;height:24px;padding:4px;border:1px solid #b4a3c9;border-radius:6px;color:#695082;background:#f8f4ff;cursor:pointer;pointer-events:auto;z-index:3}
+.gb .annotation-icon svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6}.gb .annotation-icon:focus-visible{outline:2px solid #755794;outline-offset:2px}
+.gb .annotation-anchor{display:inline-block;position:relative;width:0;height:0;vertical-align:baseline}.gb .annotation-focused{background:#e9def680}
+.gb .annotation-add{margin:6px 0;font-size:13px}.gb .annotation-add:focus-visible{outline:2px solid #755794}
+.gb .annotation-book-layer{position:absolute;inset:0;pointer-events:none}.gb .annotation-book-layer .annotation-icon,.gb .argument-editor-controls .annotation-icon{width:18px;height:24px;padding:2px;background:#f8f4ff}

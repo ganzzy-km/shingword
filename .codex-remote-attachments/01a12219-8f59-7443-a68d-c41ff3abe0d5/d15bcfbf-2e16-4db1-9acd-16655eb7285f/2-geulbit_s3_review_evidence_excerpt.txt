@@ -1,0 +1,122 @@
+글빛 V2.2 S3 첨부물 검토 발췌
+
+범위: 첨부 ZIP의 바이트 무결성과 저장된 코드·실행 기록을 확인했다. Windows worktree, pytest, Kiwi를 새로 실행한 결과가 아니다.
+첨부 ZIP SHA-256: 9e178fafa3b47917a6d10d6ef5e00ae54ec30dc1a45d3b06406b488aaf5cb961
+ZIP CRC 검사: PASS
+SHA256SUMS.json의 기재 멤버: 19개, 일치: 19개
+
+1. 저장된 최종 판단
+{
+  "status": "BLOCKED_QUALITY",
+  "reviewer": "/root/comparison_scope_review",
+  "mode": "READ_ONLY",
+  "sourceSha": "b6e1efda27525c919a546c75e3ace108bf3ed40ef548b41b53d50eda20780c34",
+  "testSha": "d84ab198efddc6407093b853f18eeda4af255e301f2b03166558fa7aab4ac9d1",
+  "confirmedEvidence": "review-blocker-reproductions.json",
+  "facts": [
+    "Both literal reading procedures still gain CLAIM_CANDIDATE.",
+    "A conceptual noun anywhere in the complement can be from an unrelated modifier.",
+    "Existing31/93 tests and57 replay success do not establish complete literal reading exclusion."
+  ],
+  "scope": "Exact2-file candidate delta allowed; original source and main checkpoint untouched",
+  "submissionApproved": false,
+  "algorithmAccuracyPass": false
+}
+
+2. 구조 코드 발췌 (ZIP 내부 structure.py의 원래 행번호)
+408:         # Author interpretation, not literal reading or an attributed claim.
+409:         # Require the observed topic, interpretive complement and terminal
+410:         # declarative morphology; this supplies a role cue, not an approval.
+411:         author_tokens=[t for t in tokens if t['start']<t['end'] and not any(q['start']<=t['start']<q['end'] for q in quotes)]
+412:         interpretive_topic=(len(author_tokens)>=3 and (author_tokens[0]['form'],author_tokens[0]['pos'])==('이','MM')
+413:                             and author_tokens[1]['form'] in {'행동','장면','발언','작품'} and author_tokens[1]['pos']=='NNG'
+414:                             and author_tokens[2]['form'] in {'은','는'} and author_tokens[2]['pos']=='JX')
+415:         for i,t in enumerate(author_tokens):
+416:             if not interpretive_topic or i<2 or (t['form'],t['pos'])!=('읽히','VV'):continue
+417:             head,particle=author_tokens[i-2:i];tail=author_tokens[i+1:]
+418:             complement=author_tokens[3:i-2]
+419:             interpreted_process=(head['form'] not in {'과정','변화'} or
+420:                 bool(complement and complement[-1]['pos']=='ETM' and
+421:                      any(x['pos'] in {'VV','VA','VX','XSV','XSA'} for x in complement)))
+422:             # A work being read through a procedure is not an interpretation.
+423:             # Reuse conceptual nouns only inside this interpretive complement.
+424:             work_interpretation=(author_tokens[1]['form']!='작품' or
+425:                 any(x['pos']=='NNG' and x['form'] in INTERPRETATION_NOUNS for x in [*complement,head]))
+426:             if (head['pos']=='NNG' and head['form'] in INTERPRETATION_NOUNS|{'과정','변화'}
+427:                 and interpreted_process and work_interpretation
+428:                 and particle['pos']=='JKB' and particle['form'] in {'로','으로'}
+429:                 and tail and tail[0]['pos']=='EF' and tail[0]['form'] in {'ᆫ다','ㄴ다','는다','다'}
+430:                 and all(x['pos']=='SF' and x['form'] not in {'?','？'} for x in tail[1:])):
+431:                 claim.append('EXPLICIT_INTERPRETIVE_READING');break
+432:         qualifies_claim=bool(claim and nouns and has_predicate)
+
+3. review-blocker-reproductions.json 원본/후보 비교 (저장된 실행 결과)
+사례 1: 이 작품은 음성 합성 프로그램이 의미 단위를 나누어 처리하는 과정으로 읽힌다.
+원본 역할: []
+후보 역할: ["CLAIM_CANDIDATE"]
+후보 claimSignals: ["EXPLICIT_INTERPRETIVE_READING"]
+저장된 Kiwi 형태소: 이/MM 작품/NNG 은/JX 음성/NNG 합성/NNG 프로그램/NNG 이/JKS 의미/NNG 단위/NNG 를/JKO 나누/VV 어/EC 처리/NNG 하/XSV 는/ETM 과정/NNG 으로/JKB 읽히/VV ᆫ다/EF ./SF
+
+사례 2: 이 작품은 독서 경험이 부족한 학생들이 발음을 연습하는 과정으로 읽힌다.
+원본 역할: []
+후보 역할: ["CLAIM_CANDIDATE"]
+후보 claimSignals: ["EXPLICIT_INTERPRETIVE_READING"]
+저장된 Kiwi 형태소: 이/MM 작품/NNG 은/JX 독서/NNG 경험/NNG 이/JKS 부족/NNG 하/XSA ᆫ/ETM 학생/NNG 들/XSN 이/JKS 발음/NNG 을/JKO 연습/NNG 하/XSV 는/ETM 과정/NNG 으로/JKB 읽히/VV ᆫ다/EF ./SF
+
+4. P06/D01의 REVIEW 사유 (저장된 실행 결과)
+{"focusedRow": 0, "id": "relation-2-1", "claimId": "sentence-2", "evidenceId": "sentence-1", "assessment": "REQUIRES_REVIEW", "reasons": ["MULTIPLE_EVENTS_IN_PREVIOUS_SENTENCE"], "eventCount": 5}
+{"focusedRow": 1, "id": "relation-2-1", "claimId": "sentence-2", "evidenceId": "sentence-1", "assessment": "REQUIRES_REVIEW", "reasons": ["MULTIPLE_EVENTS_IN_PREVIOUS_SENTENCE"], "eventCount": 5}
+{"focusedRow": 2, "id": "relation-2-1", "claimId": "sentence-2", "evidenceId": "sentence-1", "assessment": "REQUIRES_REVIEW", "reasons": ["MULTIPLE_EVENTS_IN_PREVIOUS_SENTENCE"], "eventCount": 2}
+{"focusedRow": 3, "id": "relation-2-1", "claimId": "sentence-2", "evidenceId": "sentence-1", "assessment": "REQUIRES_REVIEW", "reasons": ["MULTIPLE_EVENTS_IN_PREVIOUS_SENTENCE"], "eventCount": 2}
+
+5. 제출·완료 상태
+{
+  "phaseId": "v22-phase4a-synthetic24-s3-interpretive-claim",
+  "status": "BLOCKED_REGRESSION",
+  "reason": "READ_ONLY_REVIEW_BLOCKED_QUALITY_LITERAL_READING_FALSE_PROMOTION",
+  "lastCompletedMainPhase": "v22-phase-3b-source-relation-policy",
+  "mainPhase4A": "BLOCKED_DATA",
+  "R2": "DISABLED",
+  "phase4B": "NOT_STARTED",
+  "G5": "WAIVED_BY_USER",
+  "implementationLocation": "C:\\Projects\\dream-hs-automation-bounded-v3\\output\\geulbit\\runtime\\v22\\phase4a-synthetic24-s3\\isolated-candidate",
+  "submittedToWorktree": false,
+  "formalRunnerAttempts": 0,
+  "formalPhaseStarted": false,
+  "mainCheckpointUnchanged": "C:/Users/USER/.codex/worktrees/geulbit-v22/글빛/docs/automation/backend-checkpoint.json",
+  "candidateRepairAttempts": 1,
+  "finalCandidateSourceSha": "b6e1efda27525c919a546c75e3ace108bf3ed40ef548b41b53d50eda20780c34",
+  "tests": {
+    "new": 31,
+    "protected": 93,
+    "exitCode": 0,
+    "existingReplayConditions": 57,
+    "existingApprovalPairs": 16
+  },
+  "focused": {
+    "P06Before": [],
+    "P06After": [
+      "CLAIM_CANDIDATE"
+    ],
+    "D01Before": [],
+    "D01After": [
+      "CLAIM_CANDIDATE"
+    ],
+    "conditions": 4,
+    "newReviewRelations": 4,
+    "newGeneralQuestions": 2,
+    "newApprovedRelations": 0,
+    "newArrows": 0
+  },
+  "outstanding": {
+    "literalReadingCounterexamples": 2,
+    "independentReviewPass": false
+  },
+  "nextAction": "Do not submit this candidate or advance main Phase4A; preserve failures and frozen expectations.",
+  "checkpoint": "C:/Projects/dream-hs-automation-bounded-v3/output/geulbit/runtime/v22/phase4a-synthetic24-s3/checkpoint.json",
+  "mainCheckpoint": "C:/Users/USER/.codex/worktrees/geulbit-v22/글빛/docs/automation/backend-checkpoint.json",
+  "protectedHashesPass": true,
+  "scopePass": true,
+  "releaseAuthorized": false,
+  "operationalAccess": false
+}

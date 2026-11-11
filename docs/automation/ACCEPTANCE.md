@@ -1,3 +1,19 @@
+# 2026-10-10 안전한 재개 최종 검증 상태
+
+- P01/P02 개발 G1~G4와 독립 컴포넌트 검증을 기존 local Runner receipt로 구분한다. G5 DEFERRED_FINAL_REVIEW; 과거 변경 G4는 소급 PASS가 아니다.
+- 최초 HEAD 68d771840014cdef9e9acc84be1f2f613cc269a0/master 유지. 추가 commit, DB 재초기화/migration, UI 변경 없음.
+- 독립 OIDC/권한/AI/PDF/로컬 규칙/구조/인용 컴포넌트는 실 사용자 API 통합 완료가 아니다. 브라우저 결과는 fixtureOnly이며 실계정 인증 증거가 아니다.
+- P03 이후 DB 물리 매핑/승인 migration 범위와 실행 가능한 원본 Phase 계약이 없어 BLOCKED. 7일 기산점·백업 보존 미결은 자동 채택하지 않는다. 다음 작업과 실제 결과는 기존 checkpoint finalValidation/blockingConditions에 기록한다.
+- 아래 이전 차단·경로·상태 절은 보존 이력이며 최신 checkpoint/Runner receipt가 현재 판정이다.
+
+# 2026-10-10 최신 승인: 연속 개발 Gate
+
+- 사용자 요청문 abba589e의 명시적 승인으로 최초 로컬 commit 1회만 생성: 68d771840014cdef9e9acc84be1f2f613cc269a0. 이후 자동 commit/push/merge/deploy 금지.
+- 승인된 설계 원본은 docs/design/20261010이며 제안·미결 정책은 확정값으로 승격하지 않는다. 최신 실제 Data Root C:\Users\USER\GeulbitData 유지.
+- 개발 진행은 G1~G4 PASS, G5는 DEFERRED_FINAL_REVIEW. 최종 공개/배포는 필수 독립 검토 후 별도 승인 필요.
+- 최초 HEAD는 승인된 현재 소스의 출발점이다. 과거 UI/P01 변경 범위의 G4를 소급 검증하지 않는다. 이후 변경만 기존 Runner Scope/Protected Hash로 판정한다.
+- 기존 Runner에 geulbit-local-v1 검증 profile을 연결한다. 기존 lib/Scope/Protected Hash와 상태 snapshot을 재사용하며 별도 자동화 엔진을 만들지 않는다. 실행 가능한 범위만 backend-queue.local.json으로 연결하고 나머지 Phase는 pending Queue에 보존한다. 실제 지원: preflight, begin-phase, verify-phase 및 active checkpoint 재개. 무인 세션 생성/백그라운드 실행은 주장하지 않는다.
+
 # 글빛 백엔드 Acceptance 준비
 
 ## 2026-10-10 새 Data Root 교차 검증 완료 (최신)

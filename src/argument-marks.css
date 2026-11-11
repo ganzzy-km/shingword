@@ -1,0 +1,18 @@
+.gb .argument-claim{background:rgba(243,212,103,.32);border-radius:2px}
+.gb .argument-evidence{text-decoration-line:underline;text-decoration-color:#447f95;text-decoration-thickness:2px;text-underline-offset:4px}
+.gb .argument-focused{background:rgba(237,187,49,.55);outline:1px solid #b68930;outline-offset:1px}
+.gb .argument-selected{background:#e5d8a8}
+.gb .argument-arrow-anchor{position:relative;display:inline-block;width:0;height:0;vertical-align:baseline}
+.gb .argument-link{position:absolute;left:0;bottom:-5px;width:24px;height:24px;display:grid;place-items:center;border:1px solid #6c91a5;border-radius:50%;background:#f4f9f9;color:#245a70;padding:4px;z-index:4;pointer-events:auto;cursor:pointer;box-shadow:0 1px 3px #243a3320}
+.gb .argument-link svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.6}
+.gb .argument-link:focus-visible,.gb .argument-fragment[role=button]:focus-visible{outline:2px solid #245a70;outline-offset:2px}
+.gb .argument-fragment[role=button]{cursor:pointer}
+.gb .argument-editor{position:relative;isolation:isolate;overflow:clip}
+.gb .argument-editor textarea{display:block;position:relative;z-index:1;resize:none;background:transparent}
+.gb .argument-editor-layer{position:absolute;inset:0;overflow:clip;pointer-events:none;z-index:0}
+.gb .argument-editor-mirror{box-sizing:border-box;white-space:pre-wrap;overflow-wrap:break-word;color:transparent;pointer-events:none;border:0;margin:0}
+.gb .argument-editor-mirror .argument-fragment{color:transparent}
+.gb .argument-editor-controls{position:absolute;inset:0;pointer-events:none;overflow:clip;z-index:2}
+.gb .argument-legend{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;line-height:1.7;padding:10px 0;color:#52655d}
+.gb .argument-relation{font-size:12px;line-height:1.9;overflow-wrap:anywhere}
+.gb .argument-relation button{margin:5px 0;font-size:12px}

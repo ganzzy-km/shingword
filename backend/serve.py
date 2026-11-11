@@ -13,6 +13,7 @@ if VENV_SITE_PACKAGES.is_dir():
 from waitress import create_server  # noqa: E402
 
 from app import create_app  # noqa: E402
+from app.v2.deployment import waitress_proxy_options  # noqa: E402
 
 
 def _main_server_address() -> tuple[str, int]:
@@ -32,9 +33,10 @@ def main():
         raise RuntimeError("승인된 HTTPS 프록시 구성 전에는 로컬 바인딩만 허용됩니다.")
     app = create_app()  # Validate storage before logs, sockets or admin startup.
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s", force=True)
-    main_server = create_server(app, host=main_host, port=main_port, threads=6)
+    main_server = create_server(app, host=main_host, port=main_port, threads=6,
+                                **waitress_proxy_options())
     logging.info(
-        "Main app: http://%s:%s; student API blocked pending authentication integration",
+        "Main app: http://%s:%s; authenticated API requires approved HTTPS/session/OIDC configuration",
         main_host,
         main_port,
     )

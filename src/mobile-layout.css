@@ -1,0 +1,83 @@
+/* Responsive additions only. The existing desktop theme and span layout stay intact. */
+.gb .mobile-work-nav{display:none}
+@media(max-width:1100px){
+  .gb .gb-topbar{position:sticky;top:0;z-index:30;min-height:60px;background:var(--canvas);padding-top:env(safe-area-inset-top)}
+  .gb .desk-grid{grid-template-columns:minmax(0,1fr)}
+  .gb .writing-content{padding-bottom:calc(110px + env(safe-area-inset-bottom))}
+  .gb .feedback-panel{position:static;max-height:none;scroll-margin-top:76px}
+  .gb .annotations-panel,.gb .reading-book{scroll-margin-top:76px}
+  .gb .feedback-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .gb .feedback-cards .feedback-card{min-width:0;margin:0}
+  .gb .gb-topbar button,.gb .page-controls button,.gb .writing-actions>button,.gb .writing-more>summary,
+  .gb .document-search button,.gb .library-search select,.gb .annotation-actions button,.gb .feedback-panel .gb-outline,
+  .gb .quote-jump,.gb .finding-actions button,.gb .gb-modal button,.gb .gb-modal summary{min-height:44px;touch-action:manipulation}
+  .gb .menu-toggle,.gb .gb-topbar .icon-btn,.gb .page-controls button,.gb .document-search button,.gb .modal-close,.gb .menu-close{min-width:44px;min-height:44px}
+  .gb .writing-actions{gap:8px;max-width:none;flex-wrap:wrap}
+  .gb .document-search{gap:8px;flex-wrap:wrap}
+  .gb .document-search input{min-width:120px;flex:1}
+  .gb .document-search>span{white-space:nowrap}
+  .gb .document-search button:disabled{opacity:.5}
+  .gb .page-controls{gap:16px;flex-wrap:wrap}
+  .gb .page-controls>span{min-width:0;text-align:center;flex:1}
+  .gb .page-controls small{line-height:1.65;max-width:260px;margin-inline:auto}
+  .gb .paragraph-nav button{min-height:48px;touch-action:manipulation}
+  .gb .paragraph-jump{flex-shrink:0;min-width:148px}
+  .gb .paragraph-jump select{min-height:44px;max-width:100%;font-size:14px}
+  .gb .mobile-work-nav{position:fixed;inset:auto 16px calc(10px + env(safe-area-inset-bottom));z-index:35;display:flex;gap:4px;max-width:560px;margin-inline:auto;padding:6px;border:1px solid #dbe3d8;border-radius:18px;background:#fffdfaf5;box-shadow:0 5px 24px #203b2920}
+  .gb .mobile-work-nav button{flex:1;min-width:0;min-height:48px;display:flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:12px;background:transparent;color:var(--ink);font:inherit;font-size:13px;cursor:pointer;touch-action:manipulation}
+  .gb .mobile-work-nav button:hover,.gb .mobile-work-nav button:focus-visible{background:#edf2e9}
+  .gb .mobile-work-nav button:focus-visible{outline:2px solid #54705b;outline-offset:1px}
+  .gb .mobile-work-nav small{display:inline-grid;place-items:center;min-width:20px;padding:2px 5px;border-radius:12px;background:#e9eee5;color:#48664e;font-size:11px}
+  .gb .annotation-selection-bar{bottom:calc(84px + env(safe-area-inset-bottom))}
+  .gb .annotation-selection-bar .annotation-add{min-height:44px}
+  .gb .argument-link::after,.gb .annotation-icon::after{content:"";position:absolute;inset:-4px;pointer-events:auto}
+  .gb .gb-modal-backdrop{padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom));overflow:auto}
+  .gb .gb-modal{max-height:calc(100dvh - 32px - env(safe-area-inset-bottom));overflow:auto;overscroll-behavior:contain}
+  .gb.drawer-open .gb-sidebar{padding-bottom:env(safe-area-inset-bottom);overflow-y:auto;overscroll-behavior:contain}
+}
+@media(max-width:820px){
+  .gb .feedback-cards{display:block}
+  .gb .feedback-cards .feedback-card{margin-bottom:12px}
+  .gb .writing-heading h1{overflow-wrap:anywhere;font-size:clamp(22px,3.4vw,30px)}
+  .gb .essay-fields{gap:16px;padding:22px}
+  .gb .essay-fields label{min-width:0}
+  .gb input:not([type=checkbox]):not([type=radio]),.gb select,.gb .annotation-form textarea{font-size:16px}
+  .gb .essay-fields input,.gb .feedback-filters select{min-height:44px;max-width:100%}
+  .gb .annotation-form textarea{min-height:112px;line-height:1.7}
+  .gb .annotation-actions{gap:8px}
+  .gb .annotation-list-item{min-height:52px;padding:12px}
+  .gb .library-tabs button,.gb .library-search button{min-height:44px}
+}
+@media(max-width:650px){
+  .gb .writing-content{padding-inline:12px}
+  .gb .writing-actions button,.gb .writing-more>summary{font-size:13px!important}
+  .gb .essay-fields{grid-template-columns:1fr;padding:20px;gap:12px}
+  .gb .question-field{grid-column:auto}
+  .gb .document-search input{flex-basis:calc(100% - 42px);min-height:40px}
+  .gb .document-search>button:last-child{margin-left:auto}
+  .gb .mobile-work-nav{inset-inline:10px;border-radius:16px}
+  .gb .mobile-work-nav button{font-size:12px;gap:5px}
+  .gb .annotation-selection-bar{margin-inline:6px;padding-inline:10px;gap:8px}
+  .gb .feedback-filters{flex-wrap:wrap}
+  .gb .feedback-filters>select{flex:1;min-width:120px}
+  .gb .feedback-filters>label{width:100%;min-height:40px;display:flex;align-items:center;gap:8px}
+  .gb .writing-more-content{position:fixed;top:auto;bottom:calc(80px + env(safe-area-inset-bottom));left:12px;right:12px;width:auto;max-width:none;max-height:60dvh;overflow:auto}
+  .gb .library-heading p{font-size:14px;line-height:1.8}
+}
+@media(max-height:500px) and (max-width:1100px){
+  .gb .gb-topbar{position:static}
+  .gb .editor-paper textarea{min-height:240px;height:68dvh}
+  .gb .mobile-work-nav{bottom:calc(6px + env(safe-area-inset-bottom));padding:3px}
+  .gb .mobile-work-nav button{min-height:44px}
+}
+@media(min-width:375px) and (max-width:650px){
+  .gb.bookshelf .books-grid{grid-template-columns:repeat(2,minmax(0,1fr));--cover-height:220px;gap:28px 16px;padding:24px 12px 0}
+  .gb.bookshelf .book-cover{height:220px;max-width:180px}
+  .gb.bookshelf .cover-border{inset:14px 9px 14px 18px;padding:14px 7px}
+  .gb.bookshelf .cover-border h2{font-size:16px;line-height:1.5;margin-top:14px;max-height:96px}
+  .gb.bookshelf .cover-work{font-size:10px}
+  .gb.bookshelf .cover-emblem svg{width:22px;height:22px}
+  .gb.bookshelf .book-meta h3{font-size:14px;line-height:1.7;overflow-wrap:anywhere}
+  .gb.bookshelf .book-meta p{font-size:12px}
+}
+@media print{.gb .mobile-work-nav{display:none!important}}

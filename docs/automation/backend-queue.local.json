@@ -1,0 +1,1760 @@
+{
+  "version": 1,
+  "configured": true,
+  "profile": "geulbit-local-v1",
+  "gatePolicy": "G1_G4_DEVELOPMENT_G5_FINAL",
+  "repo": "C:/Users/USER/Documents/ChatGPT/글빛",
+  "expectedHead": "68d771840014cdef9e9acc84be1f2f613cc269a0",
+  "expectedBranch": "master",
+  "protected": {
+    "backend/app/config.py": "5eec55474f2633b7c8a5773cfe9e8c336cd21560aeef2bfb04bb79d2631e47ac",
+    "backend/app/extensions.py": "f9f5317e34e285f8b5868992176cd4d8f2f8a7f67c4ef05f2ac8cbfd14b16f40",
+    "backend/app/local_admin.py": "f4048dfd7a7b74c37c8a506d257036c149b256ae669783f365fec148756a5419",
+    "backend/app/routes/core.py": "7ad434ff17e9cf7ae23a3d1167ff83e37d54e484d47c72fb7798485650cc8aba",
+    "backend/verify_storage.py": "46d0dc81e2e0f6515b6345aaf7b21ec480e81bf8daaf84c431b391970d39056f",
+    "scripts/verify-data-root-cross.py": "71b58ccbd8438b9d5324f84dd580bf5ff0bc70a60a083ec137b98cda0a0eea42",
+    "backend/migrations/versions/0001_initial.py": "2364b72d9c8b7f0bd07be87ac5dc844e35350c2bc4d20ad654900016b0ee8a86",
+    ".gitignore": "0c3d72bc6cb4ec10c6b80b26279db801080a3aeab4d6e4840576a4c9bfacd0fc",
+    "src/book-layout.ts": "0b890c7dd1f2a75fe8c25befe5fd40ac0f648e179c68658757116be2eab9933c",
+    "src/BookCover.tsx": "8d10be65ddc45e6567558be3493b00a85fda3d0759018e41e68a98aeeea9670f",
+    "src/index.css": "5df42460e7c0000b57ec97b2d4a96b77696fead18dd5e6038527f6f7103b6e82",
+    "src/library.css": "ac4e709e6ee5770aa3c50e1e6900e787d000a693266e18c5df1af0b063e1e836",
+    "src/main.tsx": "6c2ddad066d2a90b04cf766465b454de0a9f031965311a3609c87f0e495c3383",
+    "src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+    "public/assets/green.png": "191d6c752952e30b7151daed215ffd79102762f3b0cc7e96639e91a6382f4309",
+    "public/assets/oak.png": "676fbc0f35acfcbd214813a13349fac313c65c0de8b93194479d0f45a3c83ec7",
+    "public/assets/paper.png": "d4d0dfa904a6d8b22e10686004ad8980a8c65756f4a133f28ff01e5972f16239",
+    "public/bookshelf/cover-ivory.webp": "4859605e0faf4b87e309518d96e4fa7fc5e154c4494e41975027804b158a96bd",
+    "public/bookshelf/cover-russet.webp": "b7fa2375414e66279458f197b4fb642c7782c7629cd72bbbbb9045eb121fb477",
+    "public/bookshelf/cover-slate.webp": "4116c5f994fd76e956e4901f2a67188974e4f86f37c0a6057fe2464be6b928db",
+    "public/fonts/noto-sans-kr-regular.ttf": "84e2b8acadd0a01af9f0de6b0a2d29117fb5b0eabd7c2f8353d9d2da0461d5fa",
+    "public/fonts/noto-sans-kr-semibold.ttf": "b863749bdd69ab2aa2f4c98d83d71933c605b394002b15405d2a42b5e413360e",
+    "public/fonts/OFL.txt": "1c05c68c34f9708415aada51f17e1b0092d2cea709bf4a94cd38114f9e73d7d9",
+    "docs/design/20261010/00_README.md": "a5be28f4fb67b1e8b9bdd9a604000eda302aae17385fb17af6d07cbaf5b58f15",
+    "docs/design/20261010/01_ARCHITECTURE_DATA.md": "e67a1ad64384fd64aa0ba94e13911bdaf2bc002d46badfc98d9b7625fce6334c",
+    "docs/design/20261010/02_ENGINE.md": "8280631459169ad2f55de29f104bc6ac47f271ad937df3d44a3630be160dc603",
+    "docs/design/20261010/03_API_ACCEPTANCE.md": "8f214dbeca543b6e56aa929ce36bc99a846262ed4696324f8e97eeabbbad479a",
+    "docs/design/20261010/SOURCE_MANIFEST.json": "bc0c95df457b7f13e861f0c95704fbfcf254bde582b1d604e4ecd5b30d2eff20"
+  },
+  "runnerProtected": {
+    "automation/runner.mjs": "dc2f5f45099e9964ced8b423c0a399085707e96a6467afc515ddb4bd27548713",
+    "automation/lib.mjs": "de44d1bc05ddb654f85b0b55cb379c4a8c3a524ab5817cc5e60cb85797e30d57"
+  },
+  "allowedTestExecutables": [
+    ".venv/Scripts/python.exe"
+  ],
+  "phases": [
+    {
+      "id": "p01",
+      "mode": "implement",
+      "dependsOn": [],
+      "prompt": "output/geulbit/plan-p01.md",
+      "activePlan": "output/geulbit/plan-p01.md",
+      "allowedPaths": [
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/backend-queue.local.json",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/ACCEPTANCE.md"
+      ],
+      "maxChangedFiles": 10,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/tests/test_storage.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 21,
+          "requires": "Existing Runner pytest binding; not TAP minimumPass"
+        }
+      ],
+      "requiredOutputs": [
+        "backend/app/storage.py",
+        "backend/storage_cli.py",
+        "backend/tests/test_storage.py"
+      ],
+      "acceptance": {
+        "source": {
+          "kind": "user_instruction",
+          "section": "3. P01 Acceptance Gate",
+          "date": "2026-10-10"
+        },
+        "requirements": [
+          "verified Data Root and volume identity",
+          "no startup initialization or fallback",
+          "existing Alembic and FK/WAL/busy_timeout",
+          "safe online backup/restore",
+          "disconnect latch",
+          "no unauthenticated production data API"
+        ],
+        "cases": {
+          "normal": [
+            "test_explicit_initialization_uses_existing_alembic_and_sqlite_constraints",
+            "test_online_backup_restores_into_isolated_sqlite"
+          ],
+          "failure": [
+            "test_missing_drive_never_creates_fallback",
+            "test_existing_data_is_not_initialized_or_overwritten",
+            "test_invalid_volume_never_creates_data_root",
+            "test_corrupt_database_and_unknown_migration_are_blocked",
+            "test_failed_initialization_is_not_automatically_retried",
+            "test_virtualized_data_root_is_rejected_before_initialization"
+          ],
+          "boundary": [
+            "test_identity_must_be_explicit",
+            "test_symlink_escape_is_rejected",
+            "test_insufficient_space_never_initializes",
+            "test_missing_database_is_not_recreated"
+          ],
+          "dataConsistency": [
+            "test_repeated_alembic_upgrade_preserves_existing_rows",
+            "test_40_concurrent_sqlite_writes_keep_integrity",
+            "test_disconnect_latches_until_explicit_new_startup"
+          ]
+        },
+        "G1": "PASS_LOCAL_STORAGE_CANDIDATE",
+        "G2": "LOCAL_TESTS_PASS_RUNNER_BINDING_UNVERIFIED",
+        "G3": "LOCAL_INVARIANTS_VERIFIED",
+        "G4": "SCOPE_RECORDED_BASELINE_UNVERIFIED",
+        "G5": "DEFERRED_USER_REQUEST"
+      },
+      "productDependencies": null,
+      "independentReview": {
+        "readOnly": true,
+        "claudeRequiredFor": [
+          "authentication",
+          "authorization",
+          "offset",
+          "migration",
+          "deletion",
+          "ai-privacy"
+        ],
+        "phaseRiskClassification": [
+          "migration",
+          "storage",
+          "backup/restore"
+        ],
+        "status": "DEFERRED_USER_REQUEST"
+      }
+    },
+    {
+      "id": "p02",
+      "mode": "implement",
+      "dependsOn": [
+        "p01"
+      ],
+      "prompt": "output/geulbit/plan-p02.md",
+      "activePlan": "output/geulbit/plan-p02.md",
+      "allowedPaths": [
+        "backend/app/analysis/snapshot.py",
+        "backend/engine_tests/",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 10,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/engine_tests",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 16
+        }
+      ],
+      "requiredOutputs": [
+        "backend/app/analysis/snapshot.py",
+        "backend/engine_tests/test_snapshot.py"
+      ]
+    },
+    {
+      "id": "independent-components",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "p02"
+      ],
+      "prompt": "output/geulbit/plan-components.md",
+      "activePlan": "output/geulbit/plan-components.md",
+      "allowedPaths": [
+        "backend/components/",
+        "backend/component_tests/",
+        "backend/requirements.txt",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 10,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 20
+        }
+      ],
+      "requiredOutputs": [
+        "backend/components/auth.py",
+        "backend/components/pdf.py",
+        "backend/components/ai.py"
+      ]
+    },
+    {
+      "id": "language-components",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "p02"
+      ],
+      "prompt": "output/geulbit/plan-language.md",
+      "activePlan": "output/geulbit/plan-language.md",
+      "allowedPaths": [
+        "backend/app/analysis/ruleset.py",
+        "backend/app/analysis/structure.py",
+        "backend/components/quote_match.py",
+        "backend/component_tests/test_language_components.py",
+        "backend/requirements.txt",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 10,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_language_components.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 10
+        }
+      ],
+      "requiredOutputs": [
+        "backend/app/analysis/ruleset.py",
+        "backend/app/analysis/structure.py",
+        "backend/components/quote_match.py"
+      ]
+    },
+    {
+      "id": "integration-validation",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "p02",
+        "independent-components",
+        "language-components"
+      ],
+      "prompt": "output/geulbit/plan-validation.md",
+      "activePlan": "output/geulbit/plan-validation.md",
+      "allowedPaths": [
+        "backend/engine_tests/",
+        "backend/component_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/ACCEPTANCE.md",
+        "docs/automation/backend-queue.pending.json"
+      ],
+      "maxChangedFiles": 10,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/tests",
+            "backend/engine_tests",
+            "backend/component_tests",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 137
+        }
+      ],
+      "requiredOutputs": [
+        "backend/app/analysis/snapshot.py",
+        "backend/components/auth.py",
+        "backend/components/pdf.py"
+      ]
+    },
+    {
+      "id": "db-mapping-preparation",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "p01",
+        "p02"
+      ],
+      "prompt": "output/geulbit/plan-db-mapping.md",
+      "activePlan": "output/geulbit/plan-db-mapping.md",
+      "allowedPaths": [
+        "backend/mapping/",
+        "backend/mapping_tests/",
+        "docs/automation/DB_MAPPING_PLAN.md",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json"
+      ],
+      "maxChangedFiles": 10,
+      "timeoutSeconds": 180,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/mapping_tests",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 6
+        }
+      ],
+      "requiredOutputs": [
+        "backend/mapping/rehearsal.py",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ]
+    },
+    {
+      "id": "schema-v2",
+      "mode": "implement",
+      "dependsOn": [
+        "p01",
+        "p02"
+      ],
+      "prompt": "output/geulbit/plan-schema-v2.md",
+      "activePlan": "output/geulbit/plan-schema-v2.md",
+      "allowedPaths": [
+        "backend/app/models.py",
+        "backend/migrations/versions/0002_geulbit_v2.py",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_migration.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 7
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_migration.py"
+      ],
+      "kind": "component"
+    },
+    {
+      "id": "p03",
+      "mode": "implement",
+      "dependsOn": [
+        "schema-v2"
+      ],
+      "prompt": "output/geulbit/plan-p03.md",
+      "activePlan": "output/geulbit/plan-p03.md",
+      "allowedPaths": [
+        "backend/app/__init__.py",
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_auth_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 8
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_auth_api.py"
+      ]
+    },
+    {
+      "id": "p04",
+      "mode": "implement",
+      "dependsOn": [
+        "p03"
+      ],
+      "prompt": "output/geulbit/plan-p04.md",
+      "activePlan": "output/geulbit/plan-p04.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_essay_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 8
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_essay_api.py"
+      ]
+    },
+    {
+      "id": "p05",
+      "mode": "implement",
+      "dependsOn": [
+        "p04"
+      ],
+      "prompt": "output/geulbit/plan-p05.md",
+      "activePlan": "output/geulbit/plan-p05.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "src/App.tsx",
+        "src/api.ts",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md",
+        "src/Library.tsx"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_analysis_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 6
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_analysis_api.py"
+      ]
+    },
+    {
+      "id": "p06",
+      "mode": "implement",
+      "dependsOn": [
+        "p05"
+      ],
+      "prompt": "output/geulbit/plan-p06.md",
+      "activePlan": "output/geulbit/plan-p06.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_rules_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 3
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_rules_api.py"
+      ]
+    },
+    {
+      "id": "p07",
+      "mode": "implement",
+      "dependsOn": [
+        "p06"
+      ],
+      "prompt": "output/geulbit/plan-p07.md",
+      "activePlan": "output/geulbit/plan-p07.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_structure_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 3
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_structure_api.py"
+      ]
+    },
+    {
+      "id": "p08",
+      "mode": "implement",
+      "dependsOn": [
+        "p07"
+      ],
+      "prompt": "output/geulbit/plan-p08.md",
+      "activePlan": "output/geulbit/plan-p08.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md",
+        "backend/app/models.py",
+        "backend/migrations/versions/0003_resource_ownership.py"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_library_api.py",
+            "backend/v2_tests/test_migration.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 15
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_library_api.py"
+      ]
+    },
+    {
+      "id": "p09",
+      "mode": "implement",
+      "dependsOn": [
+        "p08"
+      ],
+      "prompt": "output/geulbit/plan-p09.md",
+      "activePlan": "output/geulbit/plan-p09.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_quote_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 4
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_quote_api.py"
+      ]
+    },
+    {
+      "id": "p10",
+      "mode": "implement",
+      "dependsOn": [
+        "p09"
+      ],
+      "prompt": "output/geulbit/plan-p10.md",
+      "activePlan": "output/geulbit/plan-p10.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "src/App.tsx",
+        "src/api.ts",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md",
+        "src/Library.tsx"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_reanalysis_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 4
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_reanalysis_api.py"
+      ]
+    },
+    {
+      "id": "p11",
+      "mode": "implement",
+      "dependsOn": [
+        "p10"
+      ],
+      "prompt": "output/geulbit/plan-p11.md",
+      "activePlan": "output/geulbit/plan-p11.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/v2_tests/",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 5
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_ai_api.py"
+      ]
+    },
+    {
+      "id": "p12",
+      "mode": "implement",
+      "dependsOn": [
+        "p11"
+      ],
+      "prompt": "output/geulbit/plan-p12.md",
+      "activePlan": "output/geulbit/plan-p12.md",
+      "allowedPaths": [
+        "backend/app/v2/",
+        "backend/app/__init__.py",
+        "backend/v2_tests/",
+        "src/App.tsx",
+        "src/api.ts",
+        "backend/app/storage.py",
+        "backend/storage_cli.py",
+        "backend/tests/test_storage.py",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.pending.json",
+        "docs/automation/DB_MAPPING_PLAN.md",
+        "src/Library.tsx",
+        "scripts/verify-v2-e2e.cjs",
+        "scripts/verify-ui-design.cjs",
+        "backend/tests/conftest.py"
+      ],
+      "maxChangedFiles": 32,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/tests",
+            "backend/engine_tests",
+            "backend/component_tests",
+            "backend/mapping_tests",
+            "backend/v2_tests",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 221
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_operations_api.py"
+      ]
+    },
+    {
+      "id": "p12-recovery",
+      "mode": "implement",
+      "dependsOn": [
+        "p12"
+      ],
+      "prompt": "output/geulbit/plan-p12.md",
+      "activePlan": "output/geulbit/plan-p12.md",
+      "allowedPaths": [
+        "backend/app/v2/library_api.py",
+        "backend/v2_tests/test_operations_api.py",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/DB_MAPPING_PLAN.md"
+      ],
+      "maxChangedFiles": 8,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/tests",
+            "backend/engine_tests",
+            "backend/component_tests",
+            "backend/mapping_tests",
+            "backend/v2_tests",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 224
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_operations_api.py"
+      ],
+      "kind": "component"
+    },
+    {
+      "id": "auth-service-validation",
+      "mode": "implement",
+      "dependsOn": [
+        "p12-recovery"
+      ],
+      "prompt": "output/geulbit/plan-p12.md",
+      "activePlan": "output/geulbit/plan-p12.md",
+      "allowedPaths": [
+        "backend/app/__init__.py",
+        "backend/app/v2/deployment.py",
+        "backend/app/v2/auth_api.py",
+        "backend/components/auth.py",
+        "backend/serve.py",
+        "backend/v2_tests/test_auth_api.py",
+        "backend/v2_tests/test_deployment.py",
+        "backend/v2_tests/qa_server.py",
+        "scripts/verify-auth-flow.cjs",
+        ".env.example",
+        "docs/automation/AUTH_SETUP.md",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 12,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_auth.py",
+            "backend/v2_tests/test_auth_api.py",
+            "backend/v2_tests/test_deployment.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 47
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_operations_api.py"
+      ],
+      "kind": "component"
+    },
+    {
+      "id": "localhost-oidc-readiness",
+      "mode": "implement",
+      "dependsOn": [
+        "auth-service-validation"
+      ],
+      "prompt": "output/geulbit/plan-p12.md",
+      "activePlan": "output/geulbit/plan-p12.md",
+      "allowedPaths": [
+        "backend/app/__init__.py",
+        "backend/app/v2/server_secrets.py",
+        "backend/auth_setup.py",
+        "backend/local_https_proxy.py",
+        "backend/run_auth_dev.py",
+        "backend/v2_tests/test_server_secrets.py",
+        "backend/v2_tests/test_local_https.py",
+        "docs/automation/AUTH_SETUP.md",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 9,
+      "timeoutSeconds": 300,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_auth.py",
+            "backend/v2_tests/test_auth_api.py",
+            "backend/v2_tests/test_deployment.py",
+            "backend/v2_tests/test_server_secrets.py",
+            "backend/v2_tests/test_local_https.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 64
+        }
+      ],
+      "requiredOutputs": [
+        "backend/v2_tests/test_operations_api.py"
+      ],
+      "kind": "component"
+    },
+    {
+      "id": "beta-release-safety-recovery",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "localhost-oidc-readiness"
+      ],
+      "prompt": "output/geulbit/plan-beta-release-safety-recovery.md",
+      "activePlan": "output/geulbit/plan-beta-release-safety-recovery.md",
+      "allowedPaths": [
+        "UI_CHECKPOINT.md",
+        "backend/app/__init__.py",
+        "backend/app/analysis/data/korean_norms_v1.json",
+        "backend/app/analysis/norms_catalogue.py",
+        "backend/app/analysis/norms_reference.py",
+        "backend/app/analysis/ruleset.py",
+        "backend/app/analysis/structure.py",
+        "backend/app/services/backup_service.py",
+        "backend/app/services/storage_lease.py",
+        "backend/app/v2/analysis_api.py",
+        "backend/app/v2/auth_api.py",
+        "backend/app/v2/beta_runtime.py",
+        "backend/app/v2/beta_signup.py",
+        "backend/app/v2/essays.py",
+        "backend/app/v2/library_api.py",
+        "backend/app/v2/network_gate.py",
+        "backend/app/v2/operations_api.py",
+        "backend/app/v2/privacy_lifecycle.py",
+        "backend/app/v2/quote_api.py",
+        "backend/auth_setup.py",
+        "backend/component_tests/test_auth.py",
+        "backend/components/auth.py",
+        "backend/components/quote_match.py",
+        "backend/config/privacy.example.json",
+        "backend/engine_tests/test_norms_catalogue.py",
+        "backend/engine_tests/test_norms_rules.py",
+        "backend/engine_tests/test_snapshot.py",
+        "backend/network_service.py",
+        "backend/privacy_service.py",
+        "backend/requirements.txt",
+        "backend/run_auth_dev.py",
+        "backend/v2_tests/qa_server.py",
+        "backend/v2_tests/test_account_retention.py",
+        "backend/v2_tests/test_auth_api.py",
+        "backend/v2_tests/test_beta_runtime.py",
+        "backend/v2_tests/test_beta_signup.py",
+        "backend/v2_tests/test_library_api.py",
+        "backend/v2_tests/test_network_gate.py",
+        "backend/v2_tests/test_network_integration.py",
+        "backend/v2_tests/test_network_setup.py",
+        "backend/v2_tests/test_operations_api.py",
+        "backend/v2_tests/test_privacy_cli.py",
+        "backend/v2_tests/test_privacy_lifecycle.py",
+        "backend/v2_tests/test_review_optimizations.py",
+        "backend/v2_tests/test_rules_api.py",
+        "backend/v2_tests/test_secure_backup.py",
+        "backend/v2_tests/test_server_secrets.py",
+        "backend/v2_tests/test_workspace_concurrency.py",
+        "docs/automation/AUTH_SETUP.md",
+        "docs/automation/UI_ARCH_AUDIT.md",
+        "docs/automation/backend-checkpoint.json",
+        "docs/automation/backend-queue.local.json",
+        "docs/design/20261010/00_README.md",
+        "docs/design/20261010/02_ENGINE.md",
+        "docs/design/20261010/KOREAN_NORMS_REFERENCE.md",
+        "public/auth-status.css",
+        "scripts/account-session.test.mjs",
+        "scripts/feedback-spans.test.mjs",
+        "scripts/normalize_korean_norms.py",
+        "scripts/verify-beta-signup.cjs",
+        "scripts/verify-ui-design.cjs",
+        "scripts/verify-v2-e2e.cjs",
+        "src/AccountMenu.tsx",
+        "src/App.tsx",
+        "src/Library.tsx",
+        "src/api.ts",
+        "src/feedback-spans.ts",
+        "src/library.css",
+        "src/ui-polish.css"
+      ],
+      "maxChangedFiles": 69,
+      "timeoutSeconds": 120,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_privacy_cli.py",
+            "backend/v2_tests/test_network_setup.py",
+            "backend/v2_tests/test_beta_runtime.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 17
+        }
+      ],
+      "requiredOutputs": [
+        "backend/app/v2/beta_runtime.py",
+        "backend/app/services/storage_lease.py"
+      ]
+    },
+    {
+      "id": "beta-native-scheduler-safety",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "beta-release-safety-recovery"
+      ],
+      "prompt": "output/geulbit/plan-beta-native-scheduler-safety.md",
+      "activePlan": "output/geulbit/plan-beta-native-scheduler-safety.md",
+      "allowedPaths": [
+        "backend/network_service.py",
+        "backend/v2_tests/test_network_setup.py",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 3,
+      "timeoutSeconds": 60,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_network_setup.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 9
+        }
+      ],
+      "requiredOutputs": [
+        "backend/network_service.py"
+      ]
+    },
+    {
+      "id": "beta-first-stability",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "beta-native-scheduler-safety"
+      ],
+      "prompt": "output/geulbit/plan-beta-first-stability.md",
+      "activePlan": "output/geulbit/plan-beta-first-stability.md",
+      "allowedPaths": [
+        "backend/network_service.py",
+        "backend/v2_tests/test_network_setup.py",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 3,
+      "timeoutSeconds": 60,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_network_setup.py",
+            "backend/v2_tests/test_privacy_cli.py",
+            "backend/v2_tests/test_secure_backup.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 24
+        }
+      ],
+      "requiredOutputs": [
+        "backend/network_service.py"
+      ]
+    },
+    {
+      "id": "beta-google-only-entry",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "beta-first-stability"
+      ],
+      "prompt": "output/geulbit/plan-beta-google-only-entry.md",
+      "activePlan": "output/geulbit/plan-beta-google-only-entry.md",
+      "allowedPaths": [
+        "backend/network_service.py",
+        "backend/app/v2/network_gate.py",
+        "backend/app/v2/auth_api.py",
+        "backend/v2_tests/test_network_gate.py",
+        "backend/v2_tests/test_auth_api.py",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 6,
+      "timeoutSeconds": 120,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_network_gate.py",
+            "backend/v2_tests/test_auth_api.py",
+            "backend/v2_tests/test_network_setup.py",
+            "backend/v2_tests/test_network_integration.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 30
+        }
+      ],
+      "requiredOutputs": [
+        "backend/network_service.py",
+        "backend/app/v2/network_gate.py",
+        "backend/app/v2/auth_api.py"
+      ]
+    },
+    {
+      "id": "beta-rules-display",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "beta-google-only-entry"
+      ],
+      "prompt": "output/geulbit/plan-rules-display.md",
+      "activePlan": "output/geulbit/plan-rules-display.md",
+      "allowedPaths": [
+        "src/App.tsx",
+        "backend/app/v2/analysis_api.py",
+        "backend/v2_tests/test_rules_display.py",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 4,
+      "timeoutSeconds": 120,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_rules_display.py",
+            "backend/engine_tests/test_norms_rules.py",
+            "backend/engine_tests/test_norms_catalogue.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 45
+        }
+      ],
+      "requiredOutputs": [
+        "src/App.tsx",
+        "backend/app/v2/analysis_api.py",
+        "backend/v2_tests/test_rules_display.py"
+      ]
+    },
+    {
+      "id": "beta-rules-audit",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "beta-rules-display"
+      ],
+      "prompt": "output/geulbit/plan-rules-audit.md",
+      "activePlan": "output/geulbit/plan-rules-audit.md",
+      "allowedPaths": [
+        "backend/app/analysis/ruleset.py",
+        "backend/app/analysis/norms_catalogue.py",
+        "backend/app/v2/analysis_api.py",
+        "src/App.tsx",
+        "backend/engine_tests/test_norms_rules.py",
+        "backend/engine_tests/test_norms_catalogue.py",
+        "backend/v2_tests/test_rules_display.py",
+        "backend/v2_tests/test_rules_api.py",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 9,
+      "timeoutSeconds": 150,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/engine_tests/test_norms_rules.py",
+            "backend/engine_tests/test_norms_catalogue.py",
+            "backend/v2_tests/test_rules_display.py",
+            "backend/v2_tests/test_rules_api.py",
+            "backend/v2_tests/test_analysis_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 60
+        }
+      ],
+      "requiredOutputs": [
+        "backend/app/analysis/ruleset.py",
+        "backend/app/analysis/norms_catalogue.py",
+        "backend/app/v2/analysis_api.py",
+        "src/App.tsx"
+      ]
+    },
+    {
+      "id": "beta-rules-filter",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "beta-rules-audit"
+      ],
+      "prompt": "output/geulbit/plan-rules-filter.md",
+      "activePlan": "output/geulbit/plan-rules-filter.md",
+      "allowedPaths": [
+        "src/App.tsx",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 2,
+      "timeoutSeconds": 120,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/v2_tests/test_rules_display.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 6
+        }
+      ],
+      "requiredOutputs": [
+        "src/App.tsx"
+      ]
+    },
+    {
+      "id": "beta-reviewed-norms-expansion",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "beta-rules-filter"
+      ],
+      "prompt": "output/geulbit/plan-reviewed-expansion.md",
+      "activePlan": "output/geulbit/plan-reviewed-expansion.md",
+      "allowedPaths": [
+        "backend/app/analysis/reviewed_norms.py",
+        "backend/app/analysis/ruleset.py",
+        "backend/app/analysis/norms_catalogue.py",
+        "backend/app/analysis/norms_reference.py",
+        "backend/engine_tests/test_reviewed_norms.py",
+        "backend/engine_tests/test_norms_rules.py",
+        "backend/engine_tests/test_norms_catalogue.py",
+        "backend/v2_tests/test_rules_api.py",
+        "backend/v2_tests/test_rules_display.py",
+        "src/App.tsx",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 11,
+      "timeoutSeconds": 180,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/engine_tests/test_reviewed_norms.py",
+            "backend/engine_tests/test_norms_rules.py",
+            "backend/engine_tests/test_norms_catalogue.py",
+            "backend/v2_tests/test_rules_api.py",
+            "backend/v2_tests/test_rules_display.py",
+            "backend/v2_tests/test_analysis_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 100
+        }
+      ],
+      "requiredOutputs": [
+        "backend/app/analysis/reviewed_norms.py",
+        "backend/app/analysis/ruleset.py",
+        "backend/app/analysis/norms_catalogue.py",
+        "backend/app/analysis/norms_reference.py",
+        "backend/engine_tests/test_reviewed_norms.py"
+      ]
+    },
+    {
+      "id": "beta-baze-adapter",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "beta-reviewed-norms-expansion"
+      ],
+      "prompt": "output/geulbit/plan-baze-adapter.md",
+      "activePlan": "output/geulbit/plan-baze-adapter.md",
+      "allowedPaths": [
+        "backend/components/ai.py",
+        "backend/app/v2/baze_provider.py",
+        "backend/app/v2/ai_api.py",
+        "backend/app/v2/__init__.py",
+        "backend/component_tests/test_ai.py",
+        "backend/v2_tests/test_baze_provider.py",
+        "backend/v2_tests/test_ai_api.py",
+        "docs/automation/AUTH_SETUP.md",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 9,
+      "timeoutSeconds": 180,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_ai.py",
+            "backend/v2_tests/test_baze_provider.py",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 20
+        }
+      ],
+      "requiredOutputs": [
+        "backend/app/v2/baze_provider.py",
+        "backend/v2_tests/test_baze_provider.py"
+      ]
+    },
+    {
+      "id": "beta-baze-live-synthetic",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "beta-baze-adapter"
+      ],
+      "prompt": "output/geulbit/plan-baze-tls.md",
+      "activePlan": "output/geulbit/plan-baze-tls.md",
+      "allowedPaths": [
+        "backend/app/v2/baze_provider.py",
+        "backend/v2_tests/test_baze_provider.py",
+        "docs/automation/AUTH_SETUP.md",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 4,
+      "timeoutSeconds": 180,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_ai.py",
+            "backend/v2_tests/test_baze_provider.py",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 51
+        }
+      ],
+      "requiredOutputs": [
+        "backend/app/v2/baze_provider.py"
+      ]
+    },
+    {
+      "id": "beta-baze-schema-compatibility",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "beta-baze-live-synthetic"
+      ],
+      "prompt": "output/geulbit/plan-baze-schema.md",
+      "activePlan": "output/geulbit/plan-baze-schema.md",
+      "allowedPaths": [
+        "backend/app/v2/baze_provider.py",
+        "backend/v2_tests/test_baze_provider.py",
+        "docs/automation/AUTH_SETUP.md",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 4,
+      "timeoutSeconds": 180,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_ai.py",
+            "backend/v2_tests/test_baze_provider.py",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 52
+        }
+      ],
+      "requiredOutputs": [
+        "backend/app/v2/baze_provider.py"
+      ]
+    },
+    {
+      "id": "beta-ui-performance-polish",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "beta-baze-schema-compatibility"
+      ],
+      "prompt": "output/geulbit/plan-ui-performance.md",
+      "activePlan": "output/geulbit/plan-ui-performance.md",
+      "allowedPaths": [
+        "src/Library.tsx",
+        "src/book-layout.ts",
+        "src/ui-polish.css",
+        "scripts/book-layout.test.mjs",
+        "scripts/verify-ui-design.cjs",
+        "docs/automation/UI_ARCH_AUDIT.md",
+        "docs/automation/backend-checkpoint.json",
+        "src/text-search.ts",
+        "docs/automation/backend-queue.local.json"
+      ],
+      "maxChangedFiles": 9,
+      "timeoutSeconds": 180,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_ai.py",
+            "backend/v2_tests/test_baze_provider.py",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 52
+        }
+      ],
+      "requiredOutputs": [
+        "src/Library.tsx"
+      ]
+    },
+    {
+      "id": "beta-ui-performance-final",
+      "kind": "component",
+      "mode": "implement",
+      "dependsOn": [
+        "beta-ui-performance-polish"
+      ],
+      "prompt": "output/geulbit/plan-ui-performance.md",
+      "activePlan": "output/geulbit/plan-ui-performance.md",
+      "allowedPaths": [
+        "src/Library.tsx",
+        "src/book-layout.ts",
+        "src/ui-polish.css",
+        "scripts/book-layout.test.mjs",
+        "scripts/verify-ui-design.cjs",
+        "docs/automation/UI_ARCH_AUDIT.md",
+        "docs/automation/backend-checkpoint.json"
+      ],
+      "maxChangedFiles": 7,
+      "timeoutSeconds": 180,
+      "tests": [
+        {
+          "cwd": ".",
+          "argv": [
+            ".venv/Scripts/python.exe",
+            "-m",
+            "pytest",
+            "backend/component_tests/test_ai.py",
+            "backend/v2_tests/test_baze_provider.py",
+            "backend/v2_tests/test_ai_api.py",
+            "-q",
+            "-p",
+            "no:cacheprovider",
+            "--tb=short"
+          ],
+          "testFormat": "pytest",
+          "requiredPass": 52
+        }
+      ],
+      "requiredOutputs": [
+        "src/Library.tsx"
+      ]
+    }
+  ],
+  "tools": {
+    "python": "C:/Users/USER/Documents/ChatGPT/글빛/.venv/Scripts/python.exe",
+    "node": "C:\\Program Files\\nodejs\\node.exe"
+  },
+  "outputDir": "C:/Projects/dream-hs-automation-bounded-v3/output/geulbit/runtime",
+  "baselineSnapshot": "output/geulbit/baseline.json",
+  "queueApprovalReceipt": "output/geulbit/approval.json",
+  "checkpoint": "docs/automation/backend-checkpoint.json",
+  "approvedMutableProtected": {
+    "backend/app/__init__.py": {
+      "previousHash": "445bb7163c57b6e2af1fedd961fba0fbf3f9324e74b3d8f3a032a442dba8470f",
+      "reason": "Explicit latest user approval: necessary API integration/schema readiness only; phase Scope Gate remains enforced"
+    },
+    "src/App.tsx": {
+      "previousHash": "db7ee33332bd7cfc432c02205ad103028966f888fa790f11685bdb47b33fe5b1",
+      "reason": "Explicit latest user approval: necessary API integration/schema readiness only; phase Scope Gate remains enforced"
+    },
+    "src/api.ts": {
+      "previousHash": "6c2c4f379a0a2408047028a01fd5be3f935443c84200a952a0fed0983958a7ac",
+      "reason": "Explicit latest user approval: necessary API integration/schema readiness only; phase Scope Gate remains enforced"
+    },
+    "backend/app/storage.py": {
+      "previousHash": "e9335304e60c0604430b2b07e121578915b1e9042b5e63570d3fa3cfeda7063d",
+      "reason": "Explicit latest user approval: necessary API integration/schema readiness only; phase Scope Gate remains enforced"
+    },
+    "backend/storage_cli.py": {
+      "previousHash": "d49eaf8307440478c3144223dfaf285261dbd8189d3b2785b52048644c6a57c9",
+      "reason": "Explicit latest user approval: necessary API integration/schema readiness only; phase Scope Gate remains enforced"
+    },
+    "backend/tests/test_storage.py": {
+      "previousHash": "95a104265d4d6bbcce9a45820e7aee039a7398d9d30e039cf0149758ad786eca",
+      "reason": "Explicit latest user approval: necessary API integration/schema readiness only; phase Scope Gate remains enforced"
+    },
+    "src/Library.tsx": {
+      "previousHash": "3735dca61b19afa0192675b7bd4b7a9239ab5afd0c9d12f93152ea8c0778ed21",
+      "reason": "Necessary existing two-theme API save/analysis contract integration; latest user authorization"
+    },
+    "backend/serve.py": {
+      "originalHash": "588d5d7f1f420cd024fd6f466631dce6a73bb6fd0575d9b9cf98f58a97a271b5",
+      "reason": "Latest user authorizes OIDC/HTTPS execution configuration and empty setup examples; no UI, migration or production data changes"
+    },
+    ".env.example": {
+      "originalHash": "ab6887bd6b504c2825470187a5471b0c99a27a57ecb4470f3329d87ebc8bd75f",
+      "reason": "Latest user authorizes OIDC/HTTPS execution configuration and empty setup examples; no UI, migration or production data changes"
+    }
+  },
+  "releasePreparation": {
+    "phase": "p13",
+    "status": "BETA_STABLE",
+    "approval": "Latest explicit private beta approval; local C encrypted backup accepted; G5 WAIVED_BY_USER; mandatory G1-G4 security maintained",
+    "allowedChanges": [
+      "backend/app/v2/privacy_lifecycle.py",
+      "backend/app/services/backup_service.py",
+      "backend/privacy_service.py",
+      "backend/app/v2/essays.py",
+      "backend/app/v2/operations_api.py",
+      "backend/app/v2/auth_api.py",
+      "backend/app/v2/library_api.py",
+      "backend/app/__init__.py",
+      "backend/app/config.py",
+      "backend/v2_tests/test_privacy_lifecycle.py",
+      "backend/v2_tests/test_secure_backup.py",
+      "backend/v2_tests/test_privacy_cli.py",
+      "backend/config/privacy.example.json",
+      "docs/automation/AUTH_SETUP.md"
+    ],
+    "targetedTests": [
+      "backend/v2_tests/test_privacy_lifecycle.py",
+      "backend/v2_tests/test_secure_backup.py",
+      "backend/v2_tests/test_privacy_cli.py",
+      "backend/v2_tests/test_operations_api.py",
+      "backend/v2_tests/test_account_retention.py",
+      "backend/v2_tests/test_auth_api.py",
+      "backend/v2_tests/test_beta_signup.py"
+    ],
+    "minimumPass": 40,
+    "checkpoint": "docs/automation/backend-checkpoint.json",
+    "evidence": "artifacts/network/p13-final-evidence.json",
+    "G4": "PASS_APPROVED_RECOVERY_FORWARD_ONLY",
+    "G5": "WAIVED_BY_USER",
+    "activateQueue": false,
+    "blocks": [],
+    "automaticBackupSchedule": true,
+    "automaticDeletion": true,
+    "publicDeployment": "PRIVATE_BETA_ONLY",
+    "backupMode": "7d-encrypted-local-c-v1",
+    "accountRetention": "withdrawal/calendar-2months-v1",
+    "privacyContact": "DIRECT_OPERATOR_CONTACT",
+    "betaGates": {
+      "B1": "PRIOR_ACTUAL_PASS_UNCHANGED_GATE_CURRENT_TUNNEL_STOPPED",
+      "B2": "PASS_ACTUAL_NEW_GOOGLE_ACTIVE_USER_WITH_CONSENT_ISOLATED",
+      "B3": "PASS_TARGETED_SECURITY_SCOPE",
+      "B4": "CONSENT_UI_AND_SERVER_TESTS_PASS_OPERATING_ACTIVATION_PENDING",
+      "B5": "PASS_ISOLATED_DOC7D_RUBRIC7D_ACCOUNT2MONTHS_OPERATING_ACTIVATION_PENDING",
+      "B6": "LOCAL_C_BACKUP_RESTORE_PASS_SCHEDULE_PENDING",
+      "B7": "PASS_OPERATING_READ_ONLY_REVISION_INTEGRITY_FK_WAL",
+      "B8": "ISOLATED_API_AND_PRIOR_REAL_GOOGLE_FLOW_PASS_NEW_EXTERNAL_BETA_FLOW_PENDING",
+      "B9": "APPROVED_DIRECT_OPERATOR_CONTACT",
+      "B10": "WAIVED_BY_USER"
+    },
+    "betaStatus": "BETA_BLOCKED_EXTERNAL_FINAL_VERIFICATION",
+    "reviewPacket": null,
+    "independentDocumentPolicy": "last-document-body-change/7d-v1",
+    "finalEvidence": {
+      "status": "BETA_RELEASED",
+      "origin": "https://crushable-movie-usable.ngrok-free.dev",
+      "mode": "operating",
+      "localHealth": 200,
+      "externalHealth": 200,
+      "G5": "WAIVED_BY_USER",
+      "operatingDatabase": {
+        "integrity": "ok",
+        "fkViolations": 0,
+        "journal": "wal",
+        "revision": "0003_resource_ownership",
+        "users": 1,
+        "consents": 1,
+        "writings": 0,
+        "versions": 0,
+        "analysis": 0,
+        "account": "EXPLICIT_DESIGNATED_ADMIN_ACTIVE",
+        "testDataCreated": false
+      },
+      "authentication": {
+        "actualGoogle": true,
+        "newUser": "ACTIVE_USER_AFTER_MANUAL_AGE_AND_PRIVACY_CONSENT",
+        "adminBootstrap": "VERIFIED_GOOGLE_SUB_AND_EMAIL_MATCH_ONLY",
+        "freshAdminRelogin": true
+      },
+      "isolatedActualGoogleCore": {
+        "passed": 15,
+        "evidence": "artifacts/network/beta-new-user-evidence.json",
+        "screenshot": "artifacts/network/beta-new-user-pass.png"
+      },
+      "operatingScreenshot": "artifacts/network/operating-beta-home.png",
+      "maintenance": {
+        "task": "GeulbitPrivateBetaMaintenance",
+        "state": "Ready",
+        "intervalHours": 1,
+        "cycle": "PASS_STOP_CLEANUP_BACKUP_RESTART",
+        "essaysRemoved": 0,
+        "documentsRemoved": 0,
+        "autoStartAfterStop": false
+      },
+      "backup": {
+        "mode": "ENCRYPTED_LOCAL_C",
+        "intervalHours": 24,
+        "retentionDays": 7,
+        "restore": "PASS_ISOLATED_0003_QUARANTINED_SESSIONS_INVALIDATED",
+        "writerBlock": "PASS_EXPECTED_EXIT_1_WHILE_SERVICE_LIVE",
+        "lastArchivePredatesNewOperatorSignup": true
+      },
+      "retention": {
+        "automatic": true,
+        "essay": "LAST_REAL_BODY_CHANGE_7D",
+        "independentPrivateDocuments": "LAST_REAL_BODY_CHANGE_7D",
+        "withdrawnAccountAndConsent": "2_CALENDAR_MONTHS",
+        "publicDocumentsProtected": true
+      },
+      "AI": "DISABLED",
+      "externalDeviceDifferentNetwork": "NOT_TESTED",
+      "commands": {
+        "start": ".venv\\Scripts\\python.exe backend\\network_service.py start --operating",
+        "status": ".venv\\Scripts\\python.exe backend\\network_service.py status --operating",
+        "stop": ".venv\\Scripts\\python.exe backend\\network_service.py stop --operating",
+        "restart": ".venv\\Scripts\\python.exe backend\\network_service.py restart --operating"
+      }
+    },
+    "latestResumeVerification": {
+      "status": "BETA_RELEASED",
+      "evidence": "docs/automation/backend-checkpoint.json#latestResumeVerification",
+      "passed": 45,
+      "G4": "PASS",
+      "G5": "WAIVED_BY_USER"
+    },
+    "latestStability": {
+      "evidence": "docs/automation/backend-checkpoint.json#firstOperatingStability",
+      "G4": "PASS",
+      "G5": "WAIVED_BY_USER"
+    },
+    "accessMode": "GOOGLE_ONLY",
+    "accessModeApproval": "User explicitly requests removing browser shared-password prompt for all visitors and direct Google login",
+    "currentEvidence": "docs/automation/backend-checkpoint.json#googleOnlyEntry"
+  },
+  "releasePolicy": {
+    "G5": "WAIVED_BY_USER",
+    "basis": "Latest explicit user instruction; no Claude packet or false PASS",
+    "technicalGates": [
+      "G1",
+      "G2",
+      "G3",
+      "G4"
+    ]
+  },
+  "protectedRecoveryAudit": [
+    {
+      "path": "src/library.css",
+      "previousHash": "cc7e0bbe3a98119ac36c7f304c548c64a8707d6f20100c69668f5edb4584719c",
+      "gitHeadHash": "625ebc882da836d0776135d8602b1b28a82b5fb4201d12e8deb9fb37f640cc92",
+      "newHash": "ac4e709e6ee5770aa3c50e1e6900e787d000a693266e18c5df1af0b063e1e836",
+      "basis": "Prior explicit account UI and intuitive secondary controls approval; 32 added scoped lines, HEAD text preserved. Historical baseline bytes unavailable; forward scope only."
+    },
+    {
+      "path": "docs/design/20261010/00_README.md",
+      "previousHash": "322eb81cd576343edbf685e2ff67e9190f2afb89d7518ce12258a9adac5c4515",
+      "gitHeadHash": "322eb81cd576343edbf685e2ff67e9190f2afb89d7518ce12258a9adac5c4515",
+      "newHash": "a5be28f4fb67b1e8b9bdd9a604000eda302aae17385fb17af6d07cbaf5b58f15",
+      "basis": "Prior main norms reference approval and latest explicit local backup/G5 waiver decision; original architecture text preserved."
+    },
+    {
+      "path": "docs/design/20261010/02_ENGINE.md",
+      "previousHash": "31e6d8d7850183ceb0bae21a2a4aa7bef330469d404a9e64acf1d21e8fd46a21",
+      "gitHeadHash": "31e6d8d7850183ceb0bae21a2a4aa7bef330469d404a9e64acf1d21e8fd46a21",
+      "newHash": "8280631459169ad2f55de29f104bc6ac47f271ad937df3d44a3630be160dc603",
+      "basis": "Prior main norms reference approval and latest explicit local backup/G5 waiver decision; original architecture text preserved."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+/* Interface preferences are separate from the explicit essay body controls. */
+.gb.interface-text-large { --interface-font-size: 16px; }
+.gb.interface-text-small { --interface-font-size: 13px; }
+.gb:is(.interface-text-large, .interface-text-small) :is(
+  .gb-sidebar nav button, .gb-topbar button, .gb-primary, .gb-outline,
+  .library-search input, .library-search select, .library-tabs button,
+  .gb-auxiliary label, .gb-auxiliary input, .gb-auxiliary select, .gb-auxiliary button,
+  .tools-actions button, .feedback-card p, .feedback-card blockquote,
+  .feedback-card button, .annotations-panel label, dialog button, dialog label,
+  dialog input, dialog select
+) {
+  font-size: var(--interface-font-size) !important;
+  line-height: 1.6;
+}
+
+/* An explicit light high-contrast palette overrides both theme/color schemes.
+   Original page images and the essay's configured font/geometry are untouched. */
+.gb.high-contrast,
+.gb.high-contrast :is(
+  .gb-main, .gb-sidebar, .gb-topbar, .gb-auxiliary, .feedback-panel,
+  .reading-page, .editor-paper, .book-cover, .cover-border, .feedback-card,
+  .tools-note, .source-tools, .gb-modal, dialog, [role="dialog"], [class*="bg-"]
+) {
+  background-color: #fff !important;
+  background-image: none !important;
+  color: #111 !important;
+  border-color: #111 !important;
+}
+.gb.high-contrast :is(p, label, small, summary, button, input, select, textarea,
+  blockquote, h1, h2, h3, h4, span, strong, a) {
+  color: #111 !important;
+}
+.gb.high-contrast :is(button, input, select, textarea, .status) {
+  background-color: #fff !important;
+  border-color: #111 !important;
+}
+.gb.high-contrast .status { border: 1px solid #111; }
+.gb.high-contrast a { text-decoration: underline; }
+.gb.high-contrast mark { color: #111 !important; background-color: #ffeb3b !important; }
+.gb.high-contrast :focus-visible { outline: 3px solid #005fcc !important; outline-offset: 3px; }

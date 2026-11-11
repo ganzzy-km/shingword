@@ -1,0 +1,89 @@
+글빛 S4 계약 충돌 검토 발췌
+
+검토 범위: 제공된 Handoff 및 S3 소스 사본. Windows pytest를 재실행하지 않았다.
+ZIP CRC 검사: 이상 없음.
+SHA256SUMS.json 파일 8개: SHA-256 8/8 일치.
+별도 checkpoint (5).json과 ZIP checkpoint.json: 바이트 동일.
+
+Handoff expectation-contract-conflict.json의 원문:
+{
+  "status": "PENDING_INDEPENDENT_CONTRACT_REVIEW",
+  "conflictingFunction": "test_n08_other_role_gap_is_not_changed_or_approved",
+  "testPath": "C:\\Users\\USER\\.codex\\worktrees\\geulbit-v22\\글빛\\backend\\engine_tests\\test_interpretive_claim_candidates.py",
+  "testSha": "e75882beea60aee7da5e5334164b87568faa877c4ef4363936d7777f87a3e9d2",
+  "lineStart": 113,
+  "lineEnd": 118,
+  "frozenTestSource": "def test_n08_other_role_gap_is_not_changed_or_approved():\n    body=('현진건의 소설 「운수 좋은 날」에서 김첨지의 돌봄은 가족을 향한 책임감에서 나온다고 볼 수 있다. '\n          '이를 뒷받침하는 장면은 이효석의 소설 「메밀꽃 필 무렵」에서 동이가 물에 빠진 허 생원을 업어 건너게 하는 모습이다.')\n    r=run(body)\n    assert all(c['roles']==[] and SIGNAL not in c['claimSignals'] for c in r['roleCandidates'])\n    assert r['relations']==[]",
+  "legacyInput": "현진건의 소설 「운수 좋은 날」에서 김첨지의 돌봄은 가족을 향한 책임감에서 나온다고 볼 수 있다. 이를 뒷받침하는 장면은 이효석의 소설 「메밀꽃 필 무렵」에서 동이가 물에 빠진 허 생원을 업어 건너게 하는 모습이다.",
+  "legacyNfcLfSha256": "2edd9fb68c6797bfd1246ff7e6fa6ef54afc70732607e7fcb3082454804eaed8",
+  "sameN08PrefixCodePoints": 120,
+  "fullEssayNfcLfSha256": "b4303cfc3f6a649536d4a14736e41461d5b286598d941e1c34c09c6cc4902263",
+  "fullEssayIsLongerThanLegacyInput": true,
+  "sameTargetSentencesAndSpans": true,
+  "targetRoles": [
+    {
+      "essayId": "N08",
+      "sentenceId": "sentence-1",
+      "requestedAddedRole": "CLAIM_CANDIDATE",
+      "originalRole": [],
+      "text": "현진건의 소설 「운수 좋은 날」에서 김첨지의 돌봄은 가족을 향한 책임감에서 나온다고 볼 수 있다.",
+      "span": {
+        "start": 0,
+        "end": 54
+      },
+      "normalizedFullBodySha256": "b4303cfc3f6a649536d4a14736e41461d5b286598d941e1c34c09c6cc4902263",
+      "previousMissingReason": "NO_LEXICAL_OR_CONCEPTUAL_CLAIM_SIGNAL",
+      "expectationKind": "SYNTHETIC_DEVELOPMENT_NOT_INDEPENDENT_HUMAN_GOLD"
+    },
+    {
+      "essayId": "N08",
+      "sentenceId": "sentence-2",
+      "requestedAddedRole": "EVIDENCE_CANDIDATE",
+      "originalRole": [],
+      "text": "이를 뒷받침하는 장면은 이효석의 소설 「메밀꽃 필 무렵」에서 동이가 물에 빠진 허 생원을 업어 건너게 하는 모습이다.",
+      "span": {
+        "start": 55,
+        "end": 120
+      },
+      "normalizedFullBodySha256": "b4303cfc3f6a649536d4a14736e41461d5b286598d941e1c34c09c6cc4902263",
+      "previousMissingReason": "ACTION_LEMMA_OR_VERB_FORM_GUARD_NOT_MET_WITHOUT_QUOTE_OR_PAGE",
+      "expectationKind": "SYNTHETIC_DEVELOPMENT_NOT_INDEPENDENT_HUMAN_GOLD"
+    }
+  ],
+  "legacyExpectation": "All roleCandidates have roles==[]; relations==[]. Any new CLAIM/EVIDENCE violates this assertion.",
+  "S4Requirement": "N08 sentence-1 CLAIM and sentence-2 EVIDENCE, in both modes; old44 assertions and test file unchanged.",
+  "allowedPaths": [
+    "backend/app/analysis/structure.py",
+    "backend/engine_tests/test_remaining_role_candidates.py"
+  ],
+  "legacyTestOutsideScope": true,
+  "forbiddenWorkarounds": [
+    "skip/xfail/delete assertion",
+    "run old44 on a different engine and report candidate PASS",
+    "use essayId/versionId/test detection to avoid assertions",
+    "modify extra test without scope approval"
+  ],
+  "actualTestFailureRun": false,
+  "actualEngineRegressionEstablished": false,
+  "newAlgorithmImplemented": false,
+  "reviewQuestion": "Confirm a legacy-test expectation amendment is needed rather than silently weakening tests or adding caller-specific role behavior."
+}
+
+Handoff minimum-contract-amendment-proposal.json의 원문:
+{
+  "status": "PROPOSAL_ONLY_NOT_ADOPTED",
+  "affectedLegacyFile": "backend/engine_tests/test_interpretive_claim_candidates.py",
+  "affectedFunction": "test_n08_other_role_gap_is_not_changed_or_approved",
+  "why": "The old no-role guard was valid within the limited S3 task. It must not silently become a universal future-engine requirement.",
+  "existingScope": [
+    "backend/app/analysis/structure.py",
+    "backend/engine_tests/test_remaining_role_candidates.py"
+  ],
+  "existingScopeMaxFiles": 2,
+  "additionalPathRequiresExplicitApproval": true,
+  "possibleSeparateAmendment": "Explicitly review/refreeze this one phase-limited N08 expectation for S4 CLAIM/EVIDENCE additions while preserving S3 frozen code/receipt and forbidding cross-work automatic approval.",
+  "noSilentWaiver": true,
+  "noSkipOrXfail": true,
+  "noRunnerChangeRequired": true,
+  "acceptedNow": false
+}
