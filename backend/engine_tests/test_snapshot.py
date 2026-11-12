@@ -31,6 +31,38 @@ def test_deterministic_json_and_real_kiwi():
     assert a["manifest"]["analyzerVersion"] and a["manifest"]["engineHash"]
 
 
+def test_kiwi_wasm_preserves_spans_when_native_import_is_blocked():
+    root = Path(__file__).resolve().parents[2]
+    code = """
+import builtins
+import sys
+from unittest.mock import patch
+
+sys.path.insert(0, "backend/app")
+from analysis.snapshot import analyze_snapshot
+
+actual_import = builtins.__import__
+
+def block_native_kiwi(name, *args, **kwargs):
+    if name == "kiwipiepy":
+        raise ImportError("Native extension blocked")
+    return actual_import(name, *args, **kwargs)
+
+with patch("builtins.__import__", side_effect=block_native_kiwi):
+    result = analyze_snapshot("😀 학생이 책을 읽었다.", version_id="wasm")
+
+assert result["manifest"]["configuration"]["runtime"] == "wasm"
+morphology = result["sentences"][0]["morphology"]
+assert morphology["analyzer"] == "kiwi"
+assert morphology["alternatives"]
+assert [(t["surface"], t["pos"], t["start"], t["end"]) for t in morphology["tokens"][:3]] == [
+    ("😀", "W_EMOJI", 0, 1), ("학생", "NNG", 2, 4), ("이", "JKS", 4, 5),
+]
+assert any(t["lemma"] == "읽다" and t["pos"] == "VV" for t in morphology["tokens"])
+"""
+    subprocess.run([sys.executable, "-X", "utf8", "-c", code], cwd=root, check=True)
+
+
 @pytest.mark.parametrize("bad", [None, 12, "\ud800"])
 def test_invalid_input_has_explicit_error(bad):
     with pytest.raises(ValueError):

@@ -6,14 +6,13 @@ NFC/LF input, which the calling version service must persist before analysis.
 from __future__ import annotations
 
 import hashlib
-import importlib.metadata
 import json
 from pathlib import Path
 import re
 import unicodedata
 
 from .engine import split_sentences
-from .morphology import analyze_morphology, kiwi_available
+from .morphology import analyze_morphology, kiwi_available, kiwi_manifest
 from .quotation import extract_quotations
 
 SCHEMA_VERSION = "geulbit.analysis.snapshot/2"
@@ -43,11 +42,12 @@ def _hash(value: bytes) -> str:
 
 def _source_manifest() -> dict:
     directory = Path(__file__).parent
-    sources = {p.name: _hash(p.read_bytes()) for p in sorted(directory.glob("*.py"))}
+    sources = {p.name: _hash(p.read_bytes()) for p in sorted(directory.iterdir()) if p.suffix in {".py", ".mjs"}}
+    analyzer_version, configuration = kiwi_manifest()
     return {"engineVersion": ENGINE_VERSION, "engineHash": _hash(json.dumps(sources, sort_keys=True).encode()),
             "normalizationVersion": NORMALIZATION_VERSION,
-            "analyzer": "kiwi", "analyzerVersion": importlib.metadata.version("kiwipiepy"),
-            "configuration": {"modelType": "cong", "numWorkers": -1, "topN": 3},
+            "analyzer": "kiwi", "analyzerVersion": analyzer_version,
+            "configuration": configuration,
             "rulesetVersion": "not-applied", "offsetUnit": "unicode-code-point",
             "interval": "start-inclusive-end-exclusive"}
 

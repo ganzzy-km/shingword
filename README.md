@@ -58,6 +58,8 @@ pnpm install --frozen-lockfile
 
 `py` 명령이 없다면 설치된 Python 3.11 이상의 전체 경로로 `-m venv .venv`를 실행합니다. 프로젝트 경로에 한글이나 공백이 있어도 제공된 스크립트가 처리합니다.
 
+Windows 보안 정책 등으로 Kiwi Python 모듈을 로드할 수 없으면, 글빛은 설치된 CoNg 모델을 Node.js의 Kiwi WebAssembly에서 실행합니다. 이 경로에도 위의 Python 패키지 설치와 `pnpm install --frozen-lockfile`이 필요합니다. 형태소 분석은 컴퓨터에서 처리됩니다.
+
 ## 데이터베이스 초기화와 마이그레이션
 
 ```powershell
