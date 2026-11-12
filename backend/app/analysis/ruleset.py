@@ -9,8 +9,7 @@ from .norms_reference import rule_reference
 from .norms_catalogue import catalogue_manifest
 from .reviewed_norms import reviewed_records, lexical_records
 
-# Version 6 unifies reviewed display metadata and protects the known place name.
-RULESET_VERSION = "geulbit.local-reviewed/11"
+RULESET_VERSION = "geulbit.local-reviewed/12"
 RULE_TITLES = ["할 수 있다 · 의존 명사 띄어쓰기", "몇일 → 며칠", "외곡 → 왜곡",
                "상징적으러 → 상징적으로", "로서·로써의 의미 구별", "뿐의 띄어쓰기",
                "대로의 띄어쓰기", "만큼의 띄어쓰기"]
@@ -112,16 +111,26 @@ def local_findings(text, *, disabled=(), vocabulary=(), snapshot=None, candidate
 
 
 def expression_records():
-    descriptions=(('gb-expression-repeat','EXCESSIVE_REPETITION','반복 표현 검토','같은 설명이 집중적으로 되풀이되는지 확인해 주세요.'),
-                  ('gb-expression-vague','VAGUE_EXPRESSION','모호 표현 검토','이 표현의 의미를 조금 더 구체적으로 설명할 수 있는지 확인해 보세요.'))
+    descriptions = (
+        ('gb-expression-repeat', 'EXCESSIVE_REPETITION', '반복 표현 검토',
+         '같은 설명이 집중적으로 되풀이되는지 확인해 주세요.',
+         '독자는 책을 읽는다. 독자는 책을 읽는다. 독자는 책을 읽는다.',
+         '독자는 책을 읽는다. 독자는 책을 덮는다. 독자는 책을 건넨다.',
+         '이 시구의 반복은 의도적인 후렴이다. 독자는 책을 읽는다. 독자는 책을 읽는다. 독자는 책을 읽는다.'),
+        ('gb-expression-vague', 'VAGUE_EXPRESSION', '모호 표현 검토',
+         '이 표현의 의미를 조금 더 구체적으로 설명할 수 있는지 확인해 보세요.',
+         '나는 어떤 면에서 동의한다.',
+         '나는 그의 선택이 중요하다고 생각한다.',
+         '그는 “어떤 면에서 동의한다.”라고 말했다.'),
+    )
     return [{'rule_id':identifier,'kind':kind,'version':RULESET_VERSION,'category':'expression','categoryLabel':'표현 제안',
              'title':title,'scope':'직접 인용과 구체적인 작품 근거를 보호하는 제한된 문맥 검사',
              'execution':'CONTEXTUAL_MORPHOLOGY','condition':'(?!)','tier':'표현 제안','reason':reason,
              'suggestion':None,'autoApply':False,'selectionPolicy':'CONTEXT_REQUIRED','alternatives':[],
              'source':{'status':'LOCAL_HEURISTIC_NOT_NORMATIVE','url':None,'primaryReference':None,'legacyCaption':'로컬 표현 검토 휴리스틱','verifiedAt':None},
-             'positive_examples':['같은 설명의 불필요한 반복'],'negative_examples':['근거가 있는 신중한 해석'],'exception_examples':['인용·시의 의도적인 후렴'],
-             'examples':{'candidate':['같은 설명의 불필요한 반복'], 'normal':['근거가 있는 신중한 해석'], 'exception':['인용·시의 의도적인 후렴']}}
-            for identifier,kind,title,reason in descriptions]
+             'positive_examples':[positive],'negative_examples':[negative],'exception_examples':[exception],
+             'examples':{'candidate':[positive], 'normal':[negative], 'exception':[exception], 'exceptionVocabulary':[]}}
+            for identifier,kind,title,reason,positive,negative,exception in descriptions]
 
 
 def expression_findings(text,snapshot,candidates,quotes,protected,disabled):

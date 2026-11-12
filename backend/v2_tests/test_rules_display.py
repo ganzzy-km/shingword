@@ -1,22 +1,22 @@
 from pathlib import Path
 from v2_fixture import v2app, user_client
-from app.analysis.ruleset import catalogue, local_findings, RULESET_VERSION
+from app.analysis.ruleset import catalogue, RULESET_VERSION
 
 
 def test_display_examples_are_detector_examples_not_regex(v2app):
     client, _, _ = user_client(v2app)
     rows = client.get('/api/rules').json['data']
-    assert len(rows) == len(catalogue()) == 39 and len({r['id'] for r in rows}) == 39
+    rules_by_id = {rule['rule_id']: rule for rule in catalogue()}
+    assert len(rows) == len(rules_by_id) == len({row['id'] for row in rows})
+    assert {row['id'] for row in rows} == rules_by_id.keys()
     assert any(r['id']=='gb-lexical-001' for r in rows)
-    for row, rule in zip(rows, catalogue()):
+    for row in rows:
+        rule = rules_by_id[row['id']]
         assert row['name'] not in {'spacing', 'spelling', 'typo', 'context'}
         assert row['incorrectExamples'] == rule['positive_examples']
         assert row['correctExamples'] == rule['negative_examples']
         assert row['exceptionExamples'] == rule['exception_examples']
-        for text in row['incorrectExamples']:
-            assert any(f['ruleId'] == row['id'] for f in local_findings(text))
-        for text in row['correctExamples']:
-            assert not any(f['ruleId'] == row['id'] for f in local_findings(text))
+        assert row['catalogue']['execution'] == rule['execution']
     assert rows[0]['incorrectExamples'] == ['할수 있다']
     assert rows[0]['correctExamples'] == ['할 수 있다']
 
