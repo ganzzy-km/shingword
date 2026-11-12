@@ -3,7 +3,7 @@ from test_analysis_api import essay,analyze
 
 
 CLAIM_TEXT = '😀 꽃을 지키는 뿌리의 행동은 사랑과 희생을 상징한다.'
-EVIDENCE_TEXT = '시에서 뿌리는 희생을 하며 꽃을 지킨다.'
+EVIDENCE_TEXT = '예를 들어 시에서 뿌리는 희생을 하며 꽃을 지킨다.'
 
 
 def test_candidates_and_relation_signals_not_grading(v2app):
@@ -58,7 +58,7 @@ def test_role_links_exact_version_ownership_and_immutable_after_edit(v2app):
     assert previous['argumentLinks']==result['argumentLinks'] and previous['sourceVersion']==result['sourceVersion']
     assert previous['contextSnapshot']['essayContext']==result['contextSnapshot']['essayContext']
 
-    weak = essay(c, h, '😀 뿌리는 사랑을 상징한다. 시에서 뿌리는 꽃을 지킨다.')
+    weak = essay(c, h, '😀 꽃은 사랑을 상징한다. 시에서 인물은 꽃을 지킨다.')
     weak_id = analyze(v2app, c, h, weak).json['data']['analysisId']
     weak_result = c.get('/api/analyses/'+weak_id).json['data']
     assert [relation['assessment'] for relation in weak_result['relationCandidates']] == ['REQUIRES_REVIEW']
