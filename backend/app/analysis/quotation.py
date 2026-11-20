@@ -1,22 +1,16 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, field
 
 
-OPEN_TO_CLOSE = {"\"": "\"", "'": "'", "“": "”", "‘": "’"}
-CLOSE_TO_OPEN = {"”": "“", "’": "‘"}
-QUOTE_TYPES = {
-    "\"": "straight_double",
-    "'": "straight_single",
-    "“": "curly_double",
-    "‘": "curly_single",
-}
+OPEN_TO_CLOSE = {'"': '"', "'": "'", '“': '”', '‘': '’'}
+CLOSE_TO_OPEN = {'”': '“', '’': '‘'}
+QUOTE_TYPES = {'"': 'straight_double', "'": 'straight_single', '“': 'curly_double', '‘': 'curly_single'}
 
 
 @dataclass(frozen=True)
 class QuotationRange:
-    text: str
-    raw: str
+    _source: str = field(repr=False, compare=False)
     start: int
     end: int
     content_start: int
@@ -25,74 +19,132 @@ class QuotationRange:
     opener: str
     closer: str
     depth: int
+    quote_id: str
+    parent_id: str | None
+    status: str
+
+    @property
+    def text(self) -> str:
+        return self._source[self.content_start:self.content_end]
+
+    @property
+    def raw(self) -> str:
+        return self._source[self.start:self.end]
 
     def to_dict(self) -> dict:
-        data = asdict(self)
-        return {
-            "text": data["text"],
-            "raw": data["raw"],
-            "start": data["start"],
-            "end": data["end"],
-            "contentStart": data["content_start"],
-            "contentEnd": data["content_end"],
-            "quoteType": data["quote_type"],
-            "opener": data["opener"],
-            "closer": data["closer"],
-            "depth": data["depth"],
-        }
+        return {'text': self.text, 'raw': self.raw, 'start': self.start, 'end': self.end,
+                'contentStart': self.content_start, 'contentEnd': self.content_end,
+                'quoteType': self.quote_type, 'opener': self.opener, 'closer': self.closer,
+                'depth': self.depth}
+
+    def location(self) -> dict:
+        return {'quote_id': self.quote_id, 'start': self.start, 'end': self.end,
+                'content_start': self.content_start, 'content_end': self.content_end,
+                'delimiter_type': self.quote_type, 'depth': self.depth,
+                'parent_id': self.parent_id, 'status': self.status}
 
 
-def extract_quotations(text: str) -> list[QuotationRange]:
-    """네 가지 따옴표를 중첩 범위와 함께 찾는다.
+@dataclass
+class _Opening:
+    start: int
+    delimiter: str
+    depth: int
+    parent_id: str | None
+    slot: int
+    ambiguous: bool = False
+    crossed: bool = False
 
-    닫히지 않은 따옴표는 보호 범위로 확정하지 않는다. 작은따옴표가 단어 안의
-    아포스트로피로 쓰인 경우도 인용문으로 오인하지 않도록 영문자 사이에서는
-    건너뛴다.
+
+def _word(char: str) -> bool:
+    return char.isascii() and char.isalnum()
+
+
+def extract_quotations(text: str, *, include_unresolved: bool = False) -> list[QuotationRange]:
+    """Scan Unicode code points once. Unresolved entries mark only their delimiter.
+
+    Existing callers receive closed ranges in opening order. Text slices are lazy
+    so deeply nested input does not allocate a copy of each enclosing range.
     """
+    text = text or ''
+    stack: list[_Opening] = []
+    slots: list[QuotationRange | None] = []
+    active: dict[str, list[_Opening]] = {char: [] for char in OPEN_TO_CLOSE}
+    escaped = False
 
-    stack: list[tuple[str, int, int]] = []
-    found: list[QuotationRange] = []
-    for index, char in enumerate(text or ""):
-        if char == "'" and 0 < index < len(text) - 1:
-            if text[index - 1].isascii() and text[index - 1].isalnum() and text[index + 1].isascii() and text[index + 1].isalnum():
-                continue
+    def finish(opening, index, status, closer=''):
+        closed = status == 'CLOSED'
+        start = opening.start
+        slots[opening.slot] = QuotationRange(
+            text, start, index + 1 if closed else start + 1, start + 1,
+            index if closed else start + 1, QUOTE_TYPES[opening.delimiter],
+            opening.delimiter, closer, opening.depth, f'q{start}', opening.parent_id, status)
 
-        if char in CLOSE_TO_OPEN:
-            opener = CLOSE_TO_OPEN[char]
-            match_index = next((i for i in range(len(stack) - 1, -1, -1) if stack[i][0] == opener), None)
-            if match_index is None:
-                continue
-            open_char, start, depth = stack.pop(match_index)
-            found.append(_make_range(text, open_char, char, start, index, depth))
+    def pop():
+        opening = stack.pop()
+        active[opening.delimiter].pop()
+        return opening
+
+    for index, char in enumerate(text):
+        if char == '\\':
+            escaped = not escaped
             continue
-
-        if char in {'"', "'"}:
-            if stack and stack[-1][0] == char:
-                open_char, start, depth = stack.pop()
-                found.append(_make_range(text, open_char, char, start, index, depth))
+        if escaped:
+            escaped = False
+            continue
+        if char not in OPEN_TO_CLOSE and char not in CLOSE_TO_OPEN:
+            continue
+        previous = text[index - 1] if index else ''
+        following = text[index + 1] if index + 1 < len(text) else ''
+        if char in {"'", '’'} and _word(previous) and _word(following):
+            continue
+        opener = CLOSE_TO_OPEN.get(char, char)
+        straight = char in {'"', "'"}
+        matching = active[opener]
+        # An English trailing possessive outside a corresponding quotation.
+        if char in {"'", '’'} and _word(previous) and not _word(following) and not matching:
+            continue
+        looks_open = (not previous or previous.isspace() or previous in '([{') and bool(following and not following.isspace())
+        looks_closed = bool(previous and not previous.isspace()) and (not following or following.isspace() or not following.isalnum())
+        # Straight marks have no direction. Prefer clear adjacency, and only
+        # pair with the top frame. Same-kind nested openings stay unresolved.
+        closing = char in CLOSE_TO_OPEN or (straight and bool(matching) and not looks_open)
+        if closing:
+            if matching and stack[-1] is matching[-1]:
+                opening = pop()
+                status = 'MISMATCHED' if opening.crossed else 'AMBIGUOUS' if opening.ambiguous else 'CLOSED'
+                finish(opening, index, status, char)
             else:
-                stack.append((char, index, len(stack)))
+                # A closer aimed below the top crosses every intervening
+                # frame. Pop each once, keeping the scan linear.
+                if matching:
+                    target = matching[-1]
+                    while stack[-1] is not target:
+                        finish(pop(), index, 'MISMATCHED')
+                    finish(pop(), index, 'MISMATCHED', char)
+                elif stack:
+                    stack[-1].crossed = True
+                slots.append(QuotationRange(text, index, index + 1, index, index,
+                    QUOTE_TYPES[opener], '', char, len(stack),
+                    f'q{index}', f'q{stack[-1].start}' if stack else None, 'UNMATCHED_CLOSE'))
             continue
+        if straight and not matching and looks_closed and not looks_open:
+            slots.append(QuotationRange(text, index, index + 1, index, index,
+                QUOTE_TYPES[opener], '', char, len(stack), f'q{index}',
+                f'q{stack[-1].start}' if stack else None, 'UNMATCHED_CLOSE'))
+            continue
+        opening = _Opening(index, char, len(stack), f'q{stack[-1].start}' if stack else None,
+                           len(slots), ambiguous=straight and bool(matching))
+        if opening.ambiguous:
+            matching[-1].ambiguous = True
+        matching.append(opening)
+        stack.append(opening)
+        slots.append(None)
 
-        if char in {"“", "‘"}:
-            stack.append((char, index, len(stack)))
-
-    return sorted(found, key=lambda item: (item.start, -item.end))
-
-
-def _make_range(text: str, opener: str, closer: str, start: int, close_index: int, depth: int) -> QuotationRange:
-    return QuotationRange(
-        text=text[start + 1 : close_index],
-        raw=text[start : close_index + 1],
-        start=start,
-        end=close_index + 1,
-        content_start=start + 1,
-        content_end=close_index,
-        quote_type=QUOTE_TYPES[opener],
-        opener=opener,
-        closer=closer,
-        depth=depth,
-    )
+    while stack:
+        opening = pop()
+        status = 'MISMATCHED' if opening.crossed else 'AMBIGUOUS' if opening.ambiguous else 'UNCLOSED'
+        finish(opening, opening.start, status)
+    return [item for item in slots if item is not None and (include_unresolved or item.status == 'CLOSED')]
 
 
 def containing_quotation(start: int, end: int, ranges: list[QuotationRange]) -> QuotationRange | None:
@@ -101,4 +153,3 @@ def containing_quotation(start: int, end: int, ranges: list[QuotationRange]) -> 
 
 def overlaps_quotation(start: int, end: int, ranges: list[QuotationRange]) -> bool:
     return any(start < item.end and end > item.start for item in ranges)
-

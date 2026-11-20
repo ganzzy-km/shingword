@@ -17,9 +17,10 @@ import { validatedSpans } from "./feedback-spans"
 import { findMultipleTextSpans } from "./text-search"
 import WritingTools from "./WritingTools"
 import {toolsDefaults, type ToolsPreferences, type ToolsVersion} from "./writing-tools"
-import { argumentMarks, type ArgumentCandidate, type ArgumentLink } from "./argument-spans"
+import { argumentMarks, type ArgumentCandidate, type ArgumentLink, type TextOverlay } from "./argument-spans"
 import ArgumentText from "./ArgumentText"
 import ArgumentEditorLayer from "./ArgumentEditorLayer"
+import DualStructurePanel, { useDualStructure, type StructureView } from "./DualStructure"
 import "./argument-marks.css"
 import AnnotationsPanel, { useAnnotations } from "./AnnotationsPanel"
 import { bookSelection } from "./user-annotations"
@@ -40,6 +41,7 @@ type Writing = {
   revisionNumber: number
   characterCount: number
   latestAnalysisId?: string
+  currentVersionId?: string
   analysisRuns?: { id: string; createdAt: string; status: string }[]
 }
 type Finding = {
@@ -259,6 +261,12 @@ export default function Library({
     step: string
   } | null>(null)
   const [analysis, setAnalysis] = useState<Analysis | null>(null)
+  const [structureMode, setStructureMode] = useState<StructureView>("s4")
+  const [structureOverride, setStructureOverride] = useState<{writingId: string; versionId: string} | null>(null)
+  const [quoteEnabled, setQuoteEnabled] = useState(true)
+  const dualVersion = structureOverride?.writingId === writing.id ? structureOverride.versionId : analysis?.sourceVersion?.id ?? writing.currentVersionId
+  const dual = useDualStructure(view === "home" ? undefined : dualVersion,
+    analysis?.sourceVersion?.id === dualVersion ? analysis?.id : undefined)
   const [spans, setSpans] = useState<Record<string, Span | null>>({})
   const [snapshot, setSnapshot] = useState<string | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
@@ -446,6 +454,7 @@ export default function Library({
           content: now.content === value.content ? result.content : now.content,
           title: now.title === value.title ? result.title : now.title,
           analysisRuns: result.analysisRuns,
+          currentVersionId: result.currentVersionId,
           updatedAt: result.updatedAt,
         }))
         current.current = {
@@ -543,6 +552,7 @@ export default function Library({
     return () => node.removeEventListener("beforeinput", capture)
   }, [view])
   const loadAnalysis = async (id: string) => {
+    setStructureOverride(null)
     setAnalysis(null)
     setSelected(null)
     setSnapshot(null)
@@ -568,6 +578,8 @@ export default function Library({
     try {
       const value = await api.get<Writing>(`/writings/${record.id}`)
       setWriting(value)
+      setStructureOverride(value.currentVersionId ? {writingId: value.id, versionId: value.currentVersionId} : null)
+      setStructureMode("s4")
       current.current = value
       savedValue.current = JSON.stringify([
         value.title,
@@ -583,7 +595,10 @@ export default function Library({
       setSnapshot(null)
       setSpans({})
       setError("")
-      if (value.latestAnalysisId) await loadAnalysis(value.latestAnalysisId)
+      if (value.latestAnalysisId) {
+        await loadAnalysis(value.latestAnalysisId)
+        if (value.currentVersionId) setStructureOverride({writingId: value.id, versionId: value.currentVersionId})
+      }
       if (motion && prefs.theme === "bookshelf")
         await new Promise((resolve) => window.setTimeout(resolve, 420))
       setView(prefs.theme === "bookshelf" ? "reader" : "editor")
@@ -596,6 +611,8 @@ export default function Library({
   }
   const create = () => {
     setWriting(blank)
+    setStructureOverride(null)
+    setStructureMode("s4")
     current.current = blank
     savedValue.current = ""
     setSaved("아직 저장하지 않음")
@@ -695,6 +712,7 @@ export default function Library({
             `/analyses/${submitted.analysisId}`,
           )
           setAnalysis(result)
+          setStructureOverride(null)
           const source = result.sourceVersion?.content ?? original
           setSnapshot(source)
           setSpans(
@@ -719,6 +737,7 @@ export default function Library({
             ...now,
             analysisRuns: value.analysisRuns,
             latestAnalysisId: value.latestAnalysisId,
+            currentVersionId: value.currentVersionId,
             status: value.status,
           }))
           break
@@ -892,6 +911,18 @@ export default function Library({
     const changed=argumentContextChanged || (context && (context.work!==writing.work || context.inquiryQuestion!==writing.inquiryQuestion))
     return argumentMarks(contentPoints, changed ? null : snapshot, analysis?.id, analysis?.sourceVersion?.id, analysis?.argumentCandidates, analysis?.argumentLinks)
   }, [contentPoints, snapshot, analysis, argumentContextChanged, writing.work, writing.inquiryQuestion])
+  const overlays = useMemo<TextOverlay[]>(() => {
+    const record = dual.record
+    if (!record || record.sourceText !== writing.content) return []
+    const ranges: TextOverlay[] = quoteEnabled ? record.quotations.filter(quote => quote.status === "CLOSED")
+      .map(quote => ({ start: quote.start, end: quote.end, kind: "quote" })) : []
+    if (structureMode === "ai") for (const node of record.ai?.result?.nodes ?? []) {
+      for (const span of node.spans) ranges.push({ ...span, kind: node.role === "CLAIM" ? "claim" : "evidence" })
+    }
+    return ranges
+  }, [dual.record, writing.content, quoteEnabled, structureMode])
+  const visibleCandidates = structureMode === "s4" ? structure.candidates : []
+  const visibleLinks = structureMode === "s4" ? structure.links : []
   const selectArgument = (id: string) => {
     setManualHighlight(null)
     setSelectedArgument(id)
@@ -913,7 +944,7 @@ export default function Library({
   const renderText = (span: Span) => {
     const f = analysis?.findings.find((f) => f.id === selected),
       highlight = manualHighlight ?? (f ? validSpan(f) : matches[matchIndex])
-    return <ArgumentText points={contentPoints} range={span} candidates={structure.candidates} links={structure.links} highlight={highlight} focusedId={emphasizeSelected ? selectedArgument ?? focusedArgument : focusedArgument} onSelect={selectArgument} onJump={jumpArgument} annotations={annotations.marks} selectedAnnotation={selectedAnnotation} onAnnotation={openAnnotation} />
+    return <ArgumentText points={contentPoints} range={span} candidates={visibleCandidates} links={visibleLinks} overlays={overlays} highlight={highlight} focusedId={emphasizeSelected ? selectedArgument ?? focusedArgument : focusedArgument} onSelect={selectArgument} onJump={jumpArgument} annotations={annotations.marks} selectedAnnotation={selectedAnnotation} onAnnotation={openAnnotation} />
   }
 
   return (
@@ -1412,7 +1443,7 @@ export default function Library({
                       placeholder="첫 문장을 써보세요. 문단은 빈 줄로 구분할 수 있습니다."
                       spellCheck={false}
                     />
-                    <ArgumentEditorLayer editor={editor} links={structure.links} onJump={jumpArgument} onAnnotation={openAnnotation}><ArgumentText points={contentPoints} range={{start:0,end:contentPoints.length}} candidates={structure.candidates} links={structure.links} focusedId={emphasizeSelected ? selectedArgument ?? focusedArgument : focusedArgument} highlight={manualHighlight ?? (selected ? validSpans[selected] : matches[matchIndex])} mirror onSelect={selectArgument} onJump={jumpArgument} annotations={annotations.marks} selectedAnnotation={selectedAnnotation} /></ArgumentEditorLayer>
+                    <ArgumentEditorLayer editor={editor} links={visibleLinks} onJump={jumpArgument} onAnnotation={openAnnotation}><ArgumentText points={contentPoints} range={{start:0,end:contentPoints.length}} candidates={visibleCandidates} links={visibleLinks} overlays={overlays} focusedId={emphasizeSelected ? selectedArgument ?? focusedArgument : focusedArgument} highlight={manualHighlight ?? (selected ? validSpans[selected] : matches[matchIndex])} mirror onSelect={selectArgument} onJump={jumpArgument} annotations={annotations.marks} selectedAnnotation={selectedAnnotation} /></ArgumentEditorLayer>
                     </div>
                     <div className="editor-footer">
                       <span>
@@ -1533,7 +1564,12 @@ export default function Library({
               </section>
               <aside data-tour="feedback" ref={feedbackPanel} className="feedback-panel" aria-label="분석 결과와 내 주석" tabIndex={-1} aria-busy={!!job}>
                 <AnnotationsPanel writingId={writing.id} body={writing.content} version={analysis?.sourceVersion} selection={annotationFormOpen ? annotationSelection : null} notes={annotations.notes} positions={annotations.positions} selectedId={selectedAnnotation} error={annotations.error} onAccept={note=>{if(!annotations.accept(note))return;setSelectedAnnotation(note.id);setAnnotationFormOpen(true);setAnnotationSelection(null)}} onRemove={annotations.remove} onJump={openAnnotation} onDirtyChange={dirty=>{annotationDirty.current=dirty}} onClose={()=>{annotationDirty.current=false;setSelectedAnnotation(null);setAnnotationSelection(null);setAnnotationFormOpen(false)}} />
+                <DualStructurePanel key={writing.id} mode={structureMode} setMode={setStructureMode} record={dual.record}
+                  loadError={dual.error} refresh={dual.refresh} body={writing.content} quoteEnabled={quoteEnabled} setQuoteEnabled={setQuoteEnabled}
+                  prepareVersion={async () => { const version = await ensureToolsVersion(); setStructureOverride({writingId: current.current.id, versionId: version.id}) }}
+                  jump={span => { setManualHighlight(span); setSelected(null); jump(span) }} />
                 {job && <div className="version-notice" role="status"><strong>글을 분석하고 있습니다…</strong><p>{job.step}</p><progress aria-label="분석 진행률" value={job.progress} max={100} /><p>완료되면 새 결과가 표시됩니다. 이전 결과는 보존됩니다.</p></div>}
+                {structureMode === "s4" && <>
                 <div className="feedback-heading">
                   <Icon name="check" />
                   <h2>분석 피드백</h2>
@@ -1746,13 +1782,14 @@ export default function Library({
                     <span>규칙 기반 분석 · 자동 AI 전송 없음</span>
                   </div>
                 )}
+                </>}
               </aside>
             </div>
           </div>
         )}
         </div>
       </main>
-      {!children && view !== "home" && (analysis || job || annotations.notes.length > 0) && <nav className="mobile-work-nav" aria-label="글 작업 바로 이동" inert={Boolean(modal) || drawerOpen}>
+      {!children && view !== "home" && (writing.content.trim() || analysis || job || annotations.notes.length > 0) && <nav className="mobile-work-nav" aria-label="글 작업 바로 이동" inert={Boolean(modal) || drawerOpen}>
         <button onClick={() => {
           if(view === "editor") {editor.current?.scrollIntoView({block:"center",behavior:"auto"});jump({start:anchor,end:anchor})}
           else book.current?.scrollIntoView({block:"start",behavior:"auto"})

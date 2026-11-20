@@ -13,6 +13,7 @@ export type ArgumentLink = {
   directReference?: {form:string;kind:string;span:Span;assessment:string;reasons:string[];meaning:string}
   followingExplanation?:{sentenceNumber:number;span:Span};explanationText?:string
 }
+export type TextOverlay = Span & { kind: "quote" | "claim" | "evidence" }
 export function argumentMarks(points: string[], source: string | null, runId: string | undefined, versionId: string | undefined, candidates: ArgumentCandidate[] = [], links: ArgumentLink[] = []) {
   const stale = !!candidates.length && (source === null || points.join("") !== source)
   if (stale || !runId || !versionId) return { candidates: [], links: [], stale }
@@ -36,8 +37,19 @@ export function argumentMarks(points: string[], source: string | null, runId: st
   return { candidates: nodes, links: relations, stale }
 }
 
-export function argumentSegments(points: string[], range: Span, candidates: ArgumentCandidate[], links: ArgumentLink[], highlight?: Span | null, annotations: {id:string;span:Span}[] = []) {
+export function argumentSegments(points: string[], range: Span, candidates: ArgumentCandidate[], links: ArgumentLink[], highlight?: Span | null, annotations: {id:string;span:Span}[] = [], overlays: TextOverlay[] = []) {
   const cuts = new Set([range.start, range.end])
+  const events = new Map<number, [TextOverlay["kind"], number][]>()
+  for (const overlay of overlays) {
+    const start = Math.max(range.start, overlay.start), end = Math.min(range.end, overlay.end)
+    if (start >= end) continue
+    for (const [position, delta] of [[start, 1], [end, -1]]) {
+      cuts.add(position)
+      const event = events.get(position) ?? []
+      event.push([overlay.kind, delta])
+      events.set(position, event)
+    }
+  }
   for(const note of annotations) if(note.span.start<range.end && note.span.end>range.start) {
     cuts.add(Math.max(range.start,note.span.start));cuts.add(Math.min(range.end,note.span.end))
   }
@@ -52,11 +64,14 @@ export function argumentSegments(points: string[], range: Span, candidates: Argu
   const outgoing = new Map<string, ArgumentLink[]>()
   for (const link of links) outgoing.set(link.evidenceId, [...(outgoing.get(link.evidenceId) ?? []), link])
   let cursor = 0
+  const coverage = { quote: 0, claim: 0, evidence: 0 }
   return boundaries.slice(0,-1).map((start,i) => {
     const end = boundaries[i+1]
+    for (const [kind, delta] of events.get(start) ?? []) coverage[kind] += delta
     while (cursor < relevant.length && relevant[cursor].span.end <= start) cursor++
     const candidate = relevant[cursor]?.span.start <= start && relevant[cursor]?.span.end >= end ? relevant[cursor] : undefined
     return { start, end, text: points.slice(start,end).join(""), candidate,
+      quote: coverage.quote > 0, aiClaim: coverage.claim > 0, aiEvidence: coverage.evidence > 0,
       highlighted: !!highlight && highlight.start <= start && highlight.end >= end,
       arrows: candidate?.span.end === end ? outgoing.get(candidate.id) ?? [] : [] }
   })
