@@ -251,3 +251,120 @@ def test_admin_ai_status_uses_same_approved_terms_flag(v2app):
         response=admin.patch('/api/admin/ai',headers=headers,json={'enabled':False})
         assert response.status_code==200 and response.json['data']['externalApproved'] is approved
         assert response.json['data']['enabled'] is False
+
+
+def _header_text(data):
+    with fitz.open(stream=data,filetype='pdf') as doc:
+        return ''.join(page.get_text() for page in doc)
+
+
+def _header_compact(value):
+    return ''.join(value.split())
+
+
+def _header_run(app,client,headers,title,question,*,s4=True):
+    app.config['GEULBIT_S4_ENGINE']=s4
+    body='😀 인물은 동료의 답을 기다렸다. 이 행동은 타인의 선택을 존중하는 과정으로 읽힌다.'
+    response=client.post('/api/writings',headers=headers,json={'title':title,'inquiryQuestion':question,'content':body})
+    assert response.status_code==201
+    w=response.json['data'];identifier=analyze(app,client,headers,w).json['data']['analysisId']
+    return w,client.get('/api/analyses/'+identifier).json['data']
+
+
+def _header_edit(client,headers,writing,title,question):
+    current=client.get('/api/writings/'+writing['id']).json['data']
+    response=client.patch('/api/writings/'+writing['id'],headers=headers,json={'revisionNumber':current['revisionNumber'],'title':title,'inquiryQuestion':question})
+    assert response.status_code==200
+    return response.json['data']
+
+
+def _header_pdf(client,run):
+    import json
+    response=client.get('/api/analyses/'+run['id']+'/pdf');assert response.status_code==200
+    with fitz.open(stream=response.data,filetype='pdf') as doc:
+        source=json.loads(doc.embfile_get('geulbit-source.json'))
+    assert set(source)=={'schemaVersion','title','text','sha256','versionId','runId'}
+    assert source['schemaVersion']=='geulbit.pdf/1' and source['text']==run['sourceVersion']['content']
+    assert source['versionId']==run['essayVersionId'] and source['runId']==run['id']
+    return _header_compact(_header_text(response.data)),source
+
+
+def test_pdf_header_old_and_new_runs_keep_their_frozen_title_and_inquiry(v2app):
+    c,h,_=user_client(v2app)
+    old_title='동결된 첫 제목';old_question='기다림은 어떤 태도를 드러내는가? 😀'
+    new_title='수정된 현재 제목';new_question='바뀐 현재 질문은 무엇인가?'
+    w,first=_header_run(v2app,c,h,old_title,old_question)
+    assert first['contextSnapshot']['essayContext']['title']==old_title
+    assert first['contextSnapshot']['essayContext']['inquiryQuestion']==old_question
+    edited=_header_edit(c,h,w,new_title,new_question)
+    copied,source=_header_pdf(c,first)
+    assert _header_compact(old_title) in copied and _header_compact(old_question) in copied
+    assert _header_compact(new_title) not in copied and _header_compact(new_question) not in copied
+    assert source['title']==old_title
+    second_id=analyze(v2app,c,h,edited).json['data']['analysisId']
+    second=c.get('/api/analyses/'+second_id).json['data'];assert second['id']!=first['id']
+    copied,source=_header_pdf(c,second)
+    assert _header_compact(new_title) in copied and _header_compact(new_question) in copied
+    assert _header_compact(old_title) not in copied and _header_compact(old_question) not in copied
+    assert source['title']==new_title
+    copied,_=_header_pdf(c,first);assert _header_compact(old_question) in copied
+    after=c.get('/api/analyses/'+first['id']).json['data']
+    for name in ['contextSnapshot','inputManifest','result','sourceVersion']:
+        assert after[name]==first[name]
+
+
+def test_pdf_header_frozen_empty_values_do_not_borrow_later_current_values(v2app):
+    c,h,_=user_client(v2app);w,run=_header_run(v2app,c,h,'','')
+    assert run['contextSnapshot']['essayContext']['title']==''
+    assert run['contextSnapshot']['essayContext']['inquiryQuestion']==''
+    _header_edit(c,h,w,'나중에 입력한 제목','나중에 입력한 탐구질문인가?')
+    copied,source=_header_pdf(c,run)
+    assert _header_compact('제목 없는 글') in copied and source['title']=='제목 없는 글'
+    assert _header_compact('나중에 입력한 제목') not in copied
+    assert _header_compact('나중에 입력한 탐구질문인가?') not in copied and '탐구질문:' not in copied
+
+
+def test_pdf_header_legacy_absence_keeps_title_fallback_without_invented_question(v2app,monkeypatch):
+    from app.v2 import analysis_api
+    original=analysis_api.context_for
+    def legacy_context(item):
+        value=original(item);value.pop('essayContext',None);return value
+    monkeypatch.setattr(analysis_api,'context_for',legacy_context)
+    c,h,_=user_client(v2app);w,run=_header_run(v2app,c,h,'처음 제목','과거 질문인가?',s4=False)
+    assert 'essayContext' not in run['contextSnapshot']
+    _header_edit(c,h,w,'예전 형식의 현재 제목','현재 문서에만 있는 질문인가?')
+    copied,source=_header_pdf(c,run)
+    assert _header_compact('예전 형식의 현재 제목') in copied and source['title']=='예전 형식의 현재 제목'
+    assert _header_compact('현재 문서에만 있는 질문인가?') not in copied and '탐구질문:' not in copied
+    assert c.get('/api/analyses/'+run['id']).json['data']['contextSnapshot']==run['contextSnapshot']
+
+
+def test_pdf_header_partial_legacy_context_uses_its_frozen_question(v2app):
+    c,h,_=user_client(v2app);old_question='당시 동결된 질문은 무엇인가?';new_question='현재에만 기록한 질문인가?'
+    w,run=_header_run(v2app,c,h,'처음 제목',old_question,s4=False)
+    assert run['contextSnapshot']['essayContext']=={'work':'','inquiryQuestion':old_question}
+    _header_edit(c,h,w,'기존 방식의 현재 제목',new_question)
+    copied,source=_header_pdf(c,run)
+    assert _header_compact('기존 방식의 현재 제목') in copied and source['title']=='기존 방식의 현재 제목'
+    assert _header_compact(old_question) in copied and _header_compact(new_question) not in copied
+
+
+def test_pdf_header_optional_literal_inquiry_keeps_unicode_and_source_import():
+    import hashlib,json
+    from components.auth import Principal
+    user=Principal('synthetic-pdf-owner','synthetic-pdf-sub','USER','ACTIVE',1)
+    body='기호와 한글 😀 漢字를 보존하는 합성 본문이다.';question='<관점> & "타인의 선택"은 무엇인가? 😀'
+    kwargs={'owner_id':user.id,'title':'<제목> & 한글','text':body,'version_id':'header-v1','run_id':'header-run1',
+        'analysis':{'input':{'versionId':'header-v1','sha256':hashlib.sha256(body.encode()).hexdigest(),'codePoints':len(body)},'limitations':[]},
+        'font_path':Path(__file__).resolve().parents[2]/'public/fonts/noto-sans-kr-regular.ttf','max_pages':100,'max_bytes':20_000_000,'expires_at':100,'now':lambda:1}
+    baseline=operations_api.create_report(user,**kwargs)
+    assert '탐구질문:' not in _header_compact(_header_text(baseline))
+    data=operations_api.create_report(user,**kwargs,inquiry_question=question)
+    copied=_header_text(data)
+    assert _header_compact(question) in _header_compact(copied)
+    assert '<제목>' in copied and '😀' in copied and '漢字' in copied and '\ufffd' not in copied
+    for raw in [baseline,data]:
+        preview=operations_api.extract_preview(user,raw,max_bytes=20_000_000,max_pages=100)
+        assert preview['text']==body and preview['restoreAnalysis'] is False
+        with fitz.open(stream=raw,filetype='pdf') as doc:source=json.loads(doc.embfile_get('geulbit-source.json'))
+        assert source=={'schemaVersion':'geulbit.pdf/1','title':kwargs['title'],'text':body,'sha256':hashlib.sha256(body.encode()).hexdigest(),'versionId':'header-v1','runId':'header-run1'}

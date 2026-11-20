@@ -72,7 +72,7 @@ if ($portPids.Count -gt 0) { throw "5000번 포트를 PID $($portPids -join ', '
 $adminPortPids = @(netstat -ano -p tcp | Select-String ':5001\s+.*LISTENING\s+(\d+)$' | ForEach-Object { [regex]::Match($_.Line, 'LISTENING\s+(\d+)$').Groups[1].Value } | Where-Object { $_ } | Select-Object -Unique)
 if ($adminPortPids.Count -gt 0) { throw "5001번 로컬 관리자 포트를 PID $($adminPortPids -join ', ') 프로세스가 사용 중입니다. 다른 프로세스를 자동 종료하지 않았습니다." }
 
-& $PythonExe -c "import flask, flask_sqlalchemy, flask_migrate, waitress, argon2, kiwipiepy"
+& $PythonExe -c "import flask, flask_sqlalchemy, flask_migrate, waitress, argon2"
 if ($LASTEXITCODE -ne 0) { throw "Python 의존성이 없습니다. .\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt 를 실행해 주세요." }
 
 $Pnpm = Get-Command "pnpm.cmd" -ErrorAction SilentlyContinue

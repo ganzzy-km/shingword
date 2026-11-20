@@ -39,7 +39,12 @@ def test_permitted_forms_and_semantic_homographs_are_not_blanket_corrected(norma
 
 
 def test_all_new_links_detached_complete_source_and_hash_deterministic():
-    assert len(catalogue()) == 39 and ruleset_hash() == ruleset_hash()
+    rules = catalogue()
+    assert sum(rule['execution'] == 'BOUNDED_CANDIDATES' for rule in rules) == 39
+    assert {rule['rule_id'] for rule in rules if rule['execution'] == 'CONTEXTUAL_MORPHOLOGY'} == {
+        'gb-expression-repeat', 'gb-expression-vague',
+    }
+    assert ruleset_hash() == ruleset_hash()
     for provision, ids in provision_links().items():
         record = provision_reference(provision)
         assert set(ids) <= set(record['detectorRuleIds'])

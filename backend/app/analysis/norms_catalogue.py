@@ -14,7 +14,8 @@ CATALOGUE_PATH = Path(__file__).parent / "data" / "korean_norms_v1.json"
 
 
 def load_catalogue(path=CATALOGUE_PATH):
-    raw = Path(path).read_bytes()
+    # Older Windows checkouts can contain CRLF. Hash the canonical LF bytes.
+    raw = Path(path).read_bytes().replace(b"\r\n", b"\n")
     if hashlib.sha256(raw).hexdigest() != CATALOGUE_SHA256:
         raise ValueError("NORMS_CATALOGUE_INTEGRITY_INVALID")
     value = json.loads(raw)

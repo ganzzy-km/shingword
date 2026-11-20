@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import importlib.metadata
 import math
 import re
 import threading
-from dataclasses import dataclass
+
+from .kiwi_wasm import KiwiWasm
 
 
 VERB_TAGS = {"VV", "VA", "VX", "VCP", "VCN", "XSV", "XSA"}
@@ -26,6 +28,16 @@ def kiwi_error() -> str | None:
     return _KIWI_ERROR
 
 
+def kiwi_manifest() -> tuple[str | None, dict]:
+    kiwi = _get_kiwi()
+    configuration = {"modelType": "cong", "numWorkers": -1, "topN": 3}
+    if isinstance(kiwi, KiwiWasm):
+        configuration.update(runtime="wasm", numWorkers=1)
+        return kiwi.version, configuration
+    version = importlib.metadata.version("kiwipiepy") if kiwi is not None else None
+    return version, configuration
+
+
 def _get_kiwi():
     global _KIWI, _KIWI_ERROR
     if _KIWI is not None or _KIWI_ERROR is not None:
@@ -37,8 +49,11 @@ def _get_kiwi():
             from kiwipiepy import Kiwi
 
             _KIWI = Kiwi(num_workers=-1, model_type="cong")
-        except Exception as exc:  # 선택 의존성 실패 시 전체 분석을 중단하지 않는다.
-            _KIWI_ERROR = type(exc).__name__
+        except Exception as exc:
+            try:
+                _KIWI = KiwiWasm()
+            except Exception:  # 두 실행 경로가 실패하면 제한된 규칙 분석을 사용한다.
+                _KIWI_ERROR = type(exc).__name__
     return _KIWI
 
 

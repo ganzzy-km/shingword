@@ -4,26 +4,40 @@ import json
 import os
 from pathlib import Path
 import pytest
+from app.analysis.morphology import kiwi_manifest
 from app.analysis.snapshot import normalize_text
 
 
+CLAIM_TEXT = '😀 꽃을 지키는 뿌리의 행동은 사랑과 희생을 상징한다.'
+EVIDENCE_TEXT = '예를 들어 시에서 뿌리는 희생을 하며 꽃을 지킨다.'
+REVIEW_CLAIM = '😀 꽃은 사랑을 상징한다.'
+REVIEW_EVIDENCE = '시에서 인물은 꽃을 지킨다.'
+
+
 def _display_case(kind, *, long=False):
-    # Post-baseline contract amendment. The positive R0 pair is reused from
-    # test_r1_adds_independent_relation_without_erasing_prior_approval.
+    _, configuration = kiwi_manifest()
+    if configuration.get('runtime') == 'wasm':
+        # The fallback tokenizes the original pairs differently. Use the
+        # contextual fixtures verified on both runtimes for its display contract.
+        claim, evidence, score = (REVIEW_CLAIM, REVIEW_EVIDENCE, 4) if kind == 'review' else (CLAIM_TEXT, EVIDENCE_TEXT, 7)
+    elif kind == 'review':
+        claim, evidence, score = (
+            ('😀 가 뿌리는 사랑과 희생을 상징한다.', '시에서 뿌리는 희생을 하며 꽃을 지킨다.', 6) if long
+            else ('😀 뿌리는 사랑을 상징한다.', '시에서 뿌리는 꽃을 지킨다.', 4)
+        )
+    else:
+        claim = '😀 가 커튼과 창문과 가림막은 안전과 책임을 상징한다.' if long else '😀 커튼과 창문과 가림막은 안전과 책임을 상징한다.'
+        evidence, score = '그는 커튼과 창문과 가림막을 접는다.', 8
     if long:
-        claim='😀 가 뿌리는 사랑과 희생을 상징한다.' if kind=='review' else '😀 가 커튼과 창문과 가림막은 안전과 책임을 상징한다.'
-        evidence='시에서 뿌리는 희생을 하며 꽃을 지킨다.' if kind=='review' else '그는 커튼과 창문과 가림막을 접는다.'
         head=claim+'\n'+('독자는 조용히 글의 맥락을 차근차근 살핀다 '*70)+'.\n'+evidence+'\n\n'
         body=normalize_text((head+('독자는 천천히 낱말을 읽고 문장을 살핀다.\n\n'*1200))[:30000])
         evidence_number=3
     else:
-        claim='😀 뿌리는 사랑을 상징한다.' if kind=='review' else '😀 커튼과 창문과 가림막은 안전과 책임을 상징한다.'
-        evidence='시에서 뿌리는 꽃을 지킨다.' if kind=='review' else '그는 커튼과 창문과 가림막을 접는다.'
         body=normalize_text(claim+' '+evidence);evidence_number=2
     start=body.index(evidence)
     return {'body':body,'kind':kind,'claim':claim,'evidence':evidence,'claimSpan':{'start':0,'end':len(claim)},
             'evidenceSpan':{'start':start,'end':start+len(evidence)},'evidenceNumber':evidence_number,
-            'relationId':'relation-1-'+str(evidence_number),'score':(6 if long else 4) if kind=='review' else 8}
+            'relationId':'relation-1-'+str(evidence_number),'score':score}
 
 
 def _assert_display_contract(result, case):
@@ -120,6 +134,35 @@ def test_role_links_exact_version_ownership_and_immutable_after_edit(v2app,kind)
     assert previous['contextSnapshot']['essayContext']==result['contextSnapshot']['essayContext']
 
 
+@pytest.mark.parametrize('long', [False, True], ids=['short', 'long'])
+def test_contextual_evidence_marker_is_stable_across_kiwi_runtimes(v2app, long):
+    c, h, _ = user_client(v2app)
+    body = f'{CLAIM_TEXT} {EVIDENCE_TEXT}'
+    if long:
+        filler = '독자는 조용히 글의 맥락을 차근차근 살핀다 ' * 70
+        head = f'{CLAIM_TEXT}\n{filler}.\n{EVIDENCE_TEXT}\n\n'
+        body = (head + '독자는 천천히 낱말을 읽고 문장을 살핀다.\n\n' * 1200)[:30000]
+    w = essay(c, h, body)
+    ids = analyze(v2app, c, h, w).json['data']
+    result = c.get('/api/analyses/' + ids['analysisId']).json['data']
+    assert result['status'] == 'completed'
+    assert len(result['argumentLinks']) == 1
+    link = result['argumentLinks'][0]
+    assert link['assessment'] == 'SUFFICIENT_SIGNALS'
+    assert link['claimText'] == CLAIM_TEXT and link['evidenceText'] == EVIDENCE_TEXT
+    assert link['claimSpan']['start'] == 0
+    assert link['evidenceSpan']['start'] == body.index(EVIDENCE_TEXT)
+
+
+def test_context_missing_shared_reference_requires_review(v2app):
+    c, h, _ = user_client(v2app)
+    weak = essay(c, h, f'{REVIEW_CLAIM} {REVIEW_EVIDENCE}')
+    weak_id = analyze(v2app, c, h, weak).json['data']['analysisId']
+    weak_result = c.get('/api/analyses/'+weak_id).json['data']
+    assert [relation['assessment'] for relation in weak_result['relationCandidates']] == ['REQUIRES_REVIEW']
+    assert weak_result['argumentLinks'] == []
+
+
 def test_legacy_nearest_following_snapshot_does_not_gain_new_arrows():
     from types import SimpleNamespace
     from app.v2.analysis_api import argument_view
@@ -131,8 +174,6 @@ def test_legacy_nearest_following_snapshot_does_not_gain_new_arrows():
 
 @pytest.mark.parametrize('kind',['review','approved'],ids=['review-negative','approved-positive'])
 def test_actual_kiwi_browser_fixture_30000_codepoints(v2app,kind):
-    import json
-    from pathlib import Path
     c,h,_=user_client(v2app)
     case=_display_case(kind,long=True);body=case['body']
     w=essay(c,h,body);ids=analyze(v2app,c,h,w).json['data'];result=c.get('/api/analyses/'+ids['analysisId']).json['data']

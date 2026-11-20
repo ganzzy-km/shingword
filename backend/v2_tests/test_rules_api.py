@@ -1,5 +1,6 @@
 from v2_fixture import v2app,user_client
 from test_analysis_api import essay,analyze
+from app.analysis.ruleset import RULESET_VERSION
 from app.extensions import db
 from app.models import AppSetting
 
@@ -26,7 +27,13 @@ def test_rules_candidates_source_and_precise_span(v2app):
         assert w['content'][f['startOffset']:f['endOffset']]==f['current']
         assert f['metadata']['autoApply'] is False
     assert result['result']['manifest']['rulesetHash']==result['inputManifest']['context']['rulesetHash']
-    rules=c.get('/api/rules').json['data'];assert {f"gb-local-{i:03d}" for i in range(1,9)} <= {r["id"] for r in rules} and len(rules)==39 and not any(r['autoFixable'] for r in rules)
+    rules=c.get('/api/rules').json['data']
+    assert {f"gb-local-{i:03d}" for i in range(1,9)} <= {r["id"] for r in rules}
+    assert sum(r['catalogue']['execution'] == 'BOUNDED_CANDIDATES' for r in rules) == 39
+    assert {r['id'] for r in rules if r['catalogue']['execution'] == 'CONTEXTUAL_MORPHOLOGY'} == {
+        'gb-expression-repeat', 'gb-expression-vague',
+    }
+    assert not any(r['autoFixable'] for r in rules)
 
 
 def test_quote_protection_correct_spacing_and_legacy_uncertainty(v2app):
@@ -74,7 +81,7 @@ def test_simple_essay_normal_errors_quote_and_repeat_determinism(v2app):
         result=c.get('/api/analyses/'+ids['analysisId']).json['data']
         local=[f for f in result['findings'] if (f['rule'] or '').startswith('gb-local-')]
         for f in local:assert body[f['startOffset']:f['endOffset']]==f['current'] and f['metadata']['autoApply'] is False
-        assert result['inputManifest']['context']['rulesetVersion']=='geulbit.local-reviewed/9'
+        assert result['inputManifest']['context']['rulesetVersion'] == result['result']['manifest']['rulesetVersion'] == RULESET_VERSION
         norms=result['inputManifest']['context']['normsCatalogue']
         assert norms==result['result']['manifest']['normsCatalogue']
         assert norms['defaultReference'] and norms['provisionCount']==134

@@ -1,0 +1,14 @@
+# Separate Windows CPU venv; never install into the operating service venv.
+paddlepaddle==3.2.2
+paddleocr==3.5.0
+paddlex[ocr]==3.5.0
+numpy==1.26.4
+pypdfium2==4.30.0
+pypdf==6.1.1
+torch==2.8.0+cpu
+torchvision==0.23.0+cpu
+transformers==4.57.1
+accelerate==1.10.1
+sentencepiece==0.2.1
+psutil==7.1.0
+# Full resolved dependency freeze and third-party notices accompany the manifest.
