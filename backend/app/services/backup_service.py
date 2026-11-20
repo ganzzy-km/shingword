@@ -23,7 +23,7 @@ MAGIC=b'GEULBIT-BACKUP-1\0'
 LIMIT=64*1024*1024
 from ..storage import SCHEMA_HEAD
 REVISION=SCHEMA_HEAD
-SUPPORTED_REVISIONS={'0003_resource_ownership','0004_user_annotations',REVISION}
+SUPPORTED_REVISIONS={'0003_resource_ownership','0004_user_annotations','0005_writing_tools',REVISION}
 
 
 def physical_disk(path):
@@ -141,6 +141,8 @@ def restore_bundle(data,key,target,authority,*,now=None,revision=REVISION):
         live_rubrics={r[0] for r in live.execute('SELECT id FROM rubric')}
         live_works={r[0] for r in live.execute('SELECT id FROM works')}
         live_quotes={r[0] for r in live.execute('SELECT id FROM quote_card')}
+        budget_filter = "key='ai_monthly_usage' OR substr(key,1,9)='ai_usage_'"
+        live_budget = live.execute(f'SELECT key,value,created_at,updated_at FROM app_settings WHERE {budget_filter}').fetchall() if schema_revision == '0006_dual_structure' else None
     members,manifest=read_bundle(data,key,now,revision=schema_revision)
     if manifest.get('sourceIdentity')!=digest(str(authority.resolve()).encode()):raise ValueError('BACKUP_AUTHORITY_MISMATCH')
     # An old encrypted archive must never recreate erased Google identity.
@@ -221,6 +223,12 @@ def restore_bundle(data,key,target,authority,*,now=None,revision=REVISION):
                 restored_status='INACTIVE' if not latest or latest[0]!='ACTIVE' or status=='INACTIVE' else 'ACTIVE'
                 c.execute('UPDATE users SET status=?,session_version=? WHERE id=?',(restored_status,max(version,latest[1] if latest else version)+1,identifier))
             c.execute("UPDATE app_settings SET value='false' WHERE key='ai_enabled'")
+            if live_budget is not None:
+                # Reopening a quarantine cannot resurrect external consent or
+                # restore an older global reservation ledger from the archive.
+                c.execute("UPDATE consents SET revoked_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE kind='AI_STRUCTURE' AND revoked_at IS NULL")
+                c.execute(f'DELETE FROM app_settings WHERE {budget_filter}')
+                c.executemany('INSERT INTO app_settings(key,value,created_at,updated_at) VALUES (?,?,?,?)', live_budget)
             # Mark restoration as quarantined; this is never a server startup approval.
             c.execute("INSERT OR REPLACE INTO app_settings(key,value,created_at,updated_at) VALUES ('restore_quarantine','true',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)")
             for entry in revocations:

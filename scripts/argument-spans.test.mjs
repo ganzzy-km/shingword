@@ -23,5 +23,13 @@ const longPoints=Array.from('가😀 문장. '.repeat(5000)).slice(0,30000),long
 const longNodes=Array.from({length:1000},(_,i)=>({id:'n'+i,analysisRunId:'a1',essayVersionId:'v1',span:{start:i*30,end:i*30+20},quote:longPoints.slice(i*30,i*30+20).join(''),roles:['CLAIM_CANDIDATE'],signals:[]}))
 const started=performance.now();const longMarks=argumentMarks(longPoints,longText,'a1','v1',longNodes,[]),parts=argumentSegments(longPoints,{start:0,end:30000},longMarks.candidates,[])
 assert.equal(parts.map(s=>s.text).join(''),longText)
+const unicode=Array.from('가😀 “안 ‘속😀’ 끝” 뒤')
+const nested=argumentSegments(unicode,{start:1,end:unicode.length},[],[],null,[],[
+  {start:3,end:13,kind:'quote'},{start:6,end:10,kind:'quote'},
+  {start:5,end:11,kind:'evidence'},{start:1,end:8,kind:'claim'},
+])
+assert.equal(nested.map(s=>s.text).join(''),unicode.slice(1).join(''))
+assert.ok(nested.some(s=>s.text.includes('😀')&&s.quote&&s.aiEvidence))
+assert.ok(nested.some(s=>s.quote&&s.aiClaim&&s.aiEvidence))
 const proof={status:'PASS',unicode:true,staleClaimEvidenceContext:true,versionAndRunIsolation:true,pageBoundary:true,codePoints:30000,marks:1000,milliseconds:+(performance.now()-started).toFixed(2)}
 mkdirSync('artifacts/argument-links',{recursive:true});writeFileSync('artifacts/argument-links/span-results.json',JSON.stringify(proof,null,2));console.log(JSON.stringify(proof))

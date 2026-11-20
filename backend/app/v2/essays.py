@@ -67,6 +67,8 @@ def freeze_version(item,data):
         db.session.add(version);db.session.flush()
     item.current_version_id=version.id
     if not item.original_version_id:item.original_version_id=version.id
+    from .dual_structure_api import pin_protected_version
+    pin_protected_version(version)
     db.session.flush();return version
 
 

@@ -1,17 +1,17 @@
-import { argumentSegments, type ArgumentCandidate, type ArgumentLink } from "./argument-spans"
+import { argumentSegments, type ArgumentCandidate, type ArgumentLink, type TextOverlay } from "./argument-spans"
 import type { Span } from "./book-layout"
 
-export default function ArgumentText({points, range, candidates, links, highlight, focusedId, mirror = false, onSelect, onJump, annotations = [], selectedAnnotation, onAnnotation}: {
+export default function ArgumentText({points, range, candidates, links, highlight, focusedId, mirror = false, onSelect, onJump, annotations = [], selectedAnnotation, onAnnotation, overlays = []}: {
   points: string[]; range: Span; candidates: ArgumentCandidate[]; links: ArgumentLink[]; highlight?: Span | null
   focusedId: string | null; mirror?: boolean; onSelect: (id: string) => void; onJump: (link: ArgumentLink) => void
-  annotations?: {id:string;span:Span}[]; selectedAnnotation?:string|null;onAnnotation?:(id:string)=>void
+  annotations?: {id:string;span:Span}[]; selectedAnnotation?:string|null;onAnnotation?:(id:string)=>void; overlays?: TextOverlay[]
 }) {
-  return <>{argumentSegments(points,range,candidates,links,highlight,annotations).map(segment => {
+  return <>{argumentSegments(points,range,candidates,links,highlight,annotations,overlays).map(segment => {
     const c=segment.candidate, claim=c?.roles.includes("CLAIM_CANDIDATE"), evidence=c?.roles.includes("EVIDENCE_CANDIDATE")
     const interactive = !!c && !mirror
     return <span key={segment.start}>
       <span data-argument-id={c?.id} data-start={segment.start} data-end={segment.end}
-        className={`argument-fragment ${annotations.some(n=>n.id===selectedAnnotation && n.span.start<=segment.start && n.span.end>=segment.end) ? "annotation-focused" : ""} ${claim ? "argument-claim" : ""} ${evidence ? "argument-evidence" : ""} ${c?.id === focusedId ? "argument-focused" : ""} ${segment.highlighted ? "argument-selected" : ""}`}
+        className={`argument-fragment ${annotations.some(n=>n.id===selectedAnnotation && n.span.start<=segment.start && n.span.end>=segment.end) ? "annotation-focused" : ""} ${claim ? "argument-claim" : ""} ${evidence ? "argument-evidence" : ""} ${c?.id === focusedId ? "argument-focused" : ""} ${segment.highlighted ? "argument-selected" : ""} ${segment.quote ? "quotation-range" : ""} ${segment.aiClaim ? "dual-ai-claim" : ""} ${segment.aiEvidence ? "dual-ai-evidence" : ""}`}
         aria-hidden={mirror || undefined} role={interactive ? "button" : undefined} tabIndex={interactive ? 0 : undefined}
         aria-label={interactive ? `${claim ? "주장" : "근거"} 후보: ${c.quote}` : undefined}
         onClick={interactive ? () => onSelect(c.id) : undefined}

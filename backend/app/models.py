@@ -182,6 +182,46 @@ class WritingVersion(db.Model, TimestampMixin):
     normalization_version = db.Column(db.String(40))
 
 
+class EssayStructureMap(db.Model):
+    __tablename__ = 'essay_structure_maps'
+    version_id = db.Column(db.String(36), db.ForeignKey('writing_version.id', ondelete='CASCADE'), primary_key=True)
+    body_hash = db.Column(db.String(64), nullable=False)
+    map_version = db.Column(db.String(40), nullable=False)
+    sentence_map = db.Column(db.JSON)
+    quotation_ranges = db.Column(db.JSON)
+    protected_source = db.Column(db.Boolean, nullable=False, default=False, server_default='0')
+
+
+class EssayStructureRun(db.Model, TimestampMixin):
+    __tablename__ = 'essay_structure_runs'
+    id = db.Column(db.String(36), primary_key=True, default=uuid4)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    writing_id = db.Column(db.String(36), db.ForeignKey('writing.id', ondelete='CASCADE'), nullable=False)
+    version_id = db.Column(db.String(36), db.ForeignKey('writing_version.id', ondelete='CASCADE'), nullable=False)
+    body_hash = db.Column(db.String(64), nullable=False)
+    cache_key = db.Column(db.String(64), nullable=False)
+    engine = db.Column(db.String(8), nullable=False, default='AI')
+    provider = db.Column(db.String(24), nullable=False)
+    model = db.Column(db.String(128), nullable=False)
+    prompt_version = db.Column(db.String(40), nullable=False)
+    settings = db.Column(db.JSON, nullable=False)
+    status = db.Column(db.String(20), nullable=False)
+    result = db.Column(db.JSON)
+    usage = db.Column(db.JSON)
+    reserved_cost_units = db.Column(db.Integer, nullable=False)
+    error_code = db.Column(db.String(48))
+    deadline_at = db.Column(db.DateTime(timezone=True), nullable=False)
+    completed_at = db.Column(db.DateTime(timezone=True))
+    __table_args__ = (
+        db.Index('ix_structure_run_version_owner', 'version_id', 'user_id', 'created_at'),
+        db.Index('ix_structure_run_active', 'status', 'deadline_at'),
+        db.Index('uq_structure_run_cache_active', 'cache_key', unique=True,
+                 sqlite_where=db.text("status IN ('QUEUED','RUNNING','COMPLETED')")),
+        db.CheckConstraint("engine='AI' AND status IN ('QUEUED','RUNNING','COMPLETED','FAILED','REVIEW_REQUIRED')"),
+        db.CheckConstraint('reserved_cost_units>0'),
+    )
+
+
 class UserAnnotation(db.Model, TimestampMixin):
     __tablename__ = 'user_annotations'
     __table_args__ = (db.CheckConstraint('span_start>=0 AND span_end>span_start'),

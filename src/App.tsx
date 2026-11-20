@@ -4591,6 +4591,42 @@ function AdminOperations() {
   return <section style={{padding: 20}}><h2>계정 승인 및 운영</h2><p>{message}</p>{users.map(u => <p key={u.id} style={{overflowWrap: "anywhere"}}>{u.id} · {u.role} · {u.status}{["ACTIVE", "INACTIVE"].map(status => <button className="gb-outline" key={status} onClick={async () => { try { await api.patch(`/admin/users/${u.id}`, {status}); await load() } catch(e) { setMessage(errorMessage(e)) } }}>{status === "ACTIVE" ? "승인" : "비활성화"}</button>)}</p>)}<button className="gb-outline" onClick={async () => {try {await api.patch("/admin/ai",{enabled:false});setMessage("AI 기능을 껐습니다.")} catch(e) {setMessage(errorMessage(e))}}}>AI 기능 끄기</button></section>
 }
 
+function LoginScreen({ code, error, retry }: { code: string; error: string; retry: () => void }) {
+  const [google, setGoogle] = useState<"checking" | "available" | "unavailable" | "unknown">("checking")
+  const [attempt, setAttempt] = useState(0)
+
+  useEffect(() => {
+    if (!error) return
+    let current = true
+    setGoogle("checking")
+    void api.get<{ externalAuthentication: string }>("/health").then(health => {
+      if (!current) return
+      if (health?.externalAuthentication === "CONFIGURED_UNVERIFIED") setGoogle("available")
+      else if (health?.externalAuthentication === "PENDING_EXTERNAL") setGoogle("unavailable")
+      else setGoogle("unknown")
+    }).catch(() => { if (current) setGoogle("unknown") })
+    return () => { current = false }
+  }, [error, attempt])
+
+  return <main className="gb auth-screen">
+    <section className="auth-card">
+      <h1>글빛</h1>
+      <h2>{code === "LOGGED_OUT" ? "로그아웃 완료" : "로그인 상태 확인"}</h2>
+      <p role={error ? "alert" : undefined}>{error || "서버에서 로그인 상태를 확인하고 있습니다…"}</p>
+      {code && <p className="auth-code">{code}</p>}
+      {error && <>
+        {google === "available" && <p>Google 로그인 후 승인된 계정으로 이용할 수 있습니다.</p>}
+        {google === "unavailable" && <p>이 서버에는 Google 로그인이 연결되어 있지 않습니다.</p>}
+        {google === "unknown" && <p>Google 로그인 연결 상태를 확인하지 못했습니다. 네트워크 연결을 확인하고 다시 시도해 주세요.</p>}
+        <div className="account-actions">
+          {google === "available" && <a className="gb-primary" href="/api/auth/login">Google 로그인</a>}
+          <button className="gb-outline" onClick={() => { retry(); setAttempt(value => value + 1) }}>상태 다시 확인</button>
+        </div>
+      </>}
+    </section>
+  </main>
+}
+
 export default function App() {
   const sessionIdentity = useRef<string | null>(null)
   const [sessionReady, setSessionReady] = useState(false)
@@ -4732,7 +4768,7 @@ export default function App() {
     setSessionCode("LOGGED_OUT"); setSessionError("로그아웃했습니다.")
     return true
   }
-  const loginScreen = <main className="gb auth-screen"><section className="auth-card"><h1>글빛</h1><h2>{sessionCode === "LOGGED_OUT" ? "로그아웃 완료" : "로그인 상태 확인"}</h2><p role={sessionError ? "alert" : undefined}>{sessionError || "서버에서 로그인 상태를 확인하고 있습니다…"}</p>{sessionCode && <p className="auth-code">{sessionCode}</p>}{sessionError && <><p>{sessionCode === "NETWORK_ERROR" ? "네트워크 연결을 확인하고 다시 시도해 주세요." : "Google 로그인 후 승인된 계정으로 이용할 수 있습니다. 세션이 만료됐다면 다시 로그인해 주세요."}</p><div className="account-actions"><a className="gb-primary" href="/api/auth/login">Google 로그인</a><button className="gb-outline" onClick={() => checkSession.current()}>상태 다시 확인</button></div></>}</section></main>
+  const loginScreen = <LoginScreen code={sessionCode} error={sessionError} retry={() => checkSession.current()} />
 
   // Writing and analysis routes belong to the current two-theme UI.
   // Keep existing resource/settings implementations inside that same shell.

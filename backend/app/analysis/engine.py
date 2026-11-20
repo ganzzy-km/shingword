@@ -13,25 +13,23 @@ TRAILING_CLOSERS = "\"'”’)]}」』】"
 
 
 def _sentence_spans(paragraph):
-    quotations = extract_quotations(paragraph)
-
-    def containing_quotation(position):
-        matches = [item for item in quotations if item.start < position < item.end - 1]
-        return max(matches, key=lambda item: item.end - item.start, default=None)
-
-    def quotation_ends_sentence(position, quotation):
-        remaining_quote = paragraph[position + 1 : quotation.end - 1]
-        if remaining_quote.strip(SENTENCE_ENDINGS + " \t"):
-            return False
-        following = paragraph[quotation.end :]
-        return not following or following[0].isspace()
+    quotations = []
+    for quote in extract_quotations(paragraph):
+        if not quotations or quote.start >= quotations[-1][0].end:
+            last_content = quote.content_start + len(quote.text.rstrip(SENTENCE_ENDINGS + " \t"))
+            quotations.append((quote, last_content))
 
     spans = []
     start = 0
     index = 0
+    quote_index = 0
     while index < len(paragraph):
         character = paragraph[index]
-        quotation = containing_quotation(index)
+        while quote_index < len(quotations) and index >= quotations[quote_index][0].end - 1:
+            quote_index += 1
+        quotation = None
+        if quote_index < len(quotations) and quotations[quote_index][0].start < index:
+            quotation, last_content = quotations[quote_index]
         if character == "\n" and quotation is None:
             if paragraph[start:index].strip():
                 spans.append((start, index))
@@ -39,7 +37,8 @@ def _sentence_spans(paragraph):
             index += 1
             continue
         if character in SENTENCE_ENDINGS:
-            if quotation is not None and not quotation_ends_sentence(index, quotation):
+            if quotation is not None and (index + 1 < last_content or
+                    (quotation.end < len(paragraph) and not paragraph[quotation.end].isspace())):
                 index += 1
                 continue
             end = quotation.end if quotation is not None else index + 1
@@ -62,11 +61,11 @@ def split_sentences(text):
     results = []
     sentence_number = 0
     cursor = 0
-    for paragraph_number, paragraph in enumerate(re.split(r"\n\s*\n", text), 1):
-        if not paragraph.strip():
-            cursor += len(paragraph) + 2
-            continue
-        start_base = text.find(paragraph, cursor)
+    separators = re.finditer(r"\n\s*\n|\Z", text)
+    for paragraph_number, separator in enumerate(separators, 1):
+        start_base = cursor
+        paragraph = text[cursor:separator.start()]
+        cursor = separator.end()
         for span_start, span_end in _sentence_spans(paragraph):
             raw_sentence = paragraph[span_start:span_end]
             sentence = raw_sentence.strip()
@@ -76,7 +75,6 @@ def split_sentences(text):
             relative = span_start + len(raw_sentence) - len(raw_sentence.lstrip())
             start = start_base + relative
             results.append({"paragraph": paragraph_number, "number": sentence_number, "text": sentence, "start": start, "end": start + len(sentence)})
-        cursor = start_base + len(paragraph)
     return results
 
 

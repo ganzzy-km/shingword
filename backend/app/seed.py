@@ -75,5 +75,11 @@ def recover_interrupted_jobs():
             target = None
         if target:
             target.status = "처리 실패"
-    if jobs or ocr_runs:
+    from .models import EssayStructureRun, utcnow
+    interrupted_structure = db.session.execute(db.update(EssayStructureRun).where(
+        EssayStructureRun.status.in_(['QUEUED', 'RUNNING'])).values(
+        status='FAILED', error_code='AI_INTERRUPTED_OR_TIMEOUT', completed_at=utcnow())).rowcount
+    if jobs or ocr_runs or interrupted_structure:
         db.session.commit()
+    else:
+        db.session.rollback()

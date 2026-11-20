@@ -1,0 +1,43 @@
+{
+  "classification": "SYNTHETIC_UNREVIEWED",
+  "cases": [
+    {
+      "id": "reading-time",
+      "text": "😀 도서관은 점심시간에도 문을 열어야 한다. 점심시간에 책을 찾는 학생들이 교실에서 기다린다.",
+      "gold": {
+        "nodes": [
+          {"id":"c","role":"CLAIM","basis":"EXPLICIT","spans":[{"sentenceId":"s1","text":"도서관은 점심시간에도 문을 열어야 한다.","occurrence":1}]},
+          {"id":"e","role":"EVIDENCE","basis":"EXPLICIT","spans":[{"sentenceId":"s2","text":"","occurrence":1}]}
+        ],
+        "relations": [{"sourceId":"e","targetId":"c","type":"SUPPORTS","basis":"EXPLICIT"}]
+      }
+    },
+    {
+      "id": "mentioned-quotation",
+      "text": "공책 첫 장에는 “메모 ‘예시’”라는 제목을 적었다.",
+      "gold": {"nodes":[],"relations":[]}
+    },
+    {
+      "id": "combined-evidence",
+      "text": "우천 시에도 쉴 자리가 필요하다. 지난 비 오는 날 벤치가 젖었다. 학생들은 비가 그칠 때까지 서 있었다.",
+      "gold": {
+        "nodes": [
+          {"id":"c","role":"CLAIM","basis":"EXPLICIT","spans":[{"sentenceId":"s1","text":"","occurrence":1}]},
+          {"id":"e","role":"EVIDENCE","basis":"EXPLICIT","spans":[{"sentenceId":"s2","text":"","occurrence":1},{"sentenceId":"s3","text":"","occurrence":1}]}
+        ],
+        "relations": [{"sourceId":"e","targetId":"c","type":"SUPPORTS","basis":"IMPLICIT"}]
+      }
+    },
+    {
+      "id": "qualification",
+      "text": "교실 창문을 열어 환기하자. 실외 공기가 나쁜 날에는 창문을 닫아야 한다.",
+      "gold": {
+        "nodes": [
+          {"id":"c","role":"CLAIM","basis":"EXPLICIT","spans":[{"sentenceId":"s1","text":"","occurrence":1}]},
+          {"id":"e","role":"EVIDENCE","basis":"IMPLICIT","spans":[{"sentenceId":"s2","text":"실외 공기가 나쁜 날","occurrence":1}]}
+        ],
+        "relations": [{"sourceId":"e","targetId":"c","type":"QUALIFIES","basis":"EXPLICIT"}]
+      }
+    }
+  ]
+}

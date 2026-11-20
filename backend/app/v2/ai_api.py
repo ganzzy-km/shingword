@@ -90,10 +90,12 @@ def preview(identifier):
     return success({'context':ctx.payload,'previewHash':digest,'externalEnabled':enabled() and current_app.config.get('EXTERNAL_AI_TERMS_APPROVED') is True})
 
 
-def reserve_budget(uid):
+def reserve_budget(uid, *, call_cost=None, commit=True):
     limits=(db.session.get(AppSetting,'ai_limits').value if db.session.get(AppSetting,'ai_limits') else current_app.config.get('AI_LIMITS'))
     required=['dailyRequests','monthlyBudgetUnits','callCostUnits','cooldownSeconds','concurrency']
     if not isinstance(limits,dict) or any(type(limits.get(k)) is not int or limits[k]<0 for k in required) or any(limits[k]==0 for k in ('dailyRequests','monthlyBudgetUnits','callCostUnits','concurrency')):return False
+    cost = limits['callCostUnits'] if call_cost is None else call_cost
+    if type(cost) is not int or cost <= 0:return False
     # Serialize SQLite writes before reading/reserving budget. No transaction
     # survives the provider call. Accounting uses approved integer cost units.
     db.session.execute(db.update(AppSetting).where(AppSetting.key=='ai_enabled').values(value=AppSetting.value))
@@ -105,15 +107,16 @@ def reserve_budget(uid):
     global_value=dict(global_row.value) if global_row else {}
     if global_value.get('month')!=month:global_value={'month':month,'spent':0}
     if stamp-value.get('lastReservation',0)<limits['cooldownSeconds']:db.session.rollback();return False
-    if value.get('daily',0)>=limits['dailyRequests'] or global_value.get('spent',0)+limits['callCostUnits']>limits['monthlyBudgetUnits']:db.session.rollback();return False
-    value['daily']=value.get('daily',0)+1;value['spent']=value.get('spent',0)+limits['callCostUnits']
+    if value.get('daily',0)>=limits['dailyRequests'] or global_value.get('spent',0)+cost>limits['monthlyBudgetUnits']:db.session.rollback();return False
+    value['daily']=value.get('daily',0)+1;value['spent']=value.get('spent',0)+cost
     value['lastReservation']=stamp
     if setting:setting.value=value
     else:db.session.add(AppSetting(key=key,value=value))
-    global_value['spent']+=limits['callCostUnits']
+    global_value['spent']+=cost
     if global_row:global_row.value=global_value
     else:db.session.add(AppSetting(key='ai_monthly_usage',value=global_value))
-    db.session.commit();return True
+    if commit:db.session.commit()
+    return True
 
 
 @bp.post('/analyses/<identifier>/ai/questions')

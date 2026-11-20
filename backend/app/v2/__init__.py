@@ -3,8 +3,9 @@ from .auth_api import bp, install_auth
 
 
 def register_v2(app):
-    from .baze_provider import install_provider
+    from .baze_provider import install_provider, install_structure_provider
     install_provider(app)
+    install_structure_provider(app)
     app.register_blueprint(bp)
     install_auth(app)
     from .essays import bp as essays
@@ -21,6 +22,8 @@ def register_v2(app):
     app.register_blueprint(quotations)
     from .ai_api import bp as ai
     app.register_blueprint(ai)
+    from .dual_structure_api import bp as dual_structure
+    app.register_blueprint(dual_structure)
 
     from .operations_api import bp as operations
     app.register_blueprint(operations)

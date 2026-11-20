@@ -1,12 +1,19 @@
 """Explicit, disabled-by-default BAZE transport; never used by local analysis."""
+import http.client
 import json
+import os
 import re
 import ssl
+import socket
+import threading
 import time
 import urllib.request
+from decimal import Decimal
+from pathlib import Path
 import certifi
 from dataclasses import dataclass
 from components.ai import QUESTION_OPTIONS, selection_questions
+from components.structure_contract import OUTPUT_SCHEMA, SYSTEM_PROMPT
 
 ALLOWED_BASES = frozenset({
     'https://factchat-cloud.mindlogic.ai/v1/gateway',
@@ -17,11 +24,36 @@ ALLOWED_BASES = frozenset({
 class ProviderUnavailable(RuntimeError):
     """Constant diagnostic only; provider response/credentials are never logged."""
 
+    def __init__(self, code, usage=None):
+        super().__init__(code)
+        self.usage = usage
+
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
 
+
+
+class DeadlineHTTPSHandler(urllib.request.HTTPSHandler):
+    def https_open(self, request):
+        class Connection(http.client.HTTPSConnection):
+            def connect(self):
+                super().connect()
+                connection_socket = self.sock
+
+                def interrupt():
+                    try:
+                        connection_socket.shutdown(socket.SHUT_RDWR)
+                    except OSError:
+                        pass
+
+                timer = threading.Timer(max(0, request.deadline - time.monotonic()), interrupt)
+                timer.daemon = True
+                request.deadline_timer = timer
+                timer.start()
+
+        return self.do_open(Connection, request, context=self._context)
 
 def gateway_tls_context():
     # Reuse the installed Requests CA bundle (also used for Google auth).
@@ -38,17 +70,21 @@ class GatewaySettings:
     timeout_seconds: int
 
     @classmethod
-    def approved(cls, config):
-        value = config.get('BAZE_GATEWAY')
-        if not isinstance(value, dict) or any(value.get(k) is not True for k in ('endpointConfirmed', 'modelConfirmed', 'pricingConfirmed', 'processingTermsConfirmed', 'costUpperBoundConfirmed')):
+    def approved(cls, config, *, structure=False):
+        value = config.get('BAZE_STRUCTURE_GATEWAY' if structure else 'BAZE_GATEWAY')
+        approvals = ('endpointConfirmed', 'modelConfirmed', 'pricingConfirmed', 'processingTermsConfirmed', 'costUpperBoundConfirmed')
+        if structure:
+            approvals += ('structuredOutputConfirmed',)
+        if not isinstance(value, dict) or any(value.get(k) is not True for k in approvals):
             raise ValueError('BAZE_CONFIGURATION_UNCONFIRMED')
         base, model = value.get('baseUrl'), value.get('model')
         if base not in ALLOWED_BASES or not isinstance(model, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._/-]{0,127}', model):
             raise ValueError('BAZE_CONFIGURATION_INVALID')
         token, size, timeout = (value.get(k) for k in ('maxCompletionTokens', 'maxSelectedCodepoints', 'timeoutSeconds'))
-        if type(token) is not int or not 1 <= token <= 2048 or type(size) is not int or not 1 <= size <= 6000 or type(timeout) is not int or not 1 <= timeout <= 30:
+        if type(token) is not int or not 1 <= token <= (4096 if structure else 2048) or type(size) is not int or not 1 <= size <= 6000 or type(timeout) is not int or not 1 <= timeout <= 30:
             raise ValueError('BAZE_CONFIGURATION_INVALID')
-        if any(not isinstance(value.get(k),str) or not value[k].strip() for k in ('processingTermsReference','pricingReference')) or not isinstance(config.get('AI_POLICY_VERSION'),str) or not config['AI_POLICY_VERSION'].strip():
+        policy = config.get('AI_STRUCTURE_POLICY_VERSION' if structure else 'AI_POLICY_VERSION')
+        if any(not isinstance(value.get(k),str) or not value[k].strip() for k in ('processingTermsReference','pricingReference')) or not isinstance(policy, str) or not policy.strip():
             raise ValueError('BAZE_CONFIGURATION_UNCONFIRMED')
         limits = config.get('AI_LIMITS')
         required = ('dailyRequests', 'monthlyBudgetUnits', 'callCostUnits', 'cooldownSeconds', 'concurrency')
@@ -65,7 +101,96 @@ class BazeProvider:
         self.cache_tag += ':' + settings.model + ':' + settings.base_url
         self._opener = opener or urllib.request.build_opener(
             urllib.request.ProxyHandler({}), NoRedirect(),
-            urllib.request.HTTPSHandler(context=gateway_tls_context()))
+            DeadlineHTTPSHandler(context=gateway_tls_context()))
+
+    def completion(self, payload, *, require_model=False):
+        """One bounded HTTPS request shared by both explicit AI workflows."""
+        key = self._store.get('BAZE_API_KEY')
+        if not isinstance(key, str) or not key or any(c.isspace() for c in key):
+            raise ValueError()
+        encoded = json.dumps(payload, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
+        if len(encoded) > 40 * 1024:
+            raise ValueError()
+        request = urllib.request.Request(self.settings.base_url + '/chat/completions/', data=encoded,
+            headers={'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Accept': 'application/json'}, method='POST')
+        request.deadline = time.monotonic() + self.settings.timeout_seconds
+        usage = {}
+        try:
+            with self._opener.open(request, timeout=min(10, self.settings.timeout_seconds)) as response:
+                if response.status != 200 or response.geturl() != request.full_url:
+                    raise ValueError()
+                raw = bytearray()
+                read = getattr(response, 'read1', response.read)
+                credits = getattr(response, 'headers', {}).get('X-Credits-Charged')
+                if isinstance(credits, str) and re.fullmatch(r'\d{1,10}(?:\.\d{1,8})?', credits):
+                    usage['creditsCharged'] = credits
+                while True:
+                    part = read(256)
+                    if time.monotonic() >= request.deadline:
+                        raise TimeoutError()
+                    if not part:
+                        break
+                    raw.extend(part)
+                    if len(raw) > 65536:
+                        raise ProviderUnavailable('AI_SCHEMA_INVALID', usage)
+        except (TimeoutError, OSError) as error:
+            if (isinstance(error, TimeoutError) or time.monotonic() >= request.deadline
+                    or isinstance(getattr(error, 'reason', None), TimeoutError)):
+                raise ProviderUnavailable('AI_TIMEOUT', usage) from None
+            raise
+        finally:
+            timer = getattr(request, 'deadline_timer', None)
+            if timer:
+                timer.cancel()
+        try:
+            body = json.loads(raw.decode('utf-8'), object_pairs_hook=_unique_object)
+            billing = body.get('billing')
+            if 'creditsCharged' not in usage and isinstance(billing, dict):
+                deducted = billing.get('deducted_credit')
+                if type(deducted) in (int, float) and 0 <= deducted < 10_000_000_000:
+                    credits = format(Decimal(str(deducted)), 'f')
+                    if re.fullmatch(r'\d{1,10}(?:\.\d{1,8})?', credits):
+                        usage['creditsCharged'] = credits
+            reported = body.get('usage')
+            if isinstance(reported, dict):
+                for name in ('prompt_tokens', 'completion_tokens', 'total_tokens'):
+                    if type(reported.get(name)) is int and 0 <= reported[name] <= 10_000_000:
+                        usage[name] = reported[name]
+            if require_model and body.get('model') != self.settings.model:
+                raise ProviderUnavailable('AI_MODEL_MISMATCH', usage)
+            choices = body['choices']
+            if not isinstance(choices, list) or len(choices) != 1:
+                raise ValueError()
+            message = choices[0]['message']
+            if message.get('refusal') or choices[0].get('finish_reason') == 'content_filter':
+                raise ProviderUnavailable('AI_PROVIDER_REFUSED', usage)
+            if choices[0].get('finish_reason') != 'stop' or message.get('tool_calls') or message.get('function_call'):
+                raise ValueError()
+            return json.loads(message['content'], object_pairs_hook=_unique_object), usage
+        except (ValueError, TypeError, KeyError, AttributeError, RecursionError):
+            raise ProviderUnavailable('AI_SCHEMA_INVALID', usage) from None
+
+    def structure(self, sentences):
+        try:
+            if (not isinstance(sentences, list) or not sentences
+                    or any(set(row) != {'id', 'text'} or not re.fullmatch(r's[1-9][0-9]*', row['id'])
+                           or not isinstance(row['text'], str) or not row['text'] for row in sentences)
+                    or sum(len(row['text']) for row in sentences) > self.settings.max_selected_codepoints):
+                raise ValueError()
+            return self.completion({
+                'model': self.settings.model, 'stream': False,
+                'max_completion_tokens': self.settings.max_completion_tokens,
+                'response_format': {'type': 'json_schema', 'json_schema': {
+                    'name': 'geulbit_structure', 'strict': True, 'schema': OUTPUT_SCHEMA}},
+                'messages': [{'role': 'system', 'content': SYSTEM_PROMPT},
+                             {'role': 'user', 'content': json.dumps({'sentences': sentences}, ensure_ascii=False)}],
+            }, require_model=True)
+        except ProviderUnavailable:
+            raise
+        except TimeoutError:
+            raise ProviderUnavailable('AI_TIMEOUT') from None
+        except Exception:
+            raise ProviderUnavailable('AI_PROVIDER_UNAVAILABLE') from None
 
     def __call__(self, context):
         # Validate again at the transport boundary; no arbitrary context fields.
@@ -91,9 +216,6 @@ class BazeProvider:
                     or item['start']<0 or item['end']-item['start']!=len(item['quote'])):raise ValueError()
                 reference_quotes.append(item['quote'])
             if sum(map(len, quotes+reference_quotes)) > self.settings.max_selected_codepoints:
-                raise ValueError()
-            key = self._store.get('BAZE_API_KEY')
-            if not isinstance(key, str) or not key or any(c.isspace() for c in key):
                 raise ValueError()
             # No user/version IDs, offsets, essay, work full text or private note.
             selected = {'questionType': context['questionType'], 'excerpts': quotes,
@@ -121,36 +243,17 @@ class BazeProvider:
                                                       'questionIndex': {'type': 'integer'}}}}}}}},
                        'messages': [{'role': 'system', 'content': prompt},
                                     {'role': 'user', 'content': json.dumps(selected, ensure_ascii=False)}]}
-            request = urllib.request.Request(self.settings.base_url + '/chat/completions/',
-                data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
-                headers={'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Accept': 'application/json'}, method='POST')
-            deadline = time.monotonic() + self.settings.timeout_seconds
-            # No automatic retries: a failed charged request still consumes its
-            # reserved upper bound and cannot be silently sent twice.
-            with self._opener.open(request, timeout=min(10, self.settings.timeout_seconds)) as response:
-                if response.status != 200 or response.geturl() != request.full_url:
-                    raise ValueError()
-                raw = bytearray()
-                while True:
-                    if time.monotonic() >= deadline:
-                        raise ValueError()
-                    part = response.read(256)
-                    if not part:
-                        break
-                    raw.extend(part)
-                    if len(raw) > 65536:
-                        raise ValueError()
-            body = json.loads(raw.decode('utf-8'))
-            choices = body.get('choices')
-            if not isinstance(choices, list) or len(choices) != 1 or choices[0].get('finish_reason') != 'stop':
-                raise ValueError()
-            message = choices[0]['message']
-            if message.get('tool_calls') or message.get('function_call') or message.get('refusal') or not isinstance(message.get('content'), str):
-                raise ValueError()
-            value = json.loads(message['content'])
+            value, _usage = self.completion(payload)
             return selection_questions(value, context)
         except Exception:
             raise ProviderUnavailable('BAZE_REQUEST_UNAVAILABLE') from None
+
+
+def _unique_object(pairs):
+    result = dict(pairs)
+    if len(result) != len(pairs):
+        raise ValueError('DUPLICATE_JSON_KEY')
+    return result
 
 
 def install_provider(app):
@@ -165,3 +268,43 @@ def install_provider(app):
         raise ValueError('BAZE_KEY_UNAVAILABLE')
     app.config['AI_PROVIDER'] = BazeProvider(settings, store)
     app.config['AI_MAX_SELECTED_CODEPOINTS'] = settings.max_selected_codepoints
+
+
+def load_structure_configuration(app):
+    # The existing public service passes an explicit external-AI denial. A
+    # separate, opted-in server profile can load a non-secret configuration.
+    config_path = os.getenv('GEULBIT_STRUCTURE_AI_CONFIG_FILE')
+    if not config_path or app.testing or app.config.get('EXTERNAL_AI_TERMS_APPROVED') is False:
+        return
+    keys = {'AI_STRUCTURE_ENABLED', 'EXTERNAL_AI_TERMS_APPROVED', 'BAZE_STRUCTURE_GATEWAY',
+            'AI_STRUCTURE_POLICY_VERSION', 'AI_STRUCTURE_CALL_COST_UNITS', 'AI_LIMITS'}
+    try:
+        path = Path(config_path)
+        if not path.is_absolute():
+            raise ValueError()
+        with path.open('rb') as source:
+            raw = source.read(8193)
+        if len(raw) > 8192:
+            raise ValueError()
+        value = json.loads(raw, object_pairs_hook=_unique_object)
+        if not isinstance(value, dict) or set(value) != keys:
+            raise ValueError()
+        for key, option in value.items():
+            app.config.setdefault(key, option)
+    except (ValueError, OSError):
+        app.logger.warning('Structure AI configuration unavailable')
+
+
+def install_structure_provider(app):
+    load_structure_configuration(app)
+    if app.config.get('EXTERNAL_AI_TERMS_APPROVED') is not True or app.config.get('AI_STRUCTURE_ENABLED') is not True:
+        return
+    try:
+        settings = GatewaySettings.approved(app.config, structure=True)
+        store = app.extensions.get('secret_store') or app.config.get('SECRET_STORE')
+        cost = app.config.get('AI_STRUCTURE_CALL_COST_UNITS')
+        if store is None or not store.contains('BAZE_API_KEY') or type(cost) is not int or not 1 <= cost <= app.config['AI_LIMITS']['monthlyBudgetUnits']:
+            raise ValueError()
+        app.extensions['structure_provider'] = BazeProvider(settings, store)
+    except (ValueError, OSError):
+        app.logger.warning('Structure AI configuration unavailable')
