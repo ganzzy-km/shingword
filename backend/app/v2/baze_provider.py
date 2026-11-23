@@ -22,6 +22,7 @@ ALLOWED_BASES = frozenset({
 DEFAULT_BAZE_MODEL = 'claude-opus-5-5'
 MAX_GATEWAY_REQUEST_BYTES = 16_384
 MAX_STRUCTURE_REQUEST_BYTES = 40 * 1024
+MAX_STRUCTURE_TIMEOUT_SECONDS = 90
 
 
 def _encode_payload(payload):
@@ -106,7 +107,8 @@ class GatewaySettings:
         if base not in ALLOWED_BASES or not isinstance(model, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._/-]{0,127}', model):
             raise ValueError('BAZE_CONFIGURATION_INVALID')
         token, size, timeout = (value.get(k) for k in ('maxCompletionTokens', 'maxSelectedCodepoints', 'timeoutSeconds'))
-        if type(token) is not int or not 1 <= token <= (4096 if structure else 2048) or type(size) is not int or not 1 <= size <= 6000 or type(timeout) is not int or not 1 <= timeout <= 30:
+        max_timeout = MAX_STRUCTURE_TIMEOUT_SECONDS if structure else 30
+        if type(token) is not int or not 1 <= token <= (4096 if structure else 2048) or type(size) is not int or not 1 <= size <= 6000 or type(timeout) is not int or not 1 <= timeout <= max_timeout:
             raise ValueError('BAZE_CONFIGURATION_INVALID')
         request_bytes = value.get('maxRequestBytes', MAX_STRUCTURE_REQUEST_BYTES) if structure else MAX_STRUCTURE_REQUEST_BYTES
         if type(request_bytes) is not int or not 1 <= request_bytes <= MAX_STRUCTURE_REQUEST_BYTES:
