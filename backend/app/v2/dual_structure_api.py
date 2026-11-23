@@ -203,6 +203,8 @@ def build_preview(item, version, mapping, excluded, user, provider):
             sent.append({'id': row['id'], 'text': version.content[row['start']:row['end']]})
     if not sent:
         raise ValueError('AI_NO_INPUT')
+    if not provider.structure_fits(sent):
+        raise ValueError('AI_INPUT_LIMIT')
     settings = {'providerProfile': provider.cache_tag, 'model': provider.settings.model, 'policy': policy_version(),
                 'outputTokens': provider.settings.max_completion_tokens, 'timeoutSeconds': provider.settings.timeout_seconds,
                 'maximumCodePoints': provider.settings.max_selected_codepoints, 'mapVersion': MAP_VERSION, 'inputUnit': 'paragraph',
