@@ -69,6 +69,31 @@ def test_structure_gateway_requires_an_explicitly_configured_model():
         GatewaySettings.approved(config, structure=True)
 
 
+@pytest.mark.parametrize('use_response_deadline', [False, True])
+def test_structure_uses_remaining_deadline_after_connecting(monkeypatch, use_response_deadline):
+    from types import SimpleNamespace
+    from app.v2 import baze_provider
+
+    read_timeouts = []
+
+    class Connected:
+        def connect(self):
+            self.sock = SimpleNamespace(settimeout=read_timeouts.append)
+
+    def connect(_helper, connection, _request, *, context):
+        connection().connect()
+
+    handler = baze_provider.DeadlineHTTPSHandler()
+    monkeypatch.setattr(baze_provider.http.client, 'HTTPSConnection', Connected)
+    monkeypatch.setattr(baze_provider.DeadlineHTTPSHandler, 'do_open', connect)
+    monkeypatch.setattr(baze_provider.time, 'monotonic', lambda: 100)
+    request = SimpleNamespace(deadline=125, use_response_deadline=use_response_deadline)
+    handler.https_open(request)
+    request.deadline_timer.cancel()
+    assert read_timeouts == ([25] if use_response_deadline else [])
+    assert request.deadline_timer.interval == 25
+
+
 def test_real_protocol_minimal_context_no_ids_tools_or_retries():
     transport=Transport();result=provider(transport)(CONTEXT)
     assert result['questions']==[{'focusQuote':'선택 구절.','questionType':'EVIDENCE','question':QUESTION_OPTIONS['EVIDENCE'][1]}]
