@@ -69,6 +69,17 @@ def test_structure_gateway_requires_an_explicitly_configured_model():
         GatewaySettings.approved(config, structure=True)
 
 
+def test_longer_gateway_deadline_is_limited_to_structure_requests():
+    config = approved_config()
+    config['AI_STRUCTURE_POLICY_VERSION'] = 'synthetic-structure-policy'
+    config['BAZE_STRUCTURE_GATEWAY'] = {**config['BAZE_GATEWAY'], 'structuredOutputConfirmed': True, 'timeoutSeconds': 90}
+    assert GatewaySettings.approved(config, structure=True).timeout_seconds == 90
+    assert GatewaySettings.approved(config).timeout_seconds == 10
+    config['BAZE_STRUCTURE_GATEWAY']['timeoutSeconds'] = 91
+    with pytest.raises(ValueError, match='BAZE_CONFIGURATION_INVALID'):
+        GatewaySettings.approved(config, structure=True)
+
+
 @pytest.mark.parametrize('use_response_deadline', [False, True])
 def test_structure_uses_remaining_deadline_after_connecting(monkeypatch, use_response_deadline):
     from types import SimpleNamespace
