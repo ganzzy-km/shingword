@@ -12,6 +12,19 @@ ALLOWED_BASES = frozenset({
     'https://factchat-cloud.mindlogic.ai/v1/gateway',
     'https://factchat.mindlogic-kr-api.com/v1/gateway',
 })
+DEFAULT_BAZE_MODEL = 'claude-opus-5-5'
+MAX_GATEWAY_REQUEST_BYTES = 16_384
+
+
+def valid_ai_limits(limits):
+    required = {'dailyRequests', 'callCostUnits', 'cooldownSeconds', 'concurrency'}
+    monthly = {'monthlyBudgetUnits', 'monthlyRequests'}
+    if not isinstance(limits, dict) or not required <= limits.keys() <= required | monthly:
+        return False
+    return bool(monthly & limits.keys()) and all(
+        type(value) is int and value >= (0 if key == 'cooldownSeconds' else 1)
+        for key, value in limits.items()
+    )
 
 
 class ProviderUnavailable(RuntimeError):
@@ -42,7 +55,7 @@ class GatewaySettings:
         value = config.get('BAZE_GATEWAY')
         if not isinstance(value, dict) or any(value.get(k) is not True for k in ('endpointConfirmed', 'modelConfirmed', 'pricingConfirmed', 'processingTermsConfirmed', 'costUpperBoundConfirmed')):
             raise ValueError('BAZE_CONFIGURATION_UNCONFIRMED')
-        base, model = value.get('baseUrl'), value.get('model')
+        base, model = value.get('baseUrl'), value.get('model', DEFAULT_BAZE_MODEL)
         if base not in ALLOWED_BASES or not isinstance(model, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._/-]{0,127}', model):
             raise ValueError('BAZE_CONFIGURATION_INVALID')
         token, size, timeout = (value.get(k) for k in ('maxCompletionTokens', 'maxSelectedCodepoints', 'timeoutSeconds'))
@@ -50,9 +63,7 @@ class GatewaySettings:
             raise ValueError('BAZE_CONFIGURATION_INVALID')
         if any(not isinstance(value.get(k),str) or not value[k].strip() for k in ('processingTermsReference','pricingReference')) or not isinstance(config.get('AI_POLICY_VERSION'),str) or not config['AI_POLICY_VERSION'].strip():
             raise ValueError('BAZE_CONFIGURATION_UNCONFIRMED')
-        limits = config.get('AI_LIMITS')
-        required = ('dailyRequests', 'monthlyBudgetUnits', 'callCostUnits', 'cooldownSeconds', 'concurrency')
-        if not isinstance(limits, dict) or any(type(limits.get(k)) is not int or limits[k] < 0 for k in required) or any(limits[k] == 0 for k in required if k != 'cooldownSeconds'):
+        if not valid_ai_limits(config.get('AI_LIMITS')):
             raise ValueError('BAZE_BUDGET_UNCONFIRMED')
         return cls(base, model, token, size, timeout)
 
@@ -112,7 +123,7 @@ class BazeProvider:
                            'schema': {'type': 'object', 'additionalProperties': False,
                                'required': ['status', 'selections'], 'properties': {
                                    'status': {'type': 'string', 'enum': ['OK', 'INSUFFICIENT_CONTEXT']},
-                                   # Haiku's schema subset omits numeric/cardinality constraints.
+                                   # Keep the wire schema portable across gateway models.
                                    # selection_questions enforces both locally before accepting output.
                                    'selections': {'type': 'array', 'items': {
                                        'type': 'object', 'additionalProperties': False,
@@ -121,8 +132,11 @@ class BazeProvider:
                                                       'questionIndex': {'type': 'integer'}}}}}}}},
                        'messages': [{'role': 'system', 'content': prompt},
                                     {'role': 'user', 'content': json.dumps(selected, ensure_ascii=False)}]}
+            request_data = json.dumps(payload, ensure_ascii=False).encode('utf-8')
+            if len(request_data) > MAX_GATEWAY_REQUEST_BYTES:
+                raise ValueError()
             request = urllib.request.Request(self.settings.base_url + '/chat/completions/',
-                data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
+                data=request_data,
                 headers={'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Accept': 'application/json'}, method='POST')
             deadline = time.monotonic() + self.settings.timeout_seconds
             # No automatic retries: a failed charged request still consumes its

@@ -290,13 +290,36 @@ export default function Library({
   const [pdfIncludeAi, setPdfIncludeAi] = useState(false)
   const [sourceLinking,setSourceLinking]=useState(false)
   const [documents, setDocuments] = useState<{id: string; title: string; latestRevisionId: string}[]>([])
-  const [aiPreview, setAiPreview] = useState<{runId: string; spans: {start: number; end: number; quote: string}[]; references?: {revisionId: string; quote: string}[]; previewHash: string; context: unknown; externalEnabled: boolean; policyVersion?: string} | null>(null)
+  const [aiPreview, setAiPreview] = useState<{runId: string; spans: {start: number; end: number; quote: string}[]; references?: {revisionId: string; quote: string}[]; previewHash: string; context: unknown; externalEnabled: boolean; policyVersion?: string; policyNotice?: string} | null>(null)
   const [aiReferences, setAiReferences] = useState<{revisionId: string; title: string}[]>([])
   const [aiReferenceId, setAiReferenceId] = useState("")
   const [aiReferenceQuote, setAiReferenceQuote] = useState("")
   const [aiBusy, setAiBusy] = useState(false)
   const [aiResult, setAiResult] = useState<{id: string; questions: {question: string}[]; status: string} | null>(null)
   const [aiConsent, setAiConsent] = useState(false)
+  function aiReferencesCurrent() {
+    return JSON.stringify(aiPreview?.references ?? []) === JSON.stringify(
+      aiReferenceId ? [{revisionId: aiReferenceId, quote: aiReferenceQuote}] : []
+    )
+  }
+
+  async function generateAiQuestions(useExternal: boolean) {
+    if (!aiPreview) return
+    const {runId, spans, previewHash, references = [], policyNotice, policyVersion} = aiPreview
+    try {
+      setAiBusy(true)
+      if (useExternal) await api.post("/ai/consent", {granted: true, policyVersion})
+      setAiResult(await api.post(`/analyses/${runId}/ai/questions`, {
+        spans, questionType: aiQuestionType, previewHash, references,
+        ...(useExternal && policyNotice ? {externalPolicyVersion: policyVersion} : {}),
+      }))
+    } catch (error) {
+      setError(errorMessage(error))
+    } finally {
+      setAiBusy(false)
+    }
+  }
+
   const [aiNote, setAiNote] = useState("")
   const [aiQuestionType, setAiQuestionType] = useState("ASSUMPTION")
   useEffect(() => {setAiPreview(null);setAiResult(null);setAiConsent(false);setAiNote("");setAiReferences([]);setAiReferenceId("");setAiReferenceQuote("");setShowAnalysisDetails(false)}, [analysis?.id])
@@ -1037,26 +1060,24 @@ export default function Library({
           </header>
           {children}</section> : view === "home" ? (
           <div className="library-content">
-            <div className="library-heading">
+            <header className="library-heading">
               <div>
-                <div className="eyebrow">{section === "history" ? "다시 살펴보는 나의 글" : "내 글"}</div>
                 <h1>
                   {section === "history" ? "분석 기록" : prefs.theme === "bookshelf" ? "내 서재" : "내 글"}
                 </h1>
-                <p>{prefs.theme === "bookshelf" ? "내가 쓴 글을 책으로 읽고 이어서 수정합니다." : "저장한 글을 이어서 작성하고 분석 결과를 확인합니다."}</p>
+                <p>{section === "history"
+                  ? "글을 열어 분석 결과를 다시 확인합니다."
+                  : prefs.theme === "bookshelf"
+                    ? "내가 쓴 글을 책처럼 펼쳐 읽고 이어서 씁니다."
+                    : "저장한 글을 이어서 쓰고 분석 결과를 확인합니다."}</p>
               </div>
-              <button className="gb-primary" onClick={create}>
-                <Icon name="plus" />새 글 작성
-              </button>
-            </div>
-            {section !== "history" && <ol className="writing-journey" aria-label="글빛 사용 순서">
-              <li><span aria-hidden="true">01</span><div><strong>생각을 적어요</strong><small>새 글을 쓰거나 이어서 작성</small></div></li>
-              <li><span aria-hidden="true">02</span><div><strong>글을 살펴봐요</strong><small>분석 제안을 확인하고 수정</small></div></li>
-              <li><span aria-hidden="true">03</span><div><strong>책으로 읽어요</strong><small>다시 읽고 PDF로 보관</small></div></li>
-            </ol>}
+              {(loading || records.length > 0 || query) && <button className="gb-primary" onClick={create}>
+                <Icon name="plus" size={18} />새 글 작성
+              </button>}
+            </header>
             <div className="library-tools">
               <div className="library-tabs">
-                <button className="selected" onClick={() => setQuery("")}>
+                <button className="selected" onClick={() => { setQuery(""); setListPage(1) }}>
                   모든 글{" "}
                   <span>
                     {records.length}
@@ -1064,16 +1085,15 @@ export default function Library({
                   </span>
                 </button>
                 <button onClick={() => setModal("import")}>
-                  PDF 가져오기
-                  <Icon name="upload" size={15} />
+                  <Icon name="upload" size={18} />PDF 가져오기
                 </button>
               </div>
               <div className="library-search">
                 <label>
-                  <Icon name="search" size={17} />
+                  <Icon name="search" size={18} />
                   <input
                     aria-label="책 검색"
-                    placeholder="제목이나 작품으로 검색"
+                    placeholder="제목·작품 검색"
                     value={query}
                     onChange={(e) => {
                       setQuery(e.target.value)
@@ -1094,41 +1114,29 @@ export default function Library({
                 </select>
               </div>
             </div>
-            <div className="shelf-caption">
-              <span>
-                {prefs.theme === "bookshelf"
-                  ? "책장에서 꺼내 읽기"
-                  : "내가 쓴 글"}
-              </span>
-              <span>
-                {prefs.theme === "bookshelf"
-                  ? "책을 선택하면 펼쳐집니다"
-                  : "글을 선택하면 이어서 작성할 수 있습니다"}
-              </span>
-            </div>
-            <div className={`shelves ${records.length === 0 ? "empty" : ""}`}>
+            {records.length > 0 && <h2 className="shelf-caption">
+              {section !== "history" && prefs.theme === "bookshelf" ? "책장" : "글 목록"}
+            </h2>}
+            <div className={`shelves${records.length === 0 ? " empty" : ""}${!loading && !query && records.length === 0 && section !== "history" ? " with-shelf-art" : ""}`}>
               {loading ? (
                 <div className="empty-library" role="status">
                   서재를 불러오는 중…
                 </div>
               ) : records.length === 0 ? (
                 <div className="empty-library">
-                  <div className="empty-book">
-                    <Icon name="book" size={42} />
+                  <div className="empty-library-copy">
+                    <h2>{query ? "검색 결과가 없습니다" : "저장한 글이 없습니다."}</h2>
+                    <p>{query
+                      ? "다른 제목이나 작품으로 검색해 보세요."
+                      : section === "history"
+                        ? "글을 분석하면 이곳에서 결과를 다시 볼 수 있습니다."
+                        : "글을 쓰고 저장하면 여기서 다시 열 수 있습니다."}</p>
+                    {query
+                      ? <button className="gb-outline" onClick={() => { setQuery(""); setListPage(1) }}>검색 지우기</button>
+                      : <button className="gb-primary" onClick={create}>
+                        <Icon name="plus" size={18} />{section === "history" ? "새 글 작성" : "첫 글 작성하기"}
+                      </button>}
                   </div>
-                  <h2>
-                    {query
-                      ? "검색 결과가 없습니다"
-                      : "저장한 글이 없습니다."}
-                  </h2>
-                  <p>
-                    {query
-                      ? "다른 제목이나 작품명으로 검색해 보세요."
-                      : "새 글 작성에서 본문을 입력하세요."}
-                  </p>
-                  <button className="gb-primary" onClick={create}>
-                    <Icon name="plus" />첫 글 작성하기
-                  </button>
                 </div>
               ) : (
                 <div className="books-grid">
@@ -1173,11 +1181,11 @@ export default function Library({
               )}
             </div>
             <div className="library-bottom">
-              <div>
+              {prefs.theme === "bookshelf" && records.length > 0 && <div>
                 <Icon name="book" size={18} />
-                <span>{prefs.theme === "bookshelf" ? "책의 색상은 글의 점수와 관계가 없습니다." : "저장한 글과 분석 기록"}</span>
-              </div>
-              <div className="list-paging">
+                <span>책의 색상은 글의 점수와 관계가 없습니다.</span>
+              </div>}
+              {(listPage > 1 || records.length >= 12) && <div className="list-paging">
                 <button
                   disabled={listPage === 1 || loading}
                   onClick={() => setListPage((p) => p - 1)}
@@ -1191,7 +1199,7 @@ export default function Library({
                 >
                   다음
                 </button>
-              </div>
+              </div>}
               <button className="trash-link" onClick={() => setModal("trash")}>
                 <Icon name="trash" size={18} />
                 휴지통 및 만료 안내
@@ -1199,7 +1207,6 @@ export default function Library({
             </div>
             <div className="library-note">
               <div>
-                <span className="note-number">01</span>
                 <div>
                   <h3>분석 규칙과 데이터 안내</h3>
                   <p>분석의 범위와 한계를 확인하세요. 만료 안내는 서버 정책이 연결된 경우에 표시됩니다.</p>
@@ -1673,9 +1680,9 @@ export default function Library({
                               </button>
                               {selected === f.id && <button className="gb-outline" style={{display: "block", maxWidth: "100%", marginBottom: 8, fontSize: 12, padding: "8px 12px"}} disabled={f.startOffset == null || f.endOffset == null} onClick={async () => { try {
                                 const spans = [{start: f.startOffset!, end: f.endOffset!, quote: f.current}];
-                                const [preview, status, references] = await Promise.all([api.post<{previewHash: string; context: unknown; externalEnabled: boolean}>(`/analyses/${analysis.id}/ai/preview`, {spans, questionType: aiQuestionType}), api.get<{policyVersion?: string}>("/ai/status"), api.get<typeof aiReferences>(`/analyses/${analysis.id}/ai/references`)]);
+                                const [preview, status, references] = await Promise.all([api.post<{previewHash: string; context: unknown; externalEnabled: boolean; policyVersion?: string; policyNotice?: string}>(`/analyses/${analysis.id}/ai/preview`, {spans, questionType: aiQuestionType}), api.get<{policyVersion?: string}>("/ai/status"), api.get<typeof aiReferences>(`/analyses/${analysis.id}/ai/references`)]);
                                 setAiReferences(references);setAiReferenceId("");setAiReferenceQuote("");
-                                setAiPreview({...preview, runId: analysis.id, spans, policyVersion: status.policyVersion}); setAiResult(null); setAiConsent(false);
+                                setAiPreview({...preview, runId: analysis.id, spans, policyVersion: preview.policyVersion ?? status.policyVersion}); setAiResult(null); setAiConsent(false);
                               } catch (e) { setError(errorMessage(e)); } }}>심화 질문 문맥 확인</button>}
                               <details className="feedback-options"><summary>이 제안에 반응하기</summary>
                               <div className="finding-actions" style={{ flexWrap: "wrap", columnGap: 12, rowGap: 8 }}>
@@ -1720,12 +1727,19 @@ export default function Library({
                     {aiPreview && <details className="feedback-options"><summary>연결된 작품 구절 참고 (선택)</summary><p>이 분석에 연결한 작품 판본만 선택할 수 있습니다. 아래에 정확한 구절을 붙여 넣고 문맥을 확인하세요. 작품 전체나 연결되지 않은 자료는 보내지 않습니다.</p>
                       <label>참고 작품<select aria-label="AI 참고 작품" disabled={aiBusy} value={aiReferenceId} onChange={e => {setAiReferenceId(e.target.value);setAiReferenceQuote("");setAiConsent(false);setAiResult(null)}}><option value="">내가 쓴 글만 참고</option>{aiReferences.map(r => <option key={r.revisionId} value={r.revisionId}>{r.title}</option>)}</select></label>
                       {aiReferenceId && <textarea aria-label="AI 참고 작품 구절" maxLength={500} disabled={aiBusy} value={aiReferenceQuote} onChange={e => {setAiReferenceQuote(e.target.value);setAiConsent(false);setAiResult(null)}} placeholder="선택한 판본에 있는 구절을 정확히 붙여 넣어 주세요." />}
-                      <button className="gb-outline" disabled={aiBusy || (!!aiReferenceId && !aiReferenceQuote.trim())} onClick={async () => {setAiBusy(true);setAiConsent(false);setAiResult(null);try {const references=aiReferenceId ? [{revisionId: aiReferenceId, quote: aiReferenceQuote}] : [];const preview=await api.post<{previewHash:string;context:unknown;externalEnabled:boolean}>(`/analyses/${aiPreview.runId}/ai/preview`, {spans:aiPreview.spans,questionType:aiQuestionType,references});setAiPreview({...aiPreview,...preview,references})}catch(e){setError(errorMessage(e))}finally{setAiBusy(false)}}}>참고 구절 문맥 반영</button>
+                      <button className="gb-outline" disabled={aiBusy || (!!aiReferenceId && !aiReferenceQuote.trim())} onClick={async () => {setAiBusy(true);setAiConsent(false);setAiResult(null);try {const references=aiReferenceId ? [{revisionId: aiReferenceId, quote: aiReferenceQuote}] : [];const preview=await api.post<{previewHash:string;context:unknown;externalEnabled:boolean;policyVersion?:string;policyNotice?:string}>(`/analyses/${aiPreview.runId}/ai/preview`, {spans:aiPreview.spans,questionType:aiQuestionType,references});setAiPreview({...aiPreview,...preview,references})}catch(e){setError(errorMessage(e))}finally{setAiBusy(false)}}}>참고 구절 문맥 반영</button>
                     </details>}
-                    {aiPreview && <section className="version-notice"><h3>선택 구간 심화 질문</h3><label>질문 유형<select aria-label="질문 유형" value={aiQuestionType} onChange={async e => {const type=e.target.value;try {const preview=await api.post<{previewHash:string;context:unknown;externalEnabled:boolean}>(`/analyses/${aiPreview.runId}/ai/preview`,{spans:aiPreview.spans,questionType:type,references:aiPreview.references ?? []});setAiQuestionType(type);setAiPreview({...aiPreview,...preview});setAiResult(null);setAiConsent(false)}catch(error){setError(errorMessage(error))}}}>{Object.entries({ASSUMPTION:"전제와 연결 고리",CONCEPT:"개념 구분",CAUSALITY:"인과 검토",EVIDENCE:"근거의 성격",COUNTEREXAMPLE:"범위와 반례"}).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><p>{aiPreview.externalEnabled ? "승인된 외부 제공자에 아래 선택 구간을 전송합니다." : "외부 전송은 꺼져 있습니다. 로컬 질문만 사용할 수 있습니다."}</p><pre style={{whiteSpace: "pre-wrap", overflowWrap: "anywhere"}}>{aiContextText(aiPreview.context)}</pre><label><input type="checkbox" checked={aiConsent} onChange={e => setAiConsent(e.target.checked)} />이 문맥과 별도 AI 동의 정책을 확인했습니다.</label><button className="gb-outline" disabled={aiBusy || !aiConsent || !aiPreview.policyVersion || JSON.stringify(aiPreview.references ?? []) !== JSON.stringify(aiReferenceId ? [{revisionId: aiReferenceId, quote: aiReferenceQuote}] : [])} onClick={async () => { try {
-                      setAiBusy(true); await api.post("/ai/consent", {granted: true, policyVersion: aiPreview.policyVersion});
-                      setAiResult(await api.post(`/analyses/${aiPreview.runId}/ai/questions`, {spans: aiPreview.spans, questionType: aiQuestionType, previewHash: aiPreview.previewHash, references: aiPreview.references ?? []}));
-                    } catch (e) { setError(errorMessage(e)); } finally { setAiBusy(false); } }}>질문 생성</button>{!aiPreview.policyVersion && <p>동의 정책 확정 전에는 질문을 생성할 수 없습니다.</p>}{aiResult && <><p>{aiResult.status === "PROVIDER_VALIDATED" ? "선택 구절에 대한 심화 질문입니다." : aiResult.status === "INSUFFICIENT_CONTEXT" ? "질문을 만들기에 문맥이 부족합니다." : "외부 전송 없이 로컬 질문을 제안합니다."}</p>{aiResult.questions.map((q,i) => <p key={i}>{q.question}</p>)}<textarea aria-label="생각 메모" value={aiNote} onChange={e => setAiNote(e.target.value)} /><button className="gb-outline" onClick={async () => { try { await api.patch(`/ai/interactions/${aiResult.id}/note`, {note: aiNote}); } catch(e) { setError(errorMessage(e)); } }}>생각 메모 저장</button></>}<button className="gb-outline" onClick={() => {setAiPreview(null);setAiResult(null);setAiConsent(false);setAiNote("");}}>닫기</button></section>}
+                    {aiPreview && <section className="version-notice"><h3>선택 구간 심화 질문</h3><label>질문 유형<select aria-label="질문 유형" value={aiQuestionType} onChange={async e => {const type=e.target.value;try {const preview=await api.post<{previewHash:string;context:unknown;externalEnabled:boolean;policyVersion?:string;policyNotice?:string}>(`/analyses/${aiPreview.runId}/ai/preview`,{spans:aiPreview.spans,questionType:type,references:aiPreview.references ?? []});setAiQuestionType(type);setAiPreview({...aiPreview,...preview});setAiResult(null);setAiConsent(false)}catch(error){setError(errorMessage(error))}}}>{Object.entries({ASSUMPTION:"전제와 연결 고리",CONCEPT:"개념 구분",CAUSALITY:"인과 검토",EVIDENCE:"근거의 성격",COUNTEREXAMPLE:"범위와 반례"}).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><pre style={{whiteSpace: "pre-wrap", overflowWrap: "anywhere"}}>{aiContextText(aiPreview.context)}</pre>
+                      {aiPreview.externalEnabled && aiPreview.policyNotice && <p style={{whiteSpace: "pre-line"}}>{aiPreview.policyNotice}</p>}
+                      {(!aiPreview.policyNotice || aiPreview.externalEnabled) && <label>
+                        <input type="checkbox" checked={aiConsent} onChange={e => setAiConsent(e.target.checked)} />
+                        {aiPreview.policyNotice ? "이 요청의 구절을 Baze를 거쳐 미국 Anthropic으로 전송하는 데 동의합니다." : "이 문맥과 별도 AI 동의 정책을 확인했습니다."}
+                      </label>}
+                      {(!aiPreview.policyNotice || aiPreview.externalEnabled) && <button className="gb-outline" disabled={aiBusy || !aiConsent || !aiPreview.policyVersion || !aiReferencesCurrent()} onClick={() => void generateAiQuestions(true)}>
+                        {aiPreview.policyNotice ? "외부 AI로 질문 생성" : "질문 생성"}
+                      </button>}
+                      {aiPreview.policyNotice && <button className="gb-outline" disabled={aiBusy || !aiReferencesCurrent()} onClick={() => void generateAiQuestions(false)}>로컬 질문 생성</button>}
+                      {!aiPreview.policyVersion && <p>동의 정책 확정 전에는 질문을 생성할 수 없습니다.</p>}{aiResult && <><p>{aiResult.status === "PROVIDER_VALIDATED" ? "선택 구절에 대한 심화 질문입니다." : aiResult.status === "INSUFFICIENT_CONTEXT" ? "질문을 만들기에 문맥이 부족합니다." : "로컬 질문을 제안합니다."}</p>{aiResult.questions.map((q,i) => <p key={i}>{q.question}</p>)}<textarea aria-label="생각 메모" value={aiNote} onChange={e => setAiNote(e.target.value)} /><button className="gb-outline" onClick={async () => { try { await api.patch(`/ai/interactions/${aiResult.id}/note`, {note: aiNote}); } catch(e) { setError(errorMessage(e)); } }}>생각 메모 저장</button></>}<button className="gb-outline" onClick={() => {setAiPreview(null);setAiResult(null);setAiConsent(false);setAiNote("");}}>닫기</button></section>}
                     <button
                       className="full-analysis"
                       aria-expanded={showAnalysisDetails}

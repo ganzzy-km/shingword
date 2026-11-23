@@ -4,6 +4,27 @@ import json,hashlib
 from datetime import datetime,timedelta,timezone
 from .privacy_lifecycle import POLICY,ACCOUNT_POLICY,DOCUMENT_POLICY
 
+def external_ai_configuration(receipt):
+    settings = receipt.get('externalAi')
+    if settings is None:
+        return {'EXTERNAL_AI_TERMS_APPROVED': False}
+    if not isinstance(settings, dict) or settings.get('approved') is not True:
+        raise ValueError('BETA_EXTERNAL_AI_APPROVAL_REQUIRED')
+    notice = settings.get('notice')
+    if not isinstance(notice, str) or not notice.strip():
+        raise ValueError('BETA_EXTERNAL_AI_NOTICE_REQUIRED')
+    config = {
+        'EXTERNAL_AI_TERMS_APPROVED': True,
+        'AI_POLICY_VERSION': settings.get('policyVersion'),
+        'AI_POLICY_NOTICE': notice,
+        'BAZE_GATEWAY': settings.get('gateway'),
+        'AI_LIMITS': settings.get('limits'),
+        'AI_ENABLED_DEFAULT': True,
+    }
+    from .baze_provider import GatewaySettings
+    GatewaySettings.approved(config)
+    return config
+
 def approved_ocr_runtime(receipt):
     """Optional release binding, scoped to the app; never mutate global env."""
     pin=receipt.get('ocrRuntime')
@@ -46,4 +67,10 @@ def operating_configuration(root,repo,require_fresh_backup=True):
     policy=json.loads((repo/'backend/config/privacy.example.json').read_text(encoding='utf-8'))
     if policy['backupMode']!='7d-encrypted-local-c-v1' or policy['approvedRetention']['independentPrivateDocuments']!=DOCUMENT_POLICY:raise ValueError('BETA_RETENTION_CONTRACT_REQUIRED')
     if not policy['betaSignup']['policy']['approved']:raise ValueError('BETA_CONSENT_CONTRACT_REQUIRED')
-    return dict(BETA_SIGNUP_ENABLED=True,BETA_SIGNUP_POLICY=policy['betaSignup']['policy'],PERSONAL_DATA_POLICY=POLICY,PRIVATE_DOCUMENT_RETENTION_POLICY=DOCUMENT_POLICY,RETENTION_APPROVED=True,RETENTION_DATES_VERIFIED=True,RETENTION_LOCAL_BACKUP_APPROVED=True,RETENTION_BACKUPS_VERIFIED=True,RETENTION_POLICY={'basis':POLICY,'backupRetention':'7d-encrypted-local-c-v1','targetScope':'PRIVATE_ESSAY_GRAPH','privateDocuments':'SEPARATE_APPROVED_LIFECYCLE'},ACCOUNT_RETENTION_APPROVED=True,ACCOUNT_RETENTION_POLICY=ACCOUNT_POLICY,ACCOUNT_PUBLIC_OWNER_ERASURE_APPROVED=True,EXTERNAL_AI_TERMS_APPROVED=False,AI_PROVIDER=None,**approved_ocr_runtime(receipt))
+    ai_config = external_ai_configuration(receipt)
+    signup_policy = policy['betaSignup']['policy']
+    if ai_config['EXTERNAL_AI_TERMS_APPROVED']:
+        signup_policy = {**signup_policy, 'notice': signup_policy['notice'].replace(
+            '외부 AI 전송은 비활성입니다.', '외부 AI 질문 기능은 별도 안내 및 요청별 동의 후에만 이용할 수 있습니다.'
+        )}
+    return dict(BETA_SIGNUP_ENABLED=True,BETA_SIGNUP_POLICY=signup_policy,PERSONAL_DATA_POLICY=POLICY,PRIVATE_DOCUMENT_RETENTION_POLICY=DOCUMENT_POLICY,RETENTION_APPROVED=True,RETENTION_DATES_VERIFIED=True,RETENTION_LOCAL_BACKUP_APPROVED=True,RETENTION_BACKUPS_VERIFIED=True,RETENTION_POLICY={'basis':POLICY,'backupRetention':'7d-encrypted-local-c-v1','targetScope':'PRIVATE_ESSAY_GRAPH','privateDocuments':'SEPARATE_APPROVED_LIFECYCLE'},ACCOUNT_RETENTION_APPROVED=True,ACCOUNT_RETENTION_POLICY=ACCOUNT_POLICY,ACCOUNT_PUBLIC_OWNER_ERASURE_APPROVED=True,AI_PROVIDER=None,**ai_config,**approved_ocr_runtime(receipt))

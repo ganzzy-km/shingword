@@ -17,6 +17,23 @@ def test_operating_configuration_requires_gates_code_and_verified_backup(tmp_pat
     archive.with_suffix('.verified.json').write_text(json.dumps({'restoreVerified':True,'revision':SCHEMA_HEAD,'createdAt':datetime.now(timezone.utc).isoformat(),'sha256':hashlib.sha256(archive.read_bytes()).hexdigest()}))
     config=operating_configuration(root,repo);assert config['BETA_SIGNUP_ENABLED'] and config['PRIVATE_DOCUMENT_RETENTION_POLICY']=='last-document-body-change/7d-v1'
     assert config['AI_PROVIDER'] is None and not config['EXTERNAL_AI_TERMS_APPROVED']
+    from test_baze_provider import approved_config
+    external = approved_config()
+    receipt['externalAi'] = {
+        'approved': True, 'notice': 'Synthetic provider and processing notice',
+        'policyVersion': external['AI_POLICY_VERSION'],
+        'gateway': external['BAZE_GATEWAY'], 'limits': external['AI_LIMITS'],
+    }
+    gate.write_text(json.dumps(receipt))
+    config = operating_configuration(root, repo)
+    assert config['AI_ENABLED_DEFAULT'] and config['EXTERNAL_AI_TERMS_APPROVED']
+    assert config['AI_POLICY_NOTICE'] == receipt['externalAi']['notice']
+    receipt['externalAi']['gateway']['pricingConfirmed'] = False
+    gate.write_text(json.dumps(receipt))
+    with pytest.raises(ValueError, match='BAZE_CONFIGURATION_UNCONFIRMED'):
+        operating_configuration(root, repo)
+    del receipt['externalAi']
+    gate.write_text(json.dumps(receipt))
     proof=archive.with_suffix('.verified.json');value=json.loads(proof.read_text());value['createdAt']=(datetime.now(timezone.utc)-timedelta(days=2)).isoformat();proof.write_text(json.dumps(value))
     with pytest.raises(ValueError,match='BACKUP'):operating_configuration(root,repo)
     assert operating_configuration(root,repo,require_fresh_backup=False)['RETENTION_APPROVED']

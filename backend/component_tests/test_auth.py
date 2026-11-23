@@ -82,10 +82,15 @@ def test_state_rejection_and_external_default_never_contact_provider():
         flow.finish(challenge, state=challenge.state, code="synthetic", now=310)
     assert calls == []
 
-def test_production_exchange_validates_at_verification_time_not_callback_arrival(monkeypatch):
+@pytest.mark.parametrize(('issued_offset', 'expiry_offset', 'accepted'), [
+    (0, 300, True), (4, 300, True), (11, 300, False), (-30, -1, False),
+])
+def test_production_exchange_validates_at_verification_time_not_callback_arrival(
+        monkeypatch, issued_offset, expiry_offset, accepted):
     import backend.components.auth as auth
+    from google.auth import _helpers
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    current = datetime.now(timezone.utc)
+    current = datetime.now(timezone.utc).replace(microsecond=0)
     name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, 'synthetic-timing-test')])
     cert = (x509.CertificateBuilder().subject_name(name).issuer_name(name).public_key(key.public_key())
             .serial_number(x509.random_serial_number()).not_valid_before(current-timedelta(minutes=1))
@@ -97,14 +102,22 @@ def test_production_exchange_validates_at_verification_time_not_callback_arrival
         assert url=='https://www.googleapis.com/oauth2/v1/certs'
         return SimpleNamespace(status=200,data=certs)
     flow = GoogleCodeFlow(client_id='synthetic-client',client_secret='synthetic-secret',redirect_uri='https://localhost:8770/api/auth/callback',state_ttl=300,external_approved=True)
-    arrival = time.time()-3
+    timestamp = int(current.timestamp())
+    arrival = timestamp - 15
     _, challenge = flow.begin(now=arrival-1)
-    token = jwt.encode(signer,claims(nonce=challenge.nonce,iat=int(time.time()))).decode()
+    token = jwt.encode(signer, claims(nonce=challenge.nonce, iat=timestamp + issued_offset,
+                                      exp=timestamp + expiry_offset)).decode()
     def exchange(url, **kwargs):
         assert url=='https://oauth2.googleapis.com/token'
         return SimpleNamespace(raise_for_status=lambda:None,json=lambda:{'id_token':token})
     monkeypatch.setattr('requests.post',exchange);monkeypatch.setattr(auth,'Request',lambda:certificate_request)
-    assert flow.finish(challenge,state=challenge.state,code='synthetic-code',now=arrival)['initialStatus']=='PENDING_APPROVAL'
+    monkeypatch.setattr(auth.time, 'time', lambda: timestamp)
+    monkeypatch.setattr(_helpers, 'utcnow', lambda: current.replace(tzinfo=None))
+    if accepted:
+        assert flow.finish(challenge,state=challenge.state,code='synthetic-code',now=arrival)['initialStatus']=='PENDING_APPROVAL'
+    else:
+        with pytest.raises(AuthDenied, match='TOKEN_INVALID'):
+            flow.finish(challenge,state=challenge.state,code='synthetic-code',now=arrival)
 
 def test_token_exchange_failure_diagnostic_contains_only_constant_stage(monkeypatch,caplog):
     flow=GoogleCodeFlow(client_id='synthetic-client',client_secret='synthetic-secret',redirect_uri='https://localhost:8770/api/auth/callback',state_ttl=300,testing=True,exchange=lambda payload:(_ for _ in ()).throw(RuntimeError('synthetic-secret-sensitive-response')),certificate_request=lambda *args:None)

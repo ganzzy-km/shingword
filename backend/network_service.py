@@ -182,19 +182,22 @@ def settings():
 
 def safety_preflight(maintenance=False):
     root = active_root().resolve()
+    config = {}
     if not OPERATING and (root.parent != (ROOT / "temp").resolve() or root.name not in {"ngrok-dev-local","ngrok-beta-local"}):
         raise RuntimeError("ISOLATED_NETWORK_ROOT_REQUIRED")
     if OPERATING:
         if root!=ROOT.resolve():raise RuntimeError("EXACT_OPERATING_ROOT_REQUIRED")
         from app.v2.beta_runtime import operating_configuration
-        operating_configuration(ROOT,SCRIPT.parent.parent,require_fresh_backup=not maintenance)
+        config = operating_configuration(ROOT,SCRIPT.parent.parent,require_fresh_backup=not maintenance)
     validate_volume(root, identity())
     check_database(root / "db" / "geulbit.sqlite3")
+    approved = config.get('EXTERNAL_AI_TERMS_APPROVED') is True
     with sqlite3.connect((root / "db" / "geulbit.sqlite3").as_uri() + "?mode=ro", uri=True) as connection:
         setting = connection.execute("SELECT value FROM app_settings WHERE key='ai_enabled'").fetchone()
-        if setting and json.loads(setting[0]) is True:
+        if not approved and setting and json.loads(setting[0]) is True:
             raise RuntimeError("EXTERNAL_AI_MUST_BE_DISABLED")
-    return {"isolation": not OPERATING, "debug": False, "externalAI": False, "scheduledDeletion": OPERATING}
+    active = approved and (json.loads(setting[0]) is True if setting else config.get('AI_ENABLED_DEFAULT') is True)
+    return {"isolation": not OPERATING, "debug": False, "externalAI": active, "scheduledDeletion": OPERATING}
 
 
 def service_app(maintenance=False):

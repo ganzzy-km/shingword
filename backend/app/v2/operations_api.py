@@ -236,12 +236,12 @@ def account_withdraw():
 @bp.patch('/admin/ai/limits')
 def ai_limits():
     from .common import admin_required
+    from .ai_api import enabled
+    from .baze_provider import valid_ai_limits
     admin_required();data,error=json_body()
     if error:return error
-    keys={'dailyRequests','monthlyBudgetUnits','callCostUnits','cooldownSeconds','concurrency'}
-    if set(data)!=keys or any(type(data[k]) is not int or data[k]<0 for k in keys) or any(data[k]==0 for k in ['dailyRequests','monthlyBudgetUnits','concurrency']):return api_error('VALIDATION_ERROR','승인된 정수 한도와 비용 단위를 입력해 주세요.')
-    enabled=db.session.get(AppSetting,'ai_enabled')
-    if enabled and enabled.value:return api_error('AI_CONFIGURATION_ACTIVE','AI를 끈 뒤 한도를 변경해 주세요.',409)
+    if not valid_ai_limits(data):return api_error('VALIDATION_ERROR','승인된 정수 한도와 비용 단위를 입력해 주세요.')
+    if enabled():return api_error('AI_CONFIGURATION_ACTIVE','AI를 끈 뒤 한도를 변경해 주세요.',409)
     value=db.session.get(AppSetting,'ai_limits') or AppSetting(key='ai_limits');value.value=data;db.session.add(value)
     db.session.add(ActivityRecord(actor_id=g.principal.id,action='AI_LIMITS_CHANGED',target_type='setting',target_id=value.key,details={}));db.session.commit()
     current_app.extensions.pop('v2_ai_semaphore',None)
