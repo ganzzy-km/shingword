@@ -19,6 +19,9 @@ from google.auth.transport.requests import Request
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 
 
+GOOGLE_CLOCK_SKEW_SECONDS = 10
+
+
 class AuthDenied(ValueError):
     pass
 
@@ -66,12 +69,14 @@ def validate_google_claims(claims, *, client_id, nonce, now):
     audiences = aud if isinstance(aud, list) else [aud]
     exp, iat = claims.get("exp"), claims.get("iat")
     nbf = claims.get("nbf", iat)
+    latest_issued_at = now + GOOGLE_CLOCK_SKEW_SECONDS
     if (claims.get("iss") not in {"accounts.google.com", "https://accounts.google.com"}
             or client_id not in audiences or (len(audiences) > 1 and claims.get("azp") != client_id)
             or claims.get("azp", client_id) != client_id
             or type(exp) not in (int, float) or type(iat) not in (int, float)
-            or type(nbf) not in (int, float) or not math.isfinite(nbf) or nbf > now
-            or not math.isfinite(exp) or not math.isfinite(iat) or not iat <= now < exp
+            or type(nbf) not in (int, float) or not math.isfinite(nbf) or nbf > latest_issued_at
+            or not math.isfinite(exp) or not math.isfinite(iat) or iat > latest_issued_at
+            or not max(iat, nbf, now) < exp
             or not isinstance(claims.get("sub"), str) or not claims["sub"]
             or not isinstance(claims.get("nonce"), str)
             or not hmac.compare_digest(claims["nonce"].encode(), nonce.encode())):
@@ -159,7 +164,8 @@ class GoogleCodeFlow:
                 response.raise_for_status()
                 tokens, request = response.json(), Request()
             stage = 'SIGNATURE_AND_STANDARD_CLAIMS'
-            claims = verify_oauth2_token(tokens["id_token"], request, audience=self.client_id)
+            claims = verify_oauth2_token(tokens["id_token"], request, audience=self.client_id,
+                                         clock_skew_in_seconds=GOOGLE_CLOCK_SKEW_SECONDS)
             stage = 'CLAIMS_POLICY'
             # Google issues the ID token during exchange, after callback arrival.
             # Use the current verification time; retain the injected test clock.

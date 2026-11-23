@@ -46,12 +46,24 @@ def provider(transport,store=None):
     return BazeProvider(GatewaySettings.approved(approved_config()),store or MemorySecretStore({'BAZE_API_KEY':'synthetic-test-only-key'}),opener=transport)
 
 
+def test_default_model_is_opus_5_5():
+    config = approved_config()
+    del config['BAZE_GATEWAY']['model']
+    transport = Transport()
+    store = MemorySecretStore({'BAZE_API_KEY': 'synthetic-test-only-key'})
+    BazeProvider(GatewaySettings.approved(config), store, opener=transport)(CONTEXT)
+
+    request, _ = transport.requests[0]
+    assert json.loads(request.data)['model'] == 'claude-opus-5-5'
+
+
 def test_real_protocol_minimal_context_no_ids_tools_or_retries():
     transport=Transport();result=provider(transport)(CONTEXT)
     assert result['questions']==[{'focusQuote':'선택 구절.','questionType':'EVIDENCE','question':QUESTION_OPTIONS['EVIDENCE'][1]}]
     request,timeout=transport.requests[0];payload=json.loads(request.data)
     assert request.full_url=='https://factchat-cloud.mindlogic.ai/v1/gateway/chat/completions/'
     assert request.get_header('Authorization')=='Bearer synthetic-test-only-key' and timeout==10
+    assert payload['model'] == 'synthetic-test-model'
     assert payload['stream'] is False and payload['max_completion_tokens']==256
     assert set(payload)=={'model','stream','max_completion_tokens','response_format','messages'}
     assert payload['response_format']['json_schema']['strict'] is True

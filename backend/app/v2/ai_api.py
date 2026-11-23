@@ -1,6 +1,6 @@
 import math
 import time
-from datetime import datetime,timezone
+from datetime import datetime, timedelta, timezone
 from flask import Blueprint,g,current_app,abort
 from ..extensions import db
 from ..models import Consent,AIInteraction,AppSetting,WritingVersion,User,DocumentRevision
@@ -8,14 +8,21 @@ from ..utils import success,api_error,json_body
 from components.ai import preview_context,questions
 from components.auth import AuthDenied,require_active
 from .analysis_api import owned_run
+from .baze_provider import valid_ai_limits
 from .common import owned_writing,principal
 
 bp=Blueprint('v2_ai',__name__,url_prefix='/api')
+KOREA_TIMEZONE = timezone(timedelta(hours=9))
 
 
 def enabled():
     value=db.session.get(AppSetting,'ai_enabled')
-    return bool(value and value.value is True)
+    return value.value is True if value else current_app.config.get('AI_ENABLED_DEFAULT') is True
+
+
+def external_enabled():
+    return (enabled() and current_app.config.get('EXTERNAL_AI_TERMS_APPROVED') is True
+            and bool(current_app.config.get('AI_PROVIDER')))
 
 
 @bp.get('/ai/status')
@@ -87,35 +94,62 @@ def preview(identifier):
     if error:return error
     try:ctx,digest=context(run,data)
     except (ValueError,TypeError,KeyError):return api_error('AI_CONTEXT_INVALID','선택 구간과 운영 문맥 한도 설정을 확인해 주세요.')
-    return success({'context':ctx.payload,'previewHash':digest,'externalEnabled':enabled() and current_app.config.get('EXTERNAL_AI_TERMS_APPROVED') is True})
+    external = external_enabled()
+    result = {'context': ctx.payload, 'previewHash': digest, 'externalEnabled': external}
+    notice = current_app.config.get('AI_POLICY_NOTICE')
+    if notice:
+        result.update(policyNotice=notice, policyVersion=current_app.config['AI_POLICY_VERSION'])
+    return success(result)
 
 
 def reserve_budget(uid, *, call_cost=None, commit=True):
-    limits=(db.session.get(AppSetting,'ai_limits').value if db.session.get(AppSetting,'ai_limits') else current_app.config.get('AI_LIMITS'))
-    required=['dailyRequests','monthlyBudgetUnits','callCostUnits','cooldownSeconds','concurrency']
-    if not isinstance(limits,dict) or any(type(limits.get(k)) is not int or limits[k]<0 for k in required) or any(limits[k]==0 for k in ('dailyRequests','monthlyBudgetUnits','callCostUnits','concurrency')):return False
+    override = db.session.get(AppSetting, 'ai_limits')
+    limits = override.value if override else current_app.config.get('AI_LIMITS')
+    if not valid_ai_limits(limits):
+        return False
     cost = limits['callCostUnits'] if call_cost is None else call_cost
-    if type(cost) is not int or cost <= 0:return False
+    if type(cost) is not int or cost <= 0:
+        return False
     # Serialize SQLite writes before reading/reserving budget. No transaction
     # survives the provider call. Accounting uses approved integer cost units.
-    db.session.execute(db.update(AppSetting).where(AppSetting.key=='ai_enabled').values(value=AppSetting.value))
-    key='ai_usage_'+uid;setting=db.session.get(AppSetting,key);value=dict(setting.value) if setting else {}
-    now=datetime.now(timezone.utc);day=now.date().isoformat();month=day[:7];stamp=time.time()
-    if value.get('day')!=day:value.update(day=day,daily=0)
-    if value.get('month')!=month:value.update(month=month,spent=0)
-    global_row=db.session.get(AppSetting,'ai_monthly_usage')
-    global_value=dict(global_row.value) if global_row else {}
-    if global_value.get('month')!=month:global_value={'month':month,'spent':0}
-    if stamp-value.get('lastReservation',0)<limits['cooldownSeconds']:db.session.rollback();return False
-    if value.get('daily',0)>=limits['dailyRequests'] or global_value.get('spent',0)+cost>limits['monthlyBudgetUnits']:db.session.rollback();return False
-    value['daily']=value.get('daily',0)+1;value['spent']=value.get('spent',0)+cost
-    value['lastReservation']=stamp
-    if setting:setting.value=value
-    else:db.session.add(AppSetting(key=key,value=value))
-    global_value['spent']+=cost
-    if global_row:global_row.value=global_value
-    else:db.session.add(AppSetting(key='ai_monthly_usage',value=global_value))
-    if commit:db.session.commit()
+    db.session.execute(db.update(AppSetting).where(AppSetting.key == 'ai_enabled').values(value=AppSetting.value))
+    setting = db.session.get(AppSetting, 'ai_usage_' + uid) or AppSetting(key='ai_usage_' + uid, value={})
+    value = dict(setting.value)
+    now = datetime.now(timezone.utc)
+    day = now.date().isoformat()
+    month = day[:7]
+    request_month = now.astimezone(KOREA_TIMEZONE).strftime('%Y-%m')
+    stamp = time.time()
+    if value.get('day') != day:
+        value.update(day=day, daily=0)
+    if value.get('requestMonth') != request_month:
+        prior_requests = 0
+        # Older rows tracked only spend. The deployment retains its cost per reservation.
+        if 'requestMonth' not in value and value.get('month') == request_month:
+            standard_cost = limits['callCostUnits']
+            prior_requests = (value.get('spent', 0) + standard_cost - 1) // standard_cost
+        value.update(requestMonth=request_month, monthlyRequests=prior_requests)
+    if value.get('month') != month:
+        value.update(month=month, spent=0)
+
+    global_row = db.session.get(AppSetting, 'ai_monthly_usage') or AppSetting(key='ai_monthly_usage', value={})
+    global_spent = global_row.value.get('spent', 0) if global_row.value.get('month') == month else 0
+    account_limit = limits.get('monthlyRequests')
+    global_limit = limits.get('monthlyBudgetUnits')
+    if (stamp - value.get('lastReservation', 0) < limits['cooldownSeconds']
+            or value.get('daily', 0) >= limits['dailyRequests']
+            or (account_limit is not None and value['monthlyRequests'] >= account_limit)
+            or (global_limit is not None and global_spent + cost > global_limit)):
+        db.session.rollback()
+        return False
+
+    value.update(daily=value.get('daily', 0) + 1, monthlyRequests=value['monthlyRequests'] + 1,
+                 spent=value.get('spent', 0) + cost, lastReservation=stamp)
+    setting.value = value
+    global_row.value = {'month': month, 'spent': global_spent + cost}
+    db.session.add_all([setting, global_row])
+    if commit:
+        db.session.commit()
     return True
 
 
@@ -124,13 +158,18 @@ def generate(identifier):
     run=owned_run(identifier);data,error=json_body()
     if error:return error
     policy=current_app.config.get('AI_POLICY_VERSION')
-    granted=Consent.query.filter_by(user_id=g.principal.id,kind='AI',policy_version=policy).filter(Consent.granted_at.is_not(None),Consent.revoked_at.is_(None)).first() if policy else None
-    if not granted:return api_error('AI_CONSENT_REQUIRED','별도 AI 동의가 필요합니다.',403)
+    request_consent = bool(current_app.config.get('AI_POLICY_NOTICE'))
+    external_request = data.get('externalPolicyVersion')
+    if request_consent and external_request is not None and external_request != policy:
+        return api_error('AI_CONSENT_REQUIRED','현재 외부 전송 안내와 동의를 확인해 주세요.',403)
+    requires_consent = not request_consent or external_request is not None
+    granted=Consent.query.filter_by(user_id=g.principal.id,kind='AI',policy_version=policy).filter(Consent.granted_at.is_not(None),Consent.revoked_at.is_(None)).first() if requires_consent and policy else None
+    if requires_consent and not granted:return api_error('AI_CONSENT_REQUIRED','별도 AI 동의가 필요합니다.',403)
     try:ctx,digest=context(run,data)
     except (ValueError,TypeError,KeyError):return api_error('AI_CONTEXT_INVALID','선택 문맥을 확인해 주세요.')
     if data.get('previewHash')!=digest:return api_error('PREVIEW_MISMATCH','전송 미리보기를 다시 확인해 주세요.',409)
-    run_id,writing_id,consent_id=run.id,run.writing_id,granted.id
-    external=enabled() and current_app.config.get('EXTERNAL_AI_TERMS_APPROVED') is True
+    run_id,writing_id,consent_id=run.id,run.writing_id,granted.id if granted else None
+    external=requires_consent and external_enabled()
     provider=current_app.config.get('AI_PROVIDER')
     # A test provider cannot accidentally become a production external gateway.
     if current_app.config.get('AI_PROVIDER_TEST_ONLY') and not current_app.testing:provider=None
@@ -153,8 +192,9 @@ def generate(identifier):
     if external and (not enabled() or current_app.config.get('EXTERNAL_AI_TERMS_APPROVED') is not True):return api_error('AI_DISABLED','AI 기능이 중지되어 결과를 저장하지 않았습니다.',409)
     if fresh.session_version!=g.principal.session_version:raise AuthDenied('ACCESS_DENIED')
     owned_writing(writing_id)
-    fresh_consent=Consent.query.filter_by(user_id=g.principal.id,kind='AI',policy_version=policy).filter(Consent.granted_at.is_not(None),Consent.revoked_at.is_(None)).first()
-    if not fresh_consent or fresh_consent.id!=consent_id:return api_error('AI_CONSENT_REQUIRED','동의가 철회되어 결과를 저장하지 않았습니다.',403)
+    if requires_consent:
+        fresh_consent=Consent.query.filter_by(user_id=g.principal.id,kind='AI',policy_version=policy).filter(Consent.granted_at.is_not(None),Consent.revoked_at.is_(None)).first()
+        if not fresh_consent or fresh_consent.id!=consent_id:return api_error('AI_CONSENT_REQUIRED','동의가 철회되어 결과를 저장하지 않았습니다.',403)
     if ctx.payload.get('references'):
         # Recheck linked edition access/expiry after a slow provider call.
         context(owned_run(run_id),data)

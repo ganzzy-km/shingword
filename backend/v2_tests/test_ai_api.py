@@ -80,6 +80,73 @@ def test_consent_required_and_external_off_fallback(v2app):
     assert set(preview['context'])=={'versionId','questionType','excerpts'} and preview['context']['excerpts'][0]['quote']!=w['content']
 
 
+def test_monthly_quota_counts_each_account_and_resets_at_korea_midnight(v2app, monkeypatch):
+    from datetime import datetime, timezone
+    from app.v2 import ai_api
+
+    class Clock(datetime):
+        current = datetime(2026, 11, 30, 14, 59, tzinfo=timezone.utc)
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.current.astimezone(tz)
+
+    monkeypatch.setattr(ai_api, 'datetime', Clock)
+    v2app.config['AI_LIMITS'] = {'dailyRequests': 20, 'monthlyRequests': 10,
+                                 'callCostUnits': 2, 'cooldownSeconds': 0, 'concurrency': 1}
+    with v2app.app_context():
+        db.session.add_all([
+            AppSetting(key='ai_usage_first', value={'month': '2026-11', 'spent': 4}),
+            AppSetting(key='ai_monthly_usage', value={'month': '2026-11', 'spent': 100}),
+        ])
+        db.session.commit()
+
+        for account, remaining in [('first', 8), ('second', 10)]:
+            for _ in range(remaining):
+                assert ai_api.reserve_budget(account)
+            assert not ai_api.reserve_budget(account)
+            assert db.session.get(AppSetting, 'ai_usage_' + account).value['monthlyRequests'] == 10
+
+        Clock.current = datetime(2026, 11, 30, 15, 0, tzinfo=timezone.utc)
+        assert ai_api.reserve_budget('first')
+        assert db.session.get(AppSetting, 'ai_usage_first').value['requestMonth'] == '2026-12'
+        assert db.session.get(AppSetting, 'ai_usage_first').value['monthlyRequests'] == 1
+
+
+def test_operating_ai_requires_a_current_explicit_external_choice(v2app):
+    client, headers, _, ids, payload, _ = setup(v2app)
+    external_calls = []
+
+    def provider(context):
+        external_calls.append(context)
+        return {'questions': []}
+
+    v2app.config.update(
+        EXTERNAL_AI_TERMS_APPROVED=True, AI_ENABLED_DEFAULT=True,
+        AI_POLICY_NOTICE='Synthetic processing notice', AI_PROVIDER=provider,
+        AI_LIMITS={'dailyRequests': 2, 'monthlyBudgetUnits': 10, 'callCostUnits': 1,
+                   'cooldownSeconds': 0, 'concurrency': 1},
+    )
+    path = f"/api/analyses/{ids['analysisId']}/ai/"
+    preview = client.post(path + 'preview', headers=headers, json=payload).json['data']
+    assert preview['externalEnabled'] and preview['policyNotice'] == 'Synthetic processing notice'
+    assert client.post(path + 'questions', headers=headers, json=payload).json['data']['status'] == 'LOCAL_FALLBACK_EXTERNAL_DISABLED'
+    external = {**payload, 'externalPolicyVersion': preview['policyVersion']}
+    assert client.post(path + 'questions', headers=headers, json=external).status_code == 403
+
+    assert grant(client, headers).status_code == 200
+    assert client.post(path + 'questions', headers=headers, json={**external, 'externalPolicyVersion': 'older'}).status_code == 403
+    assert client.post(path + 'questions', headers=headers, json=external).json['data']['status'] == 'INSUFFICIENT_CONTEXT'
+    assert len(external_calls) == 1
+
+    with v2app.app_context():
+        db.session.add(AppSetting(key='ai_enabled', value=False))
+        db.session.commit()
+    assert client.post(path + 'preview', headers=headers, json=payload).json['data']['externalEnabled'] is False
+    assert client.post(path + 'questions', headers=headers, json=external).json['data']['status'] == 'LOCAL_FALLBACK_EXTERNAL_DISABLED'
+    assert len(external_calls) == 1
+
+
 def test_preview_mismatch_full_body_and_idor(v2app):
     c,h,w,ids,p,preview=setup(v2app);grant(c,h);path='/api/analyses/'+ids['analysisId']+'/ai/'
     wrong={**p,'previewHash':'wrong'};assert c.post(path+'questions',headers=h,json=wrong).status_code==409
