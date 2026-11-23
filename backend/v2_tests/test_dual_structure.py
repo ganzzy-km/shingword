@@ -7,14 +7,15 @@ from copy import deepcopy
 import pytest
 from v2_fixture import v2app, user_client
 from app.analysis.quotation import extract_quotations
-from components.structure_contract import structure_map, validate_ai, compare_structures
+from components.structure_contract import structure_map, validate_ai, validate_paragraph_ai, compare_structures
 from app.extensions import db
 from app.models import Analysis, AppSetting, EssayStructureMap, EssayStructureRun
 from app.services.secrets_service import MemorySecretStore
 from app.v2.baze_provider import BazeProvider, GatewaySettings
 
 
-BODY = '😀 학교에 독서 시간이 필요하다. 친구들은 “하루 ‘십 분’부터 시작했다”고 말했다. 학교에 독서 시간이 필요하다.'
+CLAIM = '😀 학교에 독서 시간이 필요하다.'
+BODY = CLAIM + '\n학교에 독서 시간이 필요하다.\n\n친구들은 “하루 ‘십 분’부터 시작했다”고 말했다.'
 BASE = 'https://factchat-cloud.mindlogic.ai/v1/gateway'
 POLICY = 'test-structure-1'
 
@@ -24,9 +25,19 @@ def node(identifier, role, *anchors):
         {'sentenceId': sid, 'text': text, 'occurrence': occurrence} for sid, text, occurrence in anchors]}
 
 
+def anchor(pid, text, occurrence=1):
+    return {'paragraphId': pid, 'text': text, 'occurrence': occurrence}
+
+
+def paragraph_node(identifier, role, *anchors):
+    return {'id': identifier, 'role': role, 'basis': 'EXPLICIT', 'spans': list(anchors)}
+
+
 def response():
-    return {'nodes': [node('c', 'CLAIM', ('s1', '', 1)), node('e', 'EVIDENCE', ('s2', '‘십 분’', 1))],
-            'relations': [{'sourceId': 'e', 'targetId': 'c', 'type': 'SUPPORTS', 'basis': 'IMPLICIT'}]}
+    return {'nodes': [paragraph_node('c', 'CLAIM', anchor('p1', CLAIM)),
+                      paragraph_node('e', 'EVIDENCE', anchor('p2', '‘십 분’'))],
+            'relations': [{'sourceId': 'e', 'targetId': 'c', 'type': 'SUPPORTS', 'basis': 'IMPLICIT'}],
+            'quotations': [anchor('p2', '“하루 ‘십 분’부터 시작했다”'), anchor('p2', '‘십 분’')]}
 
 
 class Gateway:
@@ -59,12 +70,12 @@ def test_structure_captures_billing_and_keeps_exact_anchors_required():
         def open(self, req, timeout):
             payload = json.loads(req.data)
             prompt = payload['messages'][0]['content']
-            assert 'Prefer a whole-sentence anchor' in prompt
-            assert 'including curly quotation marks' in prompt
+            assert 'exact nonempty original text in one supplied paragraph' in prompt
+            assert 'Include complete nested quotations individually' in prompt
             reply = {'model': 'synthetic-structure', 'billing': {'deducted_credit': 1.2054},
                      'choices': [{'finish_reason': 'stop', 'message': {'content': json.dumps({
-                         'nodes': [node('e', 'EVIDENCE', ('s2', '"하루 \'십 분\'부터 시작했다"', 1))],
-                         'relations': []})}}]}
+                         'nodes': [paragraph_node('e', 'EVIDENCE', anchor('p2', '"하루 \'십 분\'부터 시작했다"'))],
+                         'relations': [], 'quotations': []})}}]}
 
             class Answer(io.BytesIO):
                 status = 200
@@ -75,20 +86,19 @@ def test_structure_captures_billing_and_keeps_exact_anchors_required():
 
             return Answer(json.dumps(reply).encode())
 
-    mapping, _ = structure_map(BODY)
-    rows = mapping['sentences']
-    sentences = [{'id': row['id'], 'text': BODY[row['start']:row['end']]} for row in rows]
+    mapping, quotes = structure_map(BODY)
+    rows = mapping['paragraphs']
+    paragraphs = [{'id': row['id'], 'text': BODY[row['start']:row['end']]} for row in rows]
     provider = BazeProvider(GatewaySettings(BASE, 'synthetic-structure', 512, 512, 3),
         MemorySecretStore({'BAZE_API_KEY': 'synthetic-key'}), opener=GatewayWithBilling())
-    value, usage = provider.structure(sentences)
+    value, usage = provider.structure(paragraphs)
     assert usage['creditsCharged'] == '1.2054'
     allowed = {row['id'] for row in rows}
     with pytest.raises(ValueError, match='AI_SPAN_INVALID'):
-        validate_ai(value, BODY, rows, allowed)
-    value['nodes'][0]['spans'][0]['text'] = ''
-    verified = validate_ai(value, BODY, rows, allowed)
-    assert verified['nodes'][0]['spans'] == [{'sentenceId': 's2',
-        'start': rows[1]['start'], 'end': rows[1]['end']}]
+        validate_paragraph_ai(value, BODY, mapping, quotes, allowed)
+    value['nodes'][0]['spans'] = [anchor('p1', BODY[:rows[0]['end']])]
+    verified = validate_paragraph_ai(value, BODY, mapping, quotes, allowed)
+    assert verified['nodes'][0]['spans'] == [{'paragraphId': 'p1', 'start': 0, 'end': rows[0]['end']}]
 
 
 @pytest.fixture
@@ -173,9 +183,9 @@ def consent(client, headers, granted=True):
 
 def reviewed(client, headers, path, excluded=None):
     excluded = excluded or []
-    res = client.post(path + '/preview', headers=headers, json={'excludeSentenceIds': excluded})
+    res = client.post(path + '/preview', headers=headers, json={'excludeParagraphIds': excluded})
     assert res.status_code == 200, res.json
-    return {'excludeSentenceIds': excluded, 'reviewed': True, 'previewHash': res.json['data']['previewHash']}, res.json['data']
+    return {'excludeParagraphIds': excluded, 'reviewed': True, 'previewHash': res.json['data']['previewHash']}, res.json['data']
 
 
 def await_run(client, path, rid):
@@ -203,6 +213,12 @@ def test_http_independence_grounding_comparison_and_saved_result(v2app, gateway)
     assert started.status_code == 202, started.json
     saved = await_run(client, path, started.json['data']['id'])
     assert saved['status'] == 'COMPLETED', saved
+    assert saved['inputUnit'] == 'paragraph' and saved['promptVersion'] == 'structure-paragraphs/3'
+    assert saved['result']['paragraphs'] == [
+        {'paragraphId': 'p1', 'claimCount': 1, 'evidenceCount': 0, 'quotationCount': 0},
+        {'paragraphId': 'p2', 'claimCount': 0, 'evidenceCount': 1, 'quotationCount': 2},
+    ]
+    assert [BODY[q['start']:q['end']] for q in saved['result']['quotations']] == ['“하루 ‘십 분’부터 시작했다”', '‘십 분’']
     assert saved['result']['spanValidation'] == 'VERIFIED' and saved['usage']['total_tokens'] == 522
     assert saved['usage']['creditsCharged'] == '0.012' and saved['reservedCostUnits'] == 3
     evidence = saved['result']['nodes'][1]['spans'][0]
@@ -216,7 +232,8 @@ def test_http_independence_grounding_comparison_and_saved_result(v2app, gateway)
     payload, timeout = gateway.requests[0]
     assert payload['response_format']['json_schema']['strict'] is True and timeout == 3
     outbound = json.loads(payload['messages'][1]['content'])
-    assert set(outbound) == {'sentences'} and all(set(row) == {'id', 'text'} for row in outbound['sentences'])
+    assert outbound == {'paragraphs': [{'id': 'p1', 'text': BODY.split('\n\n')[0]},
+                                       {'id': 'p2', 'text': BODY.split('\n\n')[1]}]}
     raw = json.dumps(payload, ensure_ascii=False)
     for value in (uid, writing['id'], analysis_id, '비공개', 'DIRECT_QUOTE', 'synthetic-secret-not-for-logs'):
         assert value not in raw
@@ -244,14 +261,16 @@ def test_http_independence_grounding_comparison_and_saved_result(v2app, gateway)
         assert EssayStructureRun.query.count() == EssayStructureMap.query.count() == 0
 
 
-@pytest.mark.parametrize('change,code', [('id', 'AI_SENTENCE_INVALID'), ('quote', 'AI_SPAN_INVALID'),
-    ('edge', 'AI_RELATION_INVALID'), ('schema', 'AI_SCHEMA_INVALID'), ('duplicate', 'AI_NODE_INVALID')])
+@pytest.mark.parametrize('change,code', [('id', 'AI_PARAGRAPH_INVALID'), ('span', 'AI_SPAN_INVALID'),
+    ('quote', 'AI_QUOTATION_INVALID'), ('edge', 'AI_RELATION_INVALID'), ('schema', 'AI_SCHEMA_INVALID'),
+    ('duplicate', 'AI_NODE_INVALID')])
 def test_bad_provider_result_is_rejected(v2app, gateway, change, code):
     client, headers, _ = user_client(v2app)
     path = freeze(client, headers, essay(client, headers))
     consent(client, headers)
-    if change == 'id': gateway.value['nodes'][0]['spans'][0]['sentenceId'] = 's90'
-    if change == 'quote': gateway.value['nodes'][0]['spans'][0]['text'] = '없는 원문'
+    if change == 'id': gateway.value['nodes'][0]['spans'][0]['paragraphId'] = 'p90'
+    if change == 'span': gateway.value['nodes'][0]['spans'][0]['text'] = '없는 원문'
+    if change == 'quote': gateway.value['quotations'][0] = anchor('p1', CLAIM)
     if change == 'edge': gateway.value['relations'][0]['targetId'] = 'ghost'
     if change == 'schema': gateway.value['summary'] = 'unsupported'
     if change == 'duplicate': gateway.value['nodes'].append({**deepcopy(gateway.value['nodes'][0]), 'id': 'd'})
@@ -264,18 +283,20 @@ def test_bad_provider_result_is_rejected(v2app, gateway, change, code):
 
 def test_privacy_preview_and_match_only_link(v2app, gateway):
     client, headers, uid = user_client(v2app, email='secret-person@example.test')
-    text = BODY + '\n\n이름: 가상학생\n연락처는 secret-person@example.test입니다.\n010-1234-5678\n이 문장은 직접 제외한다.'
+    text = BODY + '\n\n이 문장도 전송하지 않는다.\n이름: 가상학생\n연락처는 secret-person@example.test입니다.\n010-1234-5678\n\n이 문단은 직접 제외한다.'
     writing = essay(client, headers, text)
     path = freeze(client, headers, writing)
-    request, preview = reviewed(client, headers, path, ['s8'])
-    assert preview['omittedSentenceIds'] == ['s4', 's5', 's6', 's7'], preview
-    assert [x['id'] for x in preview['sentences']] == ['s1', 's2', 's3']
+    request, preview = reviewed(client, headers, path, ['p4'])
+    assert preview['omittedParagraphIds'] == ['p3'], preview
+    assert [x['id'] for x in preview['paragraphs']] == ['p1', 'p2']
     consent(client, headers)
-    mismatch = client.post(path + '/ai', headers=headers, json={**request, 'excludeSentenceIds': []})
+    mismatch = client.post(path + '/ai', headers=headers, json={**request, 'excludeParagraphIds': []})
     assert mismatch.status_code == 409 and gateway.requests == []
     started = client.post(path + '/ai', headers=headers, json=request)
     result = await_run(client, path, started.json['data']['id'])
-    assert result['status'] == 'COMPLETED' and 'secret-person' not in json.dumps(gateway.requests[0])
+    assert result['status'] == 'COMPLETED'
+    sent = json.loads(gateway.requests[0][0]['messages'][1]['content'])
+    assert sent == {'paragraphs': preview['paragraphs']}
     protected_body = BODY + ' 별도 보호 원문.'
     protected = essay(client, headers, protected_body)
     from app.models import SourceDocument, DocumentRevision, EssayDocument
@@ -290,7 +311,7 @@ def test_privacy_preview_and_match_only_link(v2app, gateway):
     protected_path = freeze(client, headers, protected)
     with v2app.app_context():
         EssayDocument.query.filter_by(writing_id=protected['id']).delete(); db.session.commit()
-    denied = client.post(protected_path + '/preview', headers=headers, json={'excludeSentenceIds': []})
+    denied = client.post(protected_path + '/preview', headers=headers, json={'excludeParagraphIds': []})
     assert denied.status_code == 403 and denied.json['error']['code'] == 'AI_PROTECTED_SOURCE'
     assert len(gateway.requests) == 1
 
@@ -345,16 +366,25 @@ def test_partial_occurrence_many_to_one_role_difference_and_relation_type():
     assert len(compare_structures({'nodes': left, 'relations': [relation]}, ai)['relations']) == 2
 
 
+def test_paragraph_result_does_not_fill_missing_or_excluded_roles():
+    mapping, quotes = structure_map(BODY)
+    empty = {'nodes': [], 'relations': [], 'quotations': []}
+    result = validate_paragraph_ai(empty, BODY, mapping, quotes, {'p1'})
+    assert result['paragraphs'] == [{'paragraphId': 'p1', 'claimCount': 0, 'evidenceCount': 0, 'quotationCount': 0}]
+    with pytest.raises(ValueError, match='AI_PARAGRAPH_INVALID'):
+        validate_paragraph_ai({**empty, 'quotations': response()['quotations']}, BODY, mapping, quotes, {'p1'})
+
+
 def test_payload_cap_default_off_and_sqlite_lock_stay_optional(v2app, gateway):
     import sqlite3
     from sqlalchemy import event
     client, headers, _ = user_client(v2app)
     writing = essay(client, headers)
     path = freeze(client, headers, writing)
-    oversized = client.post(path + '/preview', headers=headers, json={'excludeSentenceIds': ['x' * 17000]})
+    oversized = client.post(path + '/preview', headers=headers, json={'excludeParagraphIds': ['x' * 17000]})
     assert oversized.status_code == 413
     v2app.config['AI_STRUCTURE_ENABLED'] = False
-    assert client.post(path + '/preview', headers=headers, json={'excludeSentenceIds': []}).status_code == 503
+    assert client.post(path + '/preview', headers=headers, json={'excludeParagraphIds': []}).status_code == 503
     v2app.config['AI_STRUCTURE_ENABLED'] = True
     consent(client, headers)
     data, _ = reviewed(client, headers, path)

@@ -111,19 +111,35 @@ class SyntheticGateway:
         self.requests = 0
 
     def open(self, req, timeout):
+        from app.analysis.quotation import extract_quotations
+
         self.requests += 1
         payload = json.loads(req.data)
         assert req.full_url == BASE + '/chat/completions/' and timeout <= 10
         assert payload['response_format']['json_schema']['strict'] is True
         supplied = json.loads(payload['messages'][1]['content'])
-        assert set(supplied) == {'sentences'} and all(set(row) == {'id', 'text'} for row in supplied['sentences'])
+        assert set(supplied) == {'paragraphs'} and all(set(row) == {'id', 'text'} for row in supplied['paragraphs'])
         time.sleep(1.4)  # Make the real asynchronous status visible in Chrome.
-        first, second, *_ = supplied['sentences']
-        phrase = '‘십 분’' if '‘십 분’' in second['text'] else ''
-        value = {'nodes': [
-            {'id': 'c', 'role': 'CLAIM', 'basis': 'EXPLICIT', 'spans': [{'sentenceId': first['id'], 'text': '', 'occurrence': 1}]},
-            {'id': 'e', 'role': 'EVIDENCE', 'basis': 'IMPLICIT', 'spans': [{'sentenceId': second['id'], 'text': phrase, 'occurrence': 1}]},
-        ], 'relations': [{'sourceId': 'e', 'targetId': 'c', 'type': 'QUALIFIES', 'basis': 'IMPLICIT'}]}
+        first, *later = supplied['paragraphs']
+        claim = ''.join(first['text'].splitlines()[0].partition('.')[:2])
+        value = {
+            'nodes': [{'id': 'c', 'role': 'CLAIM', 'basis': 'EXPLICIT',
+                       'spans': [{'paragraphId': first['id'], 'text': claim, 'occurrence': 1}]}],
+            'relations': [],
+            'quotations': [],
+        }
+        if later:
+            second = later[0]
+            phrase = '‘십 분’' if '‘십 분’' in second['text'] else second['text']
+            value['nodes'].append({'id': 'e', 'role': 'EVIDENCE', 'basis': 'IMPLICIT',
+                                   'spans': [{'paragraphId': second['id'], 'text': phrase, 'occurrence': 1}]})
+            value['relations'].append({'sourceId': 'e', 'targetId': 'c', 'type': 'QUALIFIES', 'basis': 'IMPLICIT'})
+        for paragraph in supplied['paragraphs']:
+            source = paragraph['text']
+            for quote in extract_quotations(source):
+                raw = quote.raw
+                preceding = sum(source.startswith(raw, i) for i in range(quote.start))
+                value['quotations'].append({'paragraphId': paragraph['id'], 'text': raw, 'occurrence': preceding + 1})
         class Response(io.BytesIO):
             status = 200
             headers = {'X-Credits-Charged': '0.010'}

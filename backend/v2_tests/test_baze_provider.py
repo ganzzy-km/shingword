@@ -57,6 +57,18 @@ def test_default_model_is_opus_5_5():
     assert json.loads(request.data)['model'] == 'claude-opus-5-5'
 
 
+def test_structure_gateway_requires_an_explicitly_configured_model():
+    config = approved_config()
+    config['AI_STRUCTURE_POLICY_VERSION'] = 'synthetic-structure-policy'
+    structure_gateway = {**config['BAZE_GATEWAY'], 'structuredOutputConfirmed': True}
+    config['BAZE_STRUCTURE_GATEWAY'] = structure_gateway
+    assert GatewaySettings.approved(config, structure=True).model == 'synthetic-test-model'
+
+    del structure_gateway['model']
+    with pytest.raises(ValueError, match='BAZE_CONFIGURATION_INVALID'):
+        GatewaySettings.approved(config, structure=True)
+
+
 def test_real_protocol_minimal_context_no_ids_tools_or_retries():
     transport=Transport();result=provider(transport)(CONTEXT)
     assert result['questions']==[{'focusQuote':'선택 구절.','questionType':'EVIDENCE','question':QUESTION_OPTIONS['EVIDENCE'][1]}]
