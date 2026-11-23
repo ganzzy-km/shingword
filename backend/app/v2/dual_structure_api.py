@@ -207,6 +207,9 @@ def build_preview(item, version, mapping, excluded, user, provider):
                 'outputTokens': provider.settings.max_completion_tokens, 'timeoutSeconds': provider.settings.timeout_seconds,
                 'maximumCodePoints': provider.settings.max_selected_codepoints, 'mapVersion': MAP_VERSION, 'inputUnit': 'paragraph',
                 'manualExclusions': sorted(exclude_set), 'automaticExclusions': omitted}
+    notice = current_app.config.get('AI_STRUCTURE_POLICY_NOTICE')
+    if notice:
+        settings['policyNoticeHash'] = text_hash(notice)
     key = digest({'user': user.id, 'version': version.id, 'bodyHash': version.snapshot_hash,
                   'prompt': PROMPT_VERSION, 'settings': settings, 'paragraphs': sent})
     return sent, settings, key
@@ -325,7 +328,7 @@ def preview(identifier):
                                             db.session.get(User, item.owner_id), provider)
         return success({'paragraphs': sent, 'omittedParagraphIds': settings['automaticExclusions'],
                         'previewHash': key, 'policyVersion': settings['policy'], 'provider': 'BAZE (Mindlogic)',
-                        'model': settings['model']})
+                        'model': settings['model'], 'policyNotice': current_app.config.get('AI_STRUCTURE_POLICY_NOTICE')})
     except ValueError as error:
         return scope_error(error)
 

@@ -101,7 +101,7 @@ class GatewaySettings:
         if any(not isinstance(value.get(k),str) or not value[k].strip() for k in ('processingTermsReference','pricingReference')) or not isinstance(policy, str) or not policy.strip():
             raise ValueError('BAZE_CONFIGURATION_UNCONFIRMED')
         limits = config.get('AI_LIMITS')
-        if not valid_ai_limits(limits) or (structure and 'monthlyBudgetUnits' not in limits):
+        if not valid_ai_limits(limits):
             raise ValueError('BAZE_BUDGET_UNCONFIRMED')
         return cls(base, model, token, size, timeout)
 
@@ -319,7 +319,9 @@ def install_structure_provider(app):
         settings = GatewaySettings.approved(app.config, structure=True)
         store = app.extensions.get('secret_store') or app.config.get('SECRET_STORE')
         cost = app.config.get('AI_STRUCTURE_CALL_COST_UNITS')
-        if store is None or not store.contains('BAZE_API_KEY') or type(cost) is not int or not 1 <= cost <= app.config['AI_LIMITS']['monthlyBudgetUnits']:
+        monthly_budget = app.config['AI_LIMITS'].get('monthlyBudgetUnits')
+        if (type(cost) is not int or cost < 1 or (monthly_budget is not None and cost > monthly_budget)
+                or store is None or not store.contains('BAZE_API_KEY')):
             raise ValueError()
         app.extensions['structure_provider'] = BazeProvider(settings, store)
     except (ValueError, OSError):

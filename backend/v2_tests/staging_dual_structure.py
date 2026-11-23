@@ -168,6 +168,7 @@ def serve(adapter, paths, args, signal):
     assert (dist / 'index.html').is_file() and dist.is_relative_to(REPO)
     app.config.update(FRONTEND_DIST=dist, AI_STRUCTURE_ENABLED=True, EXTERNAL_AI_TERMS_APPROVED=True,
         AI_STRUCTURE_POLICY_VERSION='synthetic-staging-structure-v1', AI_STRUCTURE_CALL_COST_UNITS=2,
+        AI_STRUCTURE_POLICY_NOTICE='STAGING 시험 안내. 가상 문단을 분석합니다.',
         AI_LIMITS={'dailyRequests': 12, 'monthlyBudgetUnits': 60, 'callCostUnits': 1, 'cooldownSeconds': 0, 'concurrency': 2})
     if args.ocr_config:
         app.config['OCR_LOCAL_CONFIG'] = str(Path(args.ocr_config).resolve(strict=True))
