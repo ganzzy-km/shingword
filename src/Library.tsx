@@ -705,6 +705,7 @@ export default function Library({
       return
     }
     setBusy(true)
+    setStructureMode("s4")
     setJob({id: "", progress: 0, step: "현재 글 저장 및 분석 준비 중"})
     try {
       const id = await save()
@@ -1320,6 +1321,21 @@ export default function Library({
                 </button>
               </div>
             )}
+            {(job || analysis || dualVersion || writing.content.trim()) && (
+              <DualStructurePanel key={writing.id} mode={structureMode} setMode={setStructureMode} record={dual.record}
+                analyzing={!!job} analysisId={analysis?.id} hasVersion={!!dualVersion}
+                loadError={dual.error} refresh={dual.refresh} body={writing.content} quoteEnabled={quoteEnabled} setQuoteEnabled={setQuoteEnabled}
+                prepareVersion={async () => { const version = await ensureToolsVersion(); setStructureOverride({writingId: current.current.id, versionId: version.id}) }}
+                jump={span => { setManualHighlight(span); setSelected(null); jump(span) }}
+                onShowFeedback={() => {
+                  setStructureMode("s4")
+                  setFeedbackCollapsed(false)
+                  requestAnimationFrame(() => {
+                    feedbackPanel.current?.scrollIntoView({block: "start"})
+                    feedbackPanel.current?.focus({preventScroll: true})
+                  })
+                }} />
+            )}
             <div className="document-search">
               <Icon name="search" size={18} />
               <input
@@ -1571,10 +1587,6 @@ export default function Library({
               </section>
               <aside data-tour="feedback" ref={feedbackPanel} className="feedback-panel" aria-label="분석 결과와 내 주석" tabIndex={-1} aria-busy={!!job}>
                 <AnnotationsPanel writingId={writing.id} body={writing.content} version={analysis?.sourceVersion} selection={annotationFormOpen ? annotationSelection : null} notes={annotations.notes} positions={annotations.positions} selectedId={selectedAnnotation} error={annotations.error} onAccept={note=>{if(!annotations.accept(note))return;setSelectedAnnotation(note.id);setAnnotationFormOpen(true);setAnnotationSelection(null)}} onRemove={annotations.remove} onJump={openAnnotation} onDirtyChange={dirty=>{annotationDirty.current=dirty}} onClose={()=>{annotationDirty.current=false;setSelectedAnnotation(null);setAnnotationSelection(null);setAnnotationFormOpen(false)}} />
-                <DualStructurePanel key={writing.id} mode={structureMode} setMode={setStructureMode} record={dual.record}
-                  loadError={dual.error} refresh={dual.refresh} body={writing.content} quoteEnabled={quoteEnabled} setQuoteEnabled={setQuoteEnabled}
-                  prepareVersion={async () => { const version = await ensureToolsVersion(); setStructureOverride({writingId: current.current.id, versionId: version.id}) }}
-                  jump={span => { setManualHighlight(span); setSelected(null); jump(span) }} />
                 {job && <div className="version-notice" role="status"><strong>글을 분석하고 있습니다…</strong><p>{job.step}</p><progress aria-label="분석 진행률" value={job.progress} max={100} /><p>완료되면 새 결과가 표시됩니다. 이전 결과는 보존됩니다.</p></div>}
                 {structureMode === "s4" && <>
                 <div className="feedback-heading">

@@ -13,7 +13,7 @@ from pathlib import Path
 import certifi
 from dataclasses import dataclass
 from components.ai import QUESTION_OPTIONS, selection_questions
-from components.structure_contract import OUTPUT_SCHEMA, SYSTEM_PROMPT
+from components.structure_contract import MAX_PARAGRAPHS, OUTPUT_SCHEMA, SYSTEM_PROMPT
 
 ALLOWED_BASES = frozenset({
     'https://factchat-cloud.mindlogic.ai/v1/gateway',
@@ -184,20 +184,22 @@ class BazeProvider:
         except (ValueError, TypeError, KeyError, AttributeError, RecursionError):
             raise ProviderUnavailable('AI_SCHEMA_INVALID', usage) from None
 
-    def structure(self, sentences):
+    def structure(self, paragraphs):
         try:
-            if (not isinstance(sentences, list) or not sentences
-                    or any(set(row) != {'id', 'text'} or not re.fullmatch(r's[1-9][0-9]*', row['id'])
-                           or not isinstance(row['text'], str) or not row['text'] for row in sentences)
-                    or sum(len(row['text']) for row in sentences) > self.settings.max_selected_codepoints):
+            if (not isinstance(paragraphs, list) or not 1 <= len(paragraphs) <= MAX_PARAGRAPHS
+                    or any(not isinstance(row, dict) or set(row) != {'id', 'text'}
+                           or not re.fullmatch(r'p[1-9][0-9]*', row['id'])
+                           or not isinstance(row['text'], str) or not row['text'] for row in paragraphs)
+                    or len({row['id'] for row in paragraphs}) != len(paragraphs)
+                    or sum(len(row['text']) for row in paragraphs) > self.settings.max_selected_codepoints):
                 raise ValueError()
             return self.completion({
                 'model': self.settings.model, 'stream': False,
                 'max_completion_tokens': self.settings.max_completion_tokens,
                 'response_format': {'type': 'json_schema', 'json_schema': {
-                    'name': 'geulbit_structure', 'strict': True, 'schema': OUTPUT_SCHEMA}},
+                    'name': 'geulbit_paragraph_structure', 'strict': True, 'schema': OUTPUT_SCHEMA}},
                 'messages': [{'role': 'system', 'content': SYSTEM_PROMPT},
-                             {'role': 'user', 'content': json.dumps({'sentences': sentences}, ensure_ascii=False)}],
+                             {'role': 'user', 'content': json.dumps({'paragraphs': paragraphs}, ensure_ascii=False)}],
             }, require_model=True)
         except ProviderUnavailable:
             raise

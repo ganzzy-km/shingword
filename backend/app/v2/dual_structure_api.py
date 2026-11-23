@@ -12,8 +12,8 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import load_only
 
 from components.structure_contract import (
-    MAP_VERSION, MAX_SENTENCES, PROMPT_VERSION, adapt_s4, compare_structures, digest,
-    structure_map, text_hash, validate_ai,
+    MAP_VERSION, MAX_PARAGRAPHS, PROMPT_VERSION, adapt_s4, compare_structures, digest,
+    structure_map, text_hash, validate_paragraph_ai,
 )
 from ..extensions import db
 from ..models import (
@@ -42,10 +42,10 @@ IDENTIFIERS = re.compile(
 MESSAGES = {
     'AI_DISABLED': '외부 AI 구조 분석이 준비되지 않았습니다.',
     'AI_CONSENT_REQUIRED': '외부 전송 동의를 확인해 주세요.',
-    'AI_INPUT_LIMIT': 'AI 분석에 보낼 수 있는 글 또는 문장 수를 초과했습니다.',
+    'AI_INPUT_LIMIT': 'AI 분석에 보낼 수 있는 글 길이 또는 문단 수를 초과했습니다.',
     'AI_PROTECTED_SOURCE': '보호 자료와 연결된 판본은 외부 AI로 전송할 수 없습니다.',
-    'AI_PREVIEW_MISMATCH': '전송할 문장을 다시 확인해 주세요.',
-    'AI_NO_INPUT': '전송할 수 있는 문장이 없습니다.',
+    'AI_PREVIEW_MISMATCH': '전송할 문단을 다시 확인해 주세요.',
+    'AI_NO_INPUT': '전송할 수 있는 문단이 없습니다.',
     'AI_BUSY': 'AI 구조 분석이 실행 중입니다. 잠시 후 다시 시도해 주세요.',
     'AI_BUDGET_LIMIT': 'AI 요청 또는 비용 한도에 도달했습니다.',
     'STRUCTURE_STALE': '이전 판본입니다. 현재 글을 저장한 뒤 다시 선택해 주세요.',
@@ -178,24 +178,23 @@ def build_preview(item, version, mapping, excluded, user, provider):
         raise ValueError('STRUCTURE_STALE')
     if protected(item, version):
         raise ValueError('AI_PROTECTED_SOURCE')
-    sentences = mapping['sentences']
-    if len(sentences) > MAX_SENTENCES or len(version.content) > provider.settings.max_selected_codepoints:
+    paragraphs = mapping['paragraphs']
+    if len(paragraphs) > MAX_PARAGRAPHS or len(version.content) > provider.settings.max_selected_codepoints:
         raise ValueError('AI_INPUT_LIMIT')
-    if (not isinstance(excluded, list) or len(excluded) > len(sentences)
-            or any(not isinstance(sid, str) for sid in excluded)
+    if (not isinstance(excluded, list) or len(excluded) > len(paragraphs)
+            or any(not isinstance(pid, str) for pid in excluded)
             or len(set(excluded)) != len(excluded)
-            or set(excluded) - {s['id'] for s in sentences}):
+            or set(excluded) - {row['id'] for row in paragraphs}):
         raise ValueError()
     exclude_set = set(excluded)
     sent, omitted = [], []
-    # Search the original before slicing. Sentence punctuation can split an
-    # identifier such as an email address between two server sentence IDs.
+    # Scan the original before slicing so every intersecting paragraph is withheld.
     identifiers = [match.span() for match in IDENTIFIERS.finditer(version.content)]
     if user.email:
         identifiers.extend(match.span() for match in re.finditer(re.escape(user.email), version.content, re.I))
     identifiers.sort()
     position = 0
-    for row in sentences:
+    for row in paragraphs:
         while position < len(identifiers) and identifiers[position][1] <= row['start']:
             position += 1
         if position < len(identifiers) and identifiers[position][0] < row['end']:
@@ -206,10 +205,10 @@ def build_preview(item, version, mapping, excluded, user, provider):
         raise ValueError('AI_NO_INPUT')
     settings = {'providerProfile': provider.cache_tag, 'model': provider.settings.model, 'policy': policy_version(),
                 'outputTokens': provider.settings.max_completion_tokens, 'timeoutSeconds': provider.settings.timeout_seconds,
-                'maximumCodePoints': provider.settings.max_selected_codepoints, 'mapVersion': MAP_VERSION,
+                'maximumCodePoints': provider.settings.max_selected_codepoints, 'mapVersion': MAP_VERSION, 'inputUnit': 'paragraph',
                 'manualExclusions': sorted(exclude_set), 'automaticExclusions': omitted}
     key = digest({'user': user.id, 'version': version.id, 'bodyHash': version.snapshot_hash,
-                  'prompt': PROMPT_VERSION, 'settings': settings, 'sentences': sent})
+                  'prompt': PROMPT_VERSION, 'settings': settings, 'paragraphs': sent})
     return sent, settings, key
 
 
@@ -227,6 +226,7 @@ def dto(row):
             'model': row.model, 'promptVersion': row.prompt_version, 'status': status,
             'createdAt': iso(row.created_at), 'completedAt': iso(row.completed_at),
             'errorCode': error, 'result': row.result if status == 'COMPLETED' else None,
+            'inputUnit': row.settings.get('inputUnit', 'sentence'),
             'settings': {key: row.settings[key] for key in ('manualExclusions', 'automaticExclusions')},
             'usage': row.usage, 'reservedCostUnits': row.reserved_cost_units}
 
@@ -315,15 +315,15 @@ def preview(identifier):
         return error
     try:
         item, version = version_for(identifier)
-        if set(data) != {'excludeSentenceIds'}:
+        if set(data) != {'excludeParagraphIds'}:
             raise ValueError()
         provider = provider_for()
         if not provider:
             raise ValueError('AI_DISABLED')
         mapping, _ = structure_map_for(version)
-        sent, settings, key = build_preview(item, version, mapping, data['excludeSentenceIds'],
+        sent, settings, key = build_preview(item, version, mapping, data['excludeParagraphIds'],
                                             db.session.get(User, item.owner_id), provider)
-        return success({'sentences': sent, 'omittedSentenceIds': settings['automaticExclusions'],
+        return success({'paragraphs': sent, 'omittedParagraphIds': settings['automaticExclusions'],
                         'previewHash': key, 'policyVersion': settings['policy'], 'provider': 'BAZE (Mindlogic)',
                         'model': settings['model']})
     except ValueError as error:
@@ -354,18 +354,20 @@ def worker_inputs(row, provider):
         raise ValueError('AI_CONSENT_REQUIRED')
     if not provider or row.deadline_at.replace(tzinfo=timezone.utc) <= now():
         raise ValueError('AI_INTERRUPTED_OR_TIMEOUT')
-    mapping, _ = structure_map_for(version)
+    if row.prompt_version != PROMPT_VERSION:
+        raise ValueError('AI_PREVIEW_MISMATCH')
+    mapping, quotes = structure_map_for(version)
     sent, _, key = build_preview(item, version, mapping, row.settings['manualExclusions'], user, provider)
     if key != row.cache_key:
         raise ValueError('AI_PREVIEW_MISMATCH')
-    return version.content, mapping['sentences'], sent
+    return version.content, mapping, quotes, sent
 
 
 SAFE_CODES = set(MESSAGES) | {'STRUCTURE_ACCESS_CHANGED', 'AI_INTERRUPTED_OR_TIMEOUT', 'AI_TIMEOUT',
     'AI_PROVIDER_REFUSED', 'AI_SCHEMA_INVALID', 'AI_MODEL_MISMATCH', 'AI_PROVIDER_UNAVAILABLE', 'AI_SPAN_INVALID',
-    'AI_SENTENCE_INVALID', 'AI_NODE_INVALID', 'AI_RELATION_INVALID'}
-REVIEW_CODES = {'AI_PROVIDER_REFUSED', 'AI_SCHEMA_INVALID', 'AI_MODEL_MISMATCH', 'AI_SPAN_INVALID', 'AI_SENTENCE_INVALID',
-                'AI_NODE_INVALID', 'AI_RELATION_INVALID'}
+    'AI_PARAGRAPH_INVALID', 'AI_QUOTATION_INVALID', 'AI_NODE_INVALID', 'AI_RELATION_INVALID'}
+REVIEW_CODES = {'AI_PROVIDER_REFUSED', 'AI_SCHEMA_INVALID', 'AI_MODEL_MISMATCH', 'AI_SPAN_INVALID', 'AI_PARAGRAPH_INVALID',
+                'AI_QUOTATION_INVALID', 'AI_NODE_INVALID', 'AI_RELATION_INVALID'}
 
 
 def run_job(app, run_id):
@@ -378,12 +380,12 @@ def run_job(app, run_id):
                 if not row or row.status != 'QUEUED':
                     return
                 provider = provider_for()
-                body, sentences, sent = worker_inputs(row, provider)
+                body, mapping, quotes, sent = worker_inputs(row, provider)
                 row.status = 'RUNNING'
                 db.session.commit()
                 db.session.remove()
                 value, usage = provider.structure(sent)
-                result = validate_ai(value, body, sentences, {entry['id'] for entry in sent})
+                result = validate_paragraph_ai(value, body, mapping, quotes, {entry['id'] for entry in sent})
             except ProviderUnavailable as error:
                 failure, usage = str(error), error.usage
             except ValueError as error:
@@ -420,7 +422,7 @@ def start(identifier):
         return error
     acquired = False
     try:
-        if (set(data) != {'excludeSentenceIds', 'reviewed', 'previewHash'} or data['reviewed'] is not True
+        if (set(data) != {'excludeParagraphIds', 'reviewed', 'previewHash'} or data['reviewed'] is not True
                 or not isinstance(data['previewHash'], str) or len(data['previewHash']) != 64):
             raise ValueError()
         # Reject a bad ID without taking SQLite's writer lock.
@@ -434,7 +436,7 @@ def start(identifier):
         if not consent:
             raise ValueError('AI_CONSENT_REQUIRED')
         mapping, quotes = structure_map_for(version)
-        _, settings, key = build_preview(item, version, mapping, data['excludeSentenceIds'],
+        _, settings, key = build_preview(item, version, mapping, data['excludeParagraphIds'],
                                          db.session.get(User, item.owner_id), provider)
         if key != data['previewHash']:
             raise ValueError('AI_PREVIEW_MISMATCH')
