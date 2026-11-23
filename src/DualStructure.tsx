@@ -29,6 +29,7 @@ type RecordData = {
 type Preview = {
   paragraphs: { id: string; text: string }[]; omittedParagraphIds: string[]; previewHash: string
   policyVersion: string; provider: string; model: string
+  policyNotice?: string | null
 }
 
 const roles = { CLAIM: "주장 후보", EVIDENCE: "근거 후보" }
@@ -266,7 +267,8 @@ export default function DualStructurePanel({ mode, setMode, record, loadError, r
     try {
       const confirmed = excluded.length ? await api.post<Preview>(`${versionPath(version)}/preview`, { excludeParagraphIds: excluded }) : preview
       if (current.current.versionId !== version || current.current.body !== body) return
-      if (confirmed.policyVersion !== preview.policyVersion || confirmed.model !== preview.model || JSON.stringify(confirmed.paragraphs) !== JSON.stringify(kept)) {
+      if (confirmed.policyVersion !== preview.policyVersion || confirmed.policyNotice !== preview.policyNotice
+        || confirmed.model !== preview.model || JSON.stringify(confirmed.paragraphs) !== JSON.stringify(kept)) {
         setPreview(confirmed); setExcluded([]); setReviewed(false)
         return
       }
@@ -390,6 +392,7 @@ export default function DualStructurePanel({ mode, setMode, record, loadError, r
       {preview && <>
         <h2 id="dual-consent-title">AI 전송 문단 확인</h2>
         <p>{preview.provider}의 {preview.model}에 아래 선택 문단을 전송합니다. 요청에 비용이 발생할 수 있습니다.</p>
+        {preview.policyNotice && <p style={{ whiteSpace: "pre-line" }}>{preview.policyNotice}</p>}
         <p>개인 식별 정보나 보호 원문이 남아 있는 문단은 선택을 해제해 주세요.</p>
         {preview.omittedParagraphIds.length > 0 && <p>식별 정보가 감지된 문단 {preview.omittedParagraphIds.length}개를 자동 제외했습니다.</p>}
         <div className="dual-preview-list" role="group" aria-label="전송할 문단">

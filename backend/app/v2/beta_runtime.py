@@ -23,6 +23,21 @@ def external_ai_configuration(receipt):
     }
     from .baze_provider import GatewaySettings
     GatewaySettings.approved(config)
+    structure = settings.get('structure')
+    if structure is not None:
+        if not isinstance(structure, dict) or structure.get('approved') is not True:
+            raise ValueError('BETA_STRUCTURE_AI_APPROVAL_REQUIRED')
+        notice = structure.get('notice')
+        cost = structure.get('callCostUnits')
+        budget = config['AI_LIMITS'].get('monthlyBudgetUnits')
+        if not isinstance(notice, str) or not notice.strip():
+            raise ValueError('BETA_STRUCTURE_AI_NOTICE_REQUIRED')
+        if type(cost) is not int or cost < 1 or (budget is not None and cost > budget):
+            raise ValueError('BETA_STRUCTURE_AI_COST_UNCONFIRMED')
+        config.update(AI_STRUCTURE_ENABLED=True, AI_STRUCTURE_POLICY_VERSION=structure.get('policyVersion'),
+                      AI_STRUCTURE_POLICY_NOTICE=notice, BAZE_STRUCTURE_GATEWAY=structure.get('gateway'),
+                      AI_STRUCTURE_CALL_COST_UNITS=cost)
+        GatewaySettings.approved(config, structure=True)
     return config
 
 def approved_ocr_runtime(receipt):

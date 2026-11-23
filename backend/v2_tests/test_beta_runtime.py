@@ -3,8 +3,38 @@ import json,hashlib
 from pathlib import Path
 from datetime import datetime,timezone,timedelta
 import pytest
-from app.v2.beta_runtime import operating_configuration
+from app.v2.beta_runtime import external_ai_configuration, operating_configuration
 from app.storage import SCHEMA_HEAD
+
+
+def test_approved_structure_provider_can_share_an_account_only_monthly_limit(monkeypatch):
+    from flask import Flask
+    from app.services.secrets_service import MemorySecretStore
+    from app.v2.baze_provider import install_structure_provider
+    from test_baze_provider import approved_config
+
+    monkeypatch.delenv('GEULBIT_STRUCTURE_AI_CONFIG_FILE', raising=False)
+    external = approved_config()
+    gateway = external['BAZE_GATEWAY']
+    limits = external['AI_LIMITS']
+    del limits['monthlyBudgetUnits']
+    limits['monthlyRequests'] = 10
+    structure = {'approved': True, 'policyVersion': 'synthetic-paragraph-policy', 'notice': 'Synthetic paragraph notice',
+                 'gateway': {**gateway, 'structuredOutputConfirmed': True}, 'callCostUnits': limits['callCostUnits']}
+    receipt = {'externalAi': {'approved': True, 'notice': 'Synthetic selected passage notice',
+                             'policyVersion': external['AI_POLICY_VERSION'], 'gateway': gateway, 'limits': limits,
+                             'structure': structure}}
+    app = Flask(__name__)
+    app.config.update(external_ai_configuration(receipt), SECRET_STORE=MemorySecretStore({'BAZE_API_KEY': 'synthetic-only'}))
+    install_structure_provider(app)
+    assert app.extensions['structure_provider'].settings.model == gateway['model']
+    assert app.config['AI_LIMITS']['monthlyRequests'] == 10
+    assert 'monthlyBudgetUnits' not in app.config['AI_LIMITS']
+    assert app.config['AI_STRUCTURE_POLICY_NOTICE'] == structure['notice']
+    limits['monthlyBudgetUnits'] = structure['callCostUnits'] - 1
+    with pytest.raises(ValueError, match='BETA_STRUCTURE_AI_COST_UNCONFIRMED'):
+        external_ai_configuration(receipt)
+
 
 def test_operating_configuration_requires_gates_code_and_verified_backup(tmp_path):
     root=tmp_path/'data';(root/'operational/local-backups').mkdir(parents=True);repo=tmp_path/'repo';(repo/'backend/config').mkdir(parents=True)

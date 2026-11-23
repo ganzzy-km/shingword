@@ -346,6 +346,30 @@ def test_duplicate_revoke_during_call_timeout_and_budget(v2app, gateway, caplog)
     assert len(gateway.requests) == 2 and BODY not in caplog.text and 'synthetic-secret-not-for-logs' not in caplog.text
 
 
+def test_selected_questions_and_structure_share_ten_monthly_requests_per_account(v2app, gateway):
+    from app.v2.ai_api import reserve_budget
+
+    v2app.config.update(AI_STRUCTURE_POLICY_NOTICE='Synthetic paragraph transfer notice',
+        AI_LIMITS={'dailyRequests': 10, 'monthlyRequests': 10, 'callCostUnits': 1,
+                   'cooldownSeconds': 0, 'concurrency': 1})
+    client, headers, uid = user_client(v2app)
+    path = freeze(client, headers, essay(client, headers))
+    consent(client, headers)
+    with v2app.app_context():
+        for _ in range(9):
+            assert reserve_budget(uid)
+    request, preview = reviewed(client, headers, path)
+    assert preview['policyNotice'] == 'Synthetic paragraph transfer notice'
+    started = client.post(path + '/ai', headers=headers, json=request)
+    assert started.status_code == 202
+    assert await_run(client, path, started.json['data']['id'])['status'] == 'COMPLETED'
+    _, _, other_id = user_client(v2app, 'other-account-budget')
+    with v2app.app_context():
+        assert not reserve_budget(uid)
+        assert reserve_budget(other_id)
+    assert len(gateway.requests) == 1
+
+
 def test_partial_occurrence_many_to_one_role_difference_and_relation_type():
     body = '반복 반복은 주장이다. 같은 문장. 같은 문장. 마지막.'
     mapping, _ = structure_map(body)

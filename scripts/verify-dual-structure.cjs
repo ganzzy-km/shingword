@@ -222,6 +222,7 @@ async function main() {
       await page.getByRole('button', { name: 'AI 구조 분석 실행', exact: true }).click()
       await confirm.waitFor()
       assert.ok(await confirm.getByText(/비용이 발생할 수 있습니다/).isVisible())
+      assert.ok(await confirm.getByText('STAGING 시험 안내. 가상 문단을 분석합니다.', { exact: true }).isVisible())
       assert.ok(await confirm.getByRole('button', { name: '동의하고 분석 실행' }).isDisabled())
       await page.keyboard.press('Escape')
       await confirm.waitFor({ state: 'hidden' })
