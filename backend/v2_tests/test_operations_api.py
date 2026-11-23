@@ -129,6 +129,10 @@ def test_admin_limits_explicit_configuration(v2app):
     assert c.patch('/api/admin/ai/limits',headers=h,json={}).status_code==400
     limits={'dailyRequests':2,'monthlyBudgetUnits':10,'callCostUnits':1,'cooldownSeconds':5,'concurrency':1}
     assert c.patch('/api/admin/ai/limits',headers=h,json=limits).status_code==200
+    account_limits = {key: value for key, value in limits.items() if key != 'monthlyBudgetUnits'}
+    account_limits['monthlyRequests'] = 10
+    assert c.patch('/api/admin/ai/limits',headers=h,json={**account_limits, 'monthlyRequests': 0}).status_code==400
+    assert c.patch('/api/admin/ai/limits',headers=h,json=account_limits).json['data']['limits']==account_limits
     assert c.patch('/api/admin/ai',headers=h,json={'enabled':True}).status_code==200
     assert c.patch('/api/admin/ai/limits',headers=h,json=limits).status_code==409
     assert c.get('/api/ai/status').json['data']['externalApproved'] is False
