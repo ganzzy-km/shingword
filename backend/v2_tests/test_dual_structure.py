@@ -399,6 +399,22 @@ def test_paragraph_result_does_not_fill_missing_or_excluded_roles():
         validate_paragraph_ai({**empty, 'quotations': response()['quotations']}, BODY, mapping, quotes, {'p1'})
 
 
+def test_structure_request_byte_limit_blocks_preview_and_transport_without_spending(v2app, gateway):
+    from dataclasses import replace
+    from app.v2.baze_provider import ProviderUnavailable
+
+    structure_provider = v2app.extensions['structure_provider']
+    structure_provider.settings = replace(structure_provider.settings, max_request_bytes=4096)
+    text = '가' * 1500
+    client, headers, _ = user_client(v2app)
+    path = freeze(client, headers, essay(client, headers, text))
+    preview = client.post(path + '/preview', headers=headers, json={'excludeParagraphIds': []})
+    assert preview.status_code == 413 and preview.json['error']['code'] == 'AI_INPUT_LIMIT'
+    with pytest.raises(ProviderUnavailable, match='AI_INPUT_LIMIT'):
+        structure_provider.structure([{'id': 'p1', 'text': text}])
+    assert gateway.requests == []
+
+
 def test_payload_cap_default_off_and_sqlite_lock_stay_optional(v2app, gateway):
     import sqlite3
     from sqlalchemy import event

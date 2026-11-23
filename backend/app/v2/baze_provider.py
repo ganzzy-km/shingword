@@ -21,6 +21,11 @@ ALLOWED_BASES = frozenset({
 })
 DEFAULT_BAZE_MODEL = 'claude-opus-5-5'
 MAX_GATEWAY_REQUEST_BYTES = 16_384
+MAX_STRUCTURE_REQUEST_BYTES = 40 * 1024
+
+
+def _encode_payload(payload):
+    return json.dumps(payload, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
 
 
 def valid_ai_limits(limits):
@@ -86,6 +91,7 @@ class GatewaySettings:
     max_completion_tokens: int
     max_selected_codepoints: int
     timeout_seconds: int
+    max_request_bytes: int = MAX_STRUCTURE_REQUEST_BYTES
 
     @classmethod
     def approved(cls, config, *, structure=False):
@@ -102,13 +108,16 @@ class GatewaySettings:
         token, size, timeout = (value.get(k) for k in ('maxCompletionTokens', 'maxSelectedCodepoints', 'timeoutSeconds'))
         if type(token) is not int or not 1 <= token <= (4096 if structure else 2048) or type(size) is not int or not 1 <= size <= 6000 or type(timeout) is not int or not 1 <= timeout <= 30:
             raise ValueError('BAZE_CONFIGURATION_INVALID')
+        request_bytes = value.get('maxRequestBytes', MAX_STRUCTURE_REQUEST_BYTES) if structure else MAX_STRUCTURE_REQUEST_BYTES
+        if type(request_bytes) is not int or not 1 <= request_bytes <= MAX_STRUCTURE_REQUEST_BYTES:
+            raise ValueError('BAZE_CONFIGURATION_INVALID')
         policy = config.get('AI_STRUCTURE_POLICY_VERSION' if structure else 'AI_POLICY_VERSION')
         if any(not isinstance(value.get(k),str) or not value[k].strip() for k in ('processingTermsReference','pricingReference')) or not isinstance(policy, str) or not policy.strip():
             raise ValueError('BAZE_CONFIGURATION_UNCONFIRMED')
         limits = config.get('AI_LIMITS')
         if not valid_ai_limits(limits):
             raise ValueError('BAZE_BUDGET_UNCONFIRMED')
-        return cls(base, model, token, size, timeout)
+        return cls(base, model, token, size, timeout, request_bytes)
 
 
 class BazeProvider:
@@ -123,12 +132,14 @@ class BazeProvider:
 
     def completion(self, payload, *, require_model=False):
         """One bounded HTTPS request shared by both explicit AI workflows."""
+        encoded = _encode_payload(payload)
+        request_limit = self.settings.max_request_bytes if require_model else MAX_GATEWAY_REQUEST_BYTES
+        if len(encoded) > request_limit:
+            if require_model:
+                raise ProviderUnavailable('AI_INPUT_LIMIT')
+            raise ValueError()
         key = self._store.get('BAZE_API_KEY')
         if not isinstance(key, str) or not key or any(c.isspace() for c in key):
-            raise ValueError()
-        encoded = json.dumps(payload, ensure_ascii=False, separators=(',', ':')).encode('utf-8')
-        request_limit = 40 * 1024 if require_model else MAX_GATEWAY_REQUEST_BYTES
-        if len(encoded) > request_limit:
             raise ValueError()
         request = urllib.request.Request(self.settings.base_url + '/chat/completions/', data=encoded,
             headers={'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Accept': 'application/json'}, method='POST')
@@ -190,6 +201,19 @@ class BazeProvider:
         except (ValueError, TypeError, KeyError, AttributeError, RecursionError):
             raise ProviderUnavailable('AI_SCHEMA_INVALID', usage) from None
 
+    def _structure_payload(self, paragraphs):
+        return {
+            'model': self.settings.model, 'stream': False,
+            'max_completion_tokens': self.settings.max_completion_tokens,
+            'response_format': {'type': 'json_schema', 'json_schema': {
+                'name': 'geulbit_paragraph_structure', 'strict': True, 'schema': OUTPUT_SCHEMA}},
+            'messages': [{'role': 'system', 'content': SYSTEM_PROMPT},
+                         {'role': 'user', 'content': json.dumps({'paragraphs': paragraphs}, ensure_ascii=False)}],
+        }
+
+    def structure_fits(self, paragraphs):
+        return len(_encode_payload(self._structure_payload(paragraphs))) <= self.settings.max_request_bytes
+
     def structure(self, paragraphs):
         try:
             if (not isinstance(paragraphs, list) or not 1 <= len(paragraphs) <= MAX_PARAGRAPHS
@@ -199,14 +223,7 @@ class BazeProvider:
                     or len({row['id'] for row in paragraphs}) != len(paragraphs)
                     or sum(len(row['text']) for row in paragraphs) > self.settings.max_selected_codepoints):
                 raise ValueError()
-            return self.completion({
-                'model': self.settings.model, 'stream': False,
-                'max_completion_tokens': self.settings.max_completion_tokens,
-                'response_format': {'type': 'json_schema', 'json_schema': {
-                    'name': 'geulbit_paragraph_structure', 'strict': True, 'schema': OUTPUT_SCHEMA}},
-                'messages': [{'role': 'system', 'content': SYSTEM_PROMPT},
-                             {'role': 'user', 'content': json.dumps({'paragraphs': paragraphs}, ensure_ascii=False)}],
-            }, require_model=True)
+            return self.completion(self._structure_payload(paragraphs), require_model=True)
         except ProviderUnavailable:
             raise
         except TimeoutError:
