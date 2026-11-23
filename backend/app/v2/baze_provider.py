@@ -54,6 +54,11 @@ class DeadlineHTTPSHandler(urllib.request.HTTPSHandler):
             def connect(self):
                 super().connect()
                 connection_socket = self.sock
+                remaining = request.deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError()
+                if getattr(request, 'use_response_deadline', False):
+                    connection_socket.settimeout(remaining)
 
                 def interrupt():
                     try:
@@ -128,6 +133,7 @@ class BazeProvider:
         request = urllib.request.Request(self.settings.base_url + '/chat/completions/', data=encoded,
             headers={'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Accept': 'application/json'}, method='POST')
         request.deadline = time.monotonic() + self.settings.timeout_seconds
+        request.use_response_deadline = require_model
         usage = {}
         try:
             with self._opener.open(request, timeout=min(10, self.settings.timeout_seconds)) as response:

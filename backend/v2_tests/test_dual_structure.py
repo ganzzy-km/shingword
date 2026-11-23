@@ -213,7 +213,7 @@ def test_http_independence_grounding_comparison_and_saved_result(v2app, gateway)
     assert started.status_code == 202, started.json
     saved = await_run(client, path, started.json['data']['id'])
     assert saved['status'] == 'COMPLETED', saved
-    assert saved['inputUnit'] == 'paragraph' and saved['promptVersion'] == 'structure-paragraphs/3'
+    assert saved['inputUnit'] == 'paragraph' and saved['promptVersion'] == 'structure-paragraphs/4'
     assert saved['result']['paragraphs'] == [
         {'paragraphId': 'p1', 'claimCount': 1, 'evidenceCount': 0, 'quotationCount': 0},
         {'paragraphId': 'p2', 'claimCount': 0, 'evidenceCount': 1, 'quotationCount': 2},
