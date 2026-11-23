@@ -90,7 +90,8 @@ class GatewaySettings:
             approvals += ('structuredOutputConfirmed',)
         if not isinstance(value, dict) or any(value.get(k) is not True for k in approvals):
             raise ValueError('BAZE_CONFIGURATION_UNCONFIRMED')
-        base, model = value.get('baseUrl'), value.get('model', DEFAULT_BAZE_MODEL)
+        base = value.get('baseUrl')
+        model = value.get('model') if structure else value.get('model', DEFAULT_BAZE_MODEL)
         if base not in ALLOWED_BASES or not isinstance(model, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._/-]{0,127}', model):
             raise ValueError('BAZE_CONFIGURATION_INVALID')
         token, size, timeout = (value.get(k) for k in ('maxCompletionTokens', 'maxSelectedCodepoints', 'timeoutSeconds'))
